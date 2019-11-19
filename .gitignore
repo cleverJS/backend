@@ -1,0 +1,7 @@
+syntax: glob
+.DS_Store
+.idea
+.env
+node_modules
+build
+src/configs/local.ts
