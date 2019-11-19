@@ -10,6 +10,5 @@ module.exports = {
     "js",
     "ts"
   ],
-  testPathIgnorePatterns: ["/tests/"],
   coverageDirectory: "./coverage"
 }

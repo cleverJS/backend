@@ -13,9 +13,10 @@ export interface IConnection {
   id: string
   client: WebSocket
   keepAlive?: NodeJS.Timeout
+  state: AbstractObject
 }
 
-export type RequestHandler = (request: WSRequest) => Promise<AbstractObject>
+export type RequestHandler = (request: WSRequest, connection: IConnection) => Promise<AbstractObject>
 export type RequestValidator = (request: WSRequest) => Promise<{ status: 'success' | 'fail' | 'error'; message?: string }>
 interface Request {
   handler: RequestHandler
@@ -69,13 +70,28 @@ class WSServer {
       this.logger.error('response validate error:', e)
     }
 
-    const connection = this.connections.get(id)
+    const connection = this.getConnection(id)
     if (connection) {
       const { client } = connection
       if (client.readyState === WebSocket.OPEN) {
         client.send(response.toString())
       }
     }
+  }
+
+  public updateState(id: string, key: string, value: string) {
+    const connection = this.getConnection(id)
+    if (connection) {
+      connection.state[key] = value
+    }
+  }
+
+  public getConnection(id: string) {
+    const connection = this.connections.get(id)
+    if (!connection) {
+      throw new Error('Connection was not found')
+    }
+    return connection
   }
 
   /**
@@ -90,7 +106,8 @@ class WSServer {
     this.ws = new WebSocket.Server({ port: this.port })
     this.ws.on('connection', (client: WebSocket) => {
       const id = uuid()
-      const connection: IConnection = { id, client }
+      const state = {}
+      const connection: IConnection = { id, client, state }
       this.connections.set(id, connection)
       this.logger.debug('connected: ', id)
       this.handleMessage(connection)
@@ -143,7 +160,7 @@ class WSServer {
           }
 
           const response = WSResponse.fromRequest(requestObject)
-          response.payload = await handler.handler(request)
+          response.payload = await handler.handler(request, this.getConnection(id))
           this.send(id, response)
         }
       } catch (e) {
