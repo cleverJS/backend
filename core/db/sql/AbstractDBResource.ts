@@ -70,9 +70,9 @@ export abstract class AbstractDBResource<T extends AbstractEntity<AbstractObject
     let conditionClone: Condition | undefined
     if (condition) {
       conditionClone = condition.clone()
-      condition.clearSort()
-      condition.offset(undefined)
-      condition.limit(undefined)
+      conditionClone.clearSort()
+      conditionClone.offset(undefined)
+      conditionClone.limit(undefined)
     }
     const queryBuilder = this.connection(this.table)
     this.conditionParser.parse(queryBuilder, conditionClone)
