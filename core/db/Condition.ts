@@ -99,12 +99,16 @@ export class Condition {
     return this.addSort(sort, dir)
   }
 
-  public offset(value: number) {
+  public clearSort() {
+    this.sort = []
+  }
+
+  public offset(value?: number) {
     this.offsetValue = value
     return this
   }
 
-  public limit(value: number) {
+  public limit(value?: number) {
     this.limitValue = value
     return this
   }

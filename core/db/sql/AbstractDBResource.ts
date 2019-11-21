@@ -67,8 +67,15 @@ export abstract class AbstractDBResource<T extends AbstractEntity<AbstractObject
   }
 
   public async count(condition?: Condition) {
+    let conditionClone: Condition | undefined
+    if (condition) {
+      conditionClone = condition.clone()
+      condition.clearSort()
+      condition.offset(undefined)
+      condition.limit(undefined)
+    }
     const queryBuilder = this.connection(this.table)
-    this.conditionParser.parse(queryBuilder, condition)
+    this.conditionParser.parse(queryBuilder, conditionClone)
     const result = await queryBuilder.count('* as count')
     if (result) {
       if (typeof result[0].count === 'string') {
