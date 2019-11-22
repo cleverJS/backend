@@ -18,14 +18,12 @@ export class Condition {
   public static LIKE: TOperator = 8
   public static IN: TOperator = 9
 
-  protected initialConditions: ICondition[] = []
   protected conditions: any[] = []
   protected sort: {sort: string, dir: TSortDirection}[] = []
   protected offsetValue?: number
   protected limitValue?: number
 
   constructor(conditions: ICondition[] = [], offset?: number, limit?: number, sort?: string, dir?: TSortDirection) {
-    this.initialConditions = conditions
     const parsedConditions = Condition.parseCondition(conditions)
     if (parsedConditions) {
       this.conditions = parsedConditions
@@ -130,7 +128,12 @@ export class Condition {
   }
 
   public clone() {
-    const condition = new Condition([...this.initialConditions], this.offsetValue, this.limitValue)
+    const conditionData: ICondition[] = []
+    for (const value of this.getConditions()) {
+      conditionData.push({ operator: value[0], field: value[1], value: value[2] })
+    }
+
+    const condition = new Condition(conditionData, this.offsetValue, this.limitValue)
 
     if (this.sort.length) {
       this.sort.forEach(s => {
