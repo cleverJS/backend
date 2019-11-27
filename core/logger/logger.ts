@@ -1,7 +1,13 @@
 import { LogLevel, TransportInterface } from './transport/TransportInterface'
+import { ILoggerConfig } from './config'
 
 class Logger {
+  private readonly config?: ILoggerConfig
   private transports: TransportInterface[] = []
+
+  public constructor(config?: ILoggerConfig) {
+    this.config = config
+  }
 
   /**
    * @param transport
@@ -13,17 +19,29 @@ class Logger {
   /**
    * @param msg
    */
-  public debug = (...msg: any[]) => this.log('debug', ...msg)
+  public debug = (...msg: any[]) => {
+    if (this.config && this.config.debug) {
+      this.log('debug', ...msg)
+    }
+  }
 
   /**
    * @param msg
    */
-  public info = (...msg: any[]) => this.log('info', ...msg)
+  public info = (...msg: any[]) => {
+    if (this.config && this.config.info) {
+      this.log('info', ...msg)
+    }
+  }
 
   /**
    * @param msg
    */
-  public warn = (...msg: any[]) => this.log('warn', ...msg)
+  public warn = (...msg: any[]) => {
+    if (this.config && this.config.warn) {
+      this.log('warn', ...msg)
+    }
+  }
 
   /**
    * @param msg

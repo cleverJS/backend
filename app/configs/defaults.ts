@@ -6,6 +6,12 @@ export const defaults: ISettings = {
   runtimeDir: path.resolve(`${__dirname}/../../runtime`),
   runtimeTestDir: path.resolve(`${__dirname}/../../runtime/test`),
 
+  logger: {
+    debug: true,
+    warn: true,
+    info: true,
+  },
+
   http: {
     port: 8000,
   },

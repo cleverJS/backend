@@ -3,10 +3,8 @@ import { logger } from '../../../core/logger/logger'
 import { ArticleService } from './ArticleService'
 import { ServerResponse } from 'http'
 import { FastifyReply, FastifyRequest } from 'fastify'
-import { Redis } from '../../../core/db/redis/Redis'
 import { WSServer } from '../../../core/ws/WSServer'
 import { WSRequest } from '../../../core/ws/WSRequest'
-import { Cache } from '../../../core/cache/Cache'
 import { Article } from './Article'
 import { EntityFactory } from '../../../core/entity/EntityFactory'
 
@@ -14,8 +12,6 @@ interface IDependencies {
   articleService: ArticleService
   wsServer: WSServer
   http: HttpServer
-  cache: Cache
-  redis: Redis
 }
 
 export class ArticleController {
@@ -28,19 +24,22 @@ export class ArticleController {
 
   private async init() {
     this.deps.wsServer.onRequest('article', 'get', this.actionWSGet)
+    this.deps.wsServer.onRequest('article', 'update', this.actionWSGet)
     const instance = this.deps.http.getServer()
     instance.get('/article', this.actionGet)
     instance.get('/articleService/save', this.actionSave)
   }
 
   private actionWSGet = async (request: WSRequest) => {
-    const { id } = request.payload
-    const result = await this.deps.articleService.findById(id)
-
+    logger.info(request)
+    const factory = new EntityFactory(Article, Article.cast)
     return {
       status: 'success',
       data: {
-        article: result,
+        article: factory.create({
+          title: 'News',
+          author: 'Noname',
+        }),
       },
     }
   }

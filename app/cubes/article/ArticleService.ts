@@ -2,9 +2,11 @@ import { AbstractResource } from '../../../core/db/AbstractResource'
 import { Article } from './Article'
 import { AbstractService, IAbstractDependenciesList } from '../../../core/AbstractService'
 import { Condition } from '../../../core/db/Condition'
+import { EventEmitter } from 'events'
 
 export interface IDependenciesList extends IAbstractDependenciesList<Article> {
   resource: AbstractResource<Article>
+  eventEmitter: EventEmitter
 }
 
 export class ArticleService extends AbstractService<Article> {

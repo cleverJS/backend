@@ -1,5 +1,5 @@
 import { AbstractMongoResource } from '../../../../core/db/mongo/AbstractMongoResource'
-import { Article, IArticleData } from '../Article'
+import { Article } from '../Article'
 import { AbstractObject } from '../../../../core/AbstractObject'
 import { morphism } from 'morphism'
 import { ObjectId } from 'mongodb'
@@ -20,7 +20,7 @@ export class ArticleResourceMongo extends AbstractMongoResource<Article> {
     updatedAt: 'updatedAt',
   }
 
-  protected map(data: AbstractObject): IArticleData {
+  protected map(data: AbstractObject): typeof ArticleResourceMongo.scheme {
     return morphism(ArticleResourceMongo.scheme, data) as any
   }
 }

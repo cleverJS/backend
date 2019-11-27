@@ -10,7 +10,6 @@ import { EntityFactory } from '../../../core/entity/EntityFactory'
 import { AbstractObject } from '../../../core/AbstractObject'
 
 // jest.mock('./repository/FileResourceMongo')
-
 class FileResourceStub extends AbstractResource<File> {
   public constructor(entityFactory: EntityFactory<File>) {
     super(entityFactory)

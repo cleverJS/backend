@@ -5,6 +5,7 @@ import { WSResponse } from './WSResponse'
 import { loggerNamespace } from '../logger/logger'
 import { IWSConfig } from './config'
 import { AbstractObject } from '../AbstractObject'
+import { EventEmitter } from 'events'
 
 export const EVENT_REQUEST = 'request'
 const KEEP_ALIVE_DEFAULT = 1000 * 60
@@ -28,16 +29,18 @@ interface IHandlers {
 }
 
 class WSServer {
+  private ws: WebSocket.Server | null = null
   private readonly logger = loggerNamespace('WSServer')
   private readonly port: number
   private readonly connections: Map<string, IConnection> = new Map()
   private readonly keepAliveTimeout: number | null
-  private ws: WebSocket.Server | null = null
+  private readonly eventEmitter?: EventEmitter
   private readonly handlers: IHandlers = {
     [EVENT_REQUEST]: new Map(),
   }
 
-  public constructor(config: IWSConfig) {
+  public constructor(config: IWSConfig, eventEmitter?: EventEmitter) {
+    this.eventEmitter = eventEmitter
     this.port = config.port
     this.keepAliveTimeout = config.keepalive || KEEP_ALIVE_DEFAULT
     this.init()
@@ -98,6 +101,19 @@ class WSServer {
    */
   public destroy() {
     this.ws && this.ws.close()
+  }
+
+  public broadcast(response: WSResponse, connectionIds?: string[]) {
+    let connectionList
+    if (!connectionIds) {
+      connectionList = this.connections.keys()
+    } else {
+      connectionList = connectionIds
+    }
+
+    for (const connectionId of connectionList) {
+      this.send(connectionId, response)
+    }
   }
 
   /**
@@ -193,6 +209,9 @@ class WSServer {
     client.on('close', () => {
       keepAlive && clearInterval(keepAlive)
       this.connections.delete(id)
+      if (this.eventEmitter) {
+        this.eventEmitter.emit('WSServer:handleClose', { id })
+      }
       this.logger.debug('disconnected: ', id)
     })
   }
