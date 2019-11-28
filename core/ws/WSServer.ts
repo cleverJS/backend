@@ -89,6 +89,8 @@ class WSServer {
     }
   }
 
+  /**
+   */
   public getConnection(id: string) {
     const connection = this.connections.get(id)
     if (!connection) {
@@ -103,17 +105,15 @@ class WSServer {
     this.ws && this.ws.close()
   }
 
-  public broadcast(response: WSResponse, connectionIds?: string[]) {
-    let connectionList
-    if (!connectionIds) {
-      connectionList = this.connections.keys()
-    } else {
-      connectionList = connectionIds
-    }
-
-    for (const connectionId of connectionList) {
-      this.send(connectionId, response)
-    }
+  /**
+   */
+  public broadcast(cb: (connection: IConnection) => null | WSResponse) {
+    this.connections.forEach(connection => {
+      const response = cb(connection)
+      if (response) {
+        this.send(connection.id, response)
+      }
+    })
   }
 
   /**
