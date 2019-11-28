@@ -7,6 +7,7 @@ import { WSServer } from '../../../core/ws/WSServer'
 import { WSRequest } from '../../../core/ws/WSRequest'
 import { Article } from './Article'
 import { EntityFactory } from '../../../core/entity/EntityFactory'
+import { WSResponse } from '../../../core/ws/WSResponse'
 
 interface IDependencies {
   articleService: ArticleService
@@ -23,11 +24,24 @@ export class ArticleController {
   }
 
   private async init() {
+    this.deps.wsServer.onRequest('article', 'test', this.actionWSTest)
     this.deps.wsServer.onRequest('article', 'get', this.actionWSGet)
     this.deps.wsServer.onRequest('article', 'update', this.actionWSGet)
     const instance = this.deps.http.getServer()
     instance.get('/article', this.actionGet)
     instance.get('/articleService/save', this.actionSave)
+  }
+
+  private actionWSTest = async (request: WSRequest) => {
+    console.log(request)
+    this.deps.wsServer.broadcast(connection => {
+      console.log(connection.id)
+      return Promise.resolve(new WSResponse({ service: 'article', action: 'save', type: 'event' }, { item: 1 }))
+    }).catch(logger.error)
+
+    return {
+      status: 'success',
+    }
   }
 
   private actionWSGet = async (request: WSRequest) => {
@@ -63,6 +77,15 @@ export class ArticleController {
     })
 
     const result = await this.deps.articleService.save(item)
+
+    this.deps.wsServer.broadcast(connection => {
+      if (connection.state.hasOwnProperty('token')) {
+        return Promise.resolve(new WSResponse({ service: 'article', action: 'save', type: 'event' }, { item: result }))
+      }
+
+      return Promise.resolve(null)
+    }).catch(logger.error)
+
     return {
       hello: 'Create item',
       collection: result,

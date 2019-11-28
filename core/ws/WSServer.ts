@@ -5,7 +5,7 @@ import { WSResponse } from './WSResponse'
 import { loggerNamespace } from '../logger/logger'
 import { IWSConfig } from './config'
 import { AbstractObject } from '../AbstractObject'
-import { EventEmitter } from 'events'
+import { resolvePromiseMap } from '../utils/promise'
 
 export const EVENT_REQUEST = 'request'
 const KEEP_ALIVE_DEFAULT = 1000 * 60
@@ -34,13 +34,11 @@ class WSServer {
   private readonly port: number
   private readonly connections: Map<string, IConnection> = new Map()
   private readonly keepAliveTimeout: number | null
-  private readonly eventEmitter?: EventEmitter
   private readonly handlers: IHandlers = {
     [EVENT_REQUEST]: new Map(),
   }
 
-  public constructor(config: IWSConfig, eventEmitter?: EventEmitter) {
-    this.eventEmitter = eventEmitter
+  public constructor(config: IWSConfig) {
     this.port = config.port
     this.keepAliveTimeout = config.keepalive || KEEP_ALIVE_DEFAULT
     this.init()
@@ -82,13 +80,6 @@ class WSServer {
     }
   }
 
-  public updateState(id: string, key: string, value: string) {
-    const connection = this.getConnection(id)
-    if (connection) {
-      connection.state[key] = value
-    }
-  }
-
   public getConnection(id: string) {
     const connection = this.connections.get(id)
     if (!connection) {
@@ -103,16 +94,18 @@ class WSServer {
     this.ws && this.ws.close()
   }
 
-  public broadcast(response: WSResponse, connectionIds?: string[]) {
-    let connectionList
-    if (!connectionIds) {
-      connectionList = this.connections.keys()
-    } else {
-      connectionList = connectionIds
+  public async broadcast(cb: (connection: IConnection) => Promise<WSResponse | null>) {
+    const map = new Map()
+    for (const [connectionId, connection] of this.connections.entries()) {
+      map.set(connectionId, cb(connection))
     }
 
-    for (const connectionId of connectionList) {
-      this.send(connectionId, response)
+    const resolves = await resolvePromiseMap<string, WSResponse | null>(map)
+
+    for (const { id, item } of resolves) {
+      if (id && item) {
+        this.send(id, item)
+      }
     }
   }
 
@@ -209,9 +202,6 @@ class WSServer {
     client.on('close', () => {
       keepAlive && clearInterval(keepAlive)
       this.connections.delete(id)
-      if (this.eventEmitter) {
-        this.eventEmitter.emit('WSServer:handleClose', { id })
-      }
       this.logger.debug('disconnected: ', id)
     })
   }
