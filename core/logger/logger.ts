@@ -2,10 +2,14 @@ import { LogLevel, TransportInterface } from './transport/TransportInterface'
 import { ILoggerConfig } from './config'
 
 class Logger {
-  private readonly config?: ILoggerConfig
+  private config?: ILoggerConfig
   private transports: TransportInterface[] = []
 
   public constructor(config?: ILoggerConfig) {
+    this.setConfig(config)
+  }
+
+  public setConfig(config?: ILoggerConfig) {
     this.config = config
   }
 
