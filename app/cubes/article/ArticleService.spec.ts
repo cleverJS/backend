@@ -4,13 +4,13 @@ import { EntityFactory } from '../../../core/entity/EntityFactory'
 import { ConditionDbParser } from '../../../core/db/sql/condition/ConditionDbParser'
 import { Article } from './Article'
 import { Condition } from '../../../core/db/Condition'
-import { EventEmitter } from 'events'
+import Knex from 'knex'
 
 describe('ArticleService', () => {
   it('should sign up and sign in', async () => {
-    const eventEmitter: EventEmitter = jest.genMockFromModule('events')
+    const connection: Knex = jest.genMockFromModule('knex')
     const conditionDbParser = new ConditionDbParser()
-    const articleResourceSql = new ArticleResourceSql(() => {}, conditionDbParser, new EntityFactory(Article, Article.cast))
+    const articleResourceSql = new ArticleResourceSql(connection, conditionDbParser, new EntityFactory(Article, Article.cast))
     const spyInstance = jest.spyOn(articleResourceSql, 'findOne')
 
     spyInstance.mockImplementation(() => {
@@ -34,7 +34,6 @@ describe('ArticleService', () => {
     })
 
     const service = new ArticleService({
-      eventEmitter,
       resource: articleResourceSql,
     })
 
