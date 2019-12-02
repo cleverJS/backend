@@ -90,11 +90,10 @@ export abstract class AbstractDBResource<T extends AbstractEntity<AbstractObject
 
   public async save(item: T) {
     try {
-      const data = item.getData()
+      const data = this.mapToDB(item)
       if (data) {
         // TODO: Is it necessary to clone data before delete id ?
         const dbData = { ...data }
-        delete dbData.id
         if (item.id) {
           const condition = new Condition([{ operator: Condition.EQUALS, field: 'id', value: item.id }])
           return this.update(condition, dbData)
@@ -152,5 +151,13 @@ export abstract class AbstractDBResource<T extends AbstractEntity<AbstractObject
 
   public createEntity(data: any) {
     return this.entityFactory.create(data)
+  }
+
+  protected map(data: AbstractObject): any {
+    return data
+  }
+
+  protected mapToDB(item: T): any {
+    return item.getData()
   }
 }
