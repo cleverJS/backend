@@ -19,4 +19,5 @@ export abstract class AbstractResource<T extends AbstractEntity<AbstractObject>>
   public abstract deleteAll(condition: Condition): Promise<boolean>
   public abstract createEntity(data: any): T
   protected abstract map(data: AbstractObject): any
+  protected abstract mapToDB(item: T): any
 }

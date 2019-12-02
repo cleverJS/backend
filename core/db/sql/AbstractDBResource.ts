@@ -8,6 +8,7 @@ import { EntityFactory } from '../../entity/EntityFactory'
 import { AbstractObject } from '../../AbstractObject'
 
 export abstract class AbstractDBResource<T extends AbstractEntity<AbstractObject>> extends AbstractResource<T> {
+  protected primaryKey = 'id'
   protected table: string = ''
   protected connection: Knex
   protected conditionParser: ConditionDbParser
@@ -19,7 +20,7 @@ export abstract class AbstractDBResource<T extends AbstractEntity<AbstractObject
   }
 
   public async findById(id: string) {
-    const condition = new Condition([{ operator: Condition.EQUALS, field: 'id', value: id }])
+    const condition = new Condition([{ operator: Condition.EQUALS, field: this.primaryKey, value: id }])
     const result = await this.findOne(condition)
 
     if (result) {
@@ -95,12 +96,12 @@ export abstract class AbstractDBResource<T extends AbstractEntity<AbstractObject
         // TODO: Is it necessary to clone data before delete id ?
         const dbData = { ...data }
         if (item.id) {
-          const condition = new Condition([{ operator: Condition.EQUALS, field: 'id', value: item.id }])
+          const condition = new Condition([{ operator: Condition.EQUALS, field: this.primaryKey, value: item.id }])
           return this.update(condition, dbData)
         }
 
         const queryBuilder = this.connection(this.table)
-        const result = await queryBuilder.insert(dbData).returning('id')
+        const result = await queryBuilder.insert(dbData).returning(this.primaryKey)
         if (result) {
           item.id = result[0]
         }
@@ -138,7 +139,7 @@ export abstract class AbstractDBResource<T extends AbstractEntity<AbstractObject
   }
 
   public async delete(id: string) {
-    const condition = new Condition([{ operator: Condition.EQUALS, field: 'id', value: id }])
+    const condition = new Condition([{ operator: Condition.EQUALS, field: this.primaryKey, value: id }])
     return await this.deleteAll(condition)
   }
 
