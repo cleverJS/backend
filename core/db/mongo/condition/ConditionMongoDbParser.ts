@@ -1,5 +1,4 @@
-import { Condition } from '../../Condition'
-import { logger } from '../../../logger/logger'
+import { ConditionDepricated } from '../../ConditionDepricated'
 
 interface IConditionOptions {
   limit?: number
@@ -8,9 +7,9 @@ interface IConditionOptions {
 }
 
 export class ConditionMongoDbParser {
-  protected condition?: Condition
+  protected condition?: ConditionDepricated
 
-  constructor(condition?: Condition) {
+  constructor(condition?: ConditionDepricated) {
     this.condition = condition
   }
 
@@ -29,35 +28,34 @@ export class ConditionMongoDbParser {
         const type = condValues.shift()
 
         switch (type) {
-          case Condition.EQUALS:
-            logger.info(condValues[0])
+          case ConditionDepricated.EQUALS:
             result[condValues[0]] = Array.isArray(condValues[1]) ? { $in: condValues[1] } : condValues[1]
             break
-          case Condition.NOT_EQUALS:
+          case ConditionDepricated.NOT_EQUALS:
             result[condValues[0]] = Array.isArray(condValues[1]) ? { $nin: condValues[1] } : { $ne: condValues[1] }
             break
-          case Condition.LESS_THAN:
+          case ConditionDepricated.LESS_THAN:
             result[condValues[0]] = { $lt: condValues[1] }
             break
-          case Condition.GREATER_THAN:
+          case ConditionDepricated.GREATER_THAN:
             result[condValues[0]] = { $gt: condValues[1] }
             break
-          case Condition.LESS_OR_EQUALS:
+          case ConditionDepricated.LESS_OR_EQUALS:
             result[condValues[0]] = { $lte: condValues[1] }
             break
-          case Condition.GREATER_OR_EQUALS:
+          case ConditionDepricated.GREATER_OR_EQUALS:
             result[condValues[0]] = { $gte: condValues[1] }
             break
-          case Condition.BETWEEN:
+          case ConditionDepricated.BETWEEN:
             result[condValues[0]] = {
               $gte: condValues[1][0],
               $lte: condValues[1][1],
             }
             break
-          case Condition.LIKE:
+          case ConditionDepricated.LIKE:
             result[condValues[0]] = { $regex: condValues[1], $options: 'i' }
             break
-          case Condition.IN:
+          case ConditionDepricated.IN:
             result[condValues[0]] = { $in: Object.values(condValues[1]) }
             break
         }

@@ -1,5 +1,6 @@
 import Knex from 'knex'
-import { Condition } from '../../Condition'
+import { Condition, TConditionOperator, IConditionItem, IConditionItemList, TConditionLogic } from '../../Condition'
+import { isInstanceOf } from '../../../utils/common'
 
 interface IConditionOptions {
   limit?: number
@@ -13,7 +14,10 @@ export class ConditionDbParser {
       return
     }
 
-    this.parseCondition(queryBuilder, condition)
+    const conditionItemList = condition.getConditionItemList()
+    if (conditionItemList) {
+      this.parseConditionItemList(queryBuilder, conditionItemList)
+    }
 
     const options = this.options(condition)
 
@@ -32,62 +36,100 @@ export class ConditionDbParser {
     }
   }
 
-  protected parseCondition(queryBuilder: Knex.QueryBuilder, condition: Condition) {
-    for (const cond of condition.getConditions()) {
-      if (!Array.isArray(cond)) {
-        continue
+  protected parseConditionItemList(queryBuilder: Knex.QueryBuilder, conditionItemList: IConditionItemList, itemListLogic: TConditionLogic = 'and') {
+    const logic: TConditionLogic = itemListLogic || conditionItemList.logic
+    if (conditionItemList) {
+      if (logic === 'and') {
+        queryBuilder.andWhere(query => {
+          this.parseConditions(query, conditionItemList)
+        })
       }
 
-      const condValues = Object.values(cond)
-      const type = condValues.shift()
-
-      switch (type) {
-        case Condition.EQUALS:
-          this.parseSimpleCondition(queryBuilder, '=', cond)
-          break
-        case Condition.NOT_EQUALS:
-          this.parseSimpleCondition(queryBuilder, '<>', cond)
-          break
-        case Condition.LESS_THAN:
-          this.parseSimpleCondition(queryBuilder, '<', cond)
-          break
-        case Condition.GREATER_THAN:
-          this.parseSimpleCondition(queryBuilder, '>', cond)
-          break
-        case Condition.LESS_OR_EQUALS:
-          this.parseSimpleCondition(queryBuilder, '<=', cond)
-          break
-        case Condition.GREATER_OR_EQUALS:
-          this.parseSimpleCondition(queryBuilder, '>=', cond)
-          break
-        case Condition.BETWEEN:
-          this.parseBetweenCondition(queryBuilder, cond)
-          break
-        case Condition.LIKE:
-          this.parseLikeCondition(queryBuilder, cond)
-          break
-        case Condition.IN:
-          this.parseInCondition(queryBuilder, cond)
-          break
+      if (logic === 'or') {
+        queryBuilder.orWhere(query => {
+          this.parseConditions(query, conditionItemList)
+        })
       }
     }
   }
 
-  protected parseInCondition(queryBuilder: Knex.QueryBuilder, condition: any[]) {
-    queryBuilder.whereIn(condition[1], condition[2])
+  protected parseConditions(queryBuilder: Knex.QueryBuilder, conditionItemList: IConditionItemList) {
+    for (const cond of conditionItemList.conditions) {
+      if (isInstanceOf<IConditionItemList>(cond, 'conditions')) {
+        this.parseConditionItemList(queryBuilder, cond, conditionItemList.logic)
+      } else {
+        this.parseCondition(queryBuilder, cond, conditionItemList.logic)
+      }
+    }
   }
 
-  protected parseLikeCondition(queryBuilder: Knex.QueryBuilder, condition: any[]) {
-    const value = `%${condition[2]}%`
-    queryBuilder.andWhere(condition[1], 'like', value)
+  protected parseCondition(queryBuilder: Knex.QueryBuilder, condition: IConditionItem, logic: TConditionLogic = 'and') {
+    switch (condition.operator) {
+      case TConditionOperator.EQUALS:
+        this.parseSimpleCondition(queryBuilder, '=', condition, logic)
+        break
+      case TConditionOperator.NOT_EQUALS:
+        this.parseSimpleCondition(queryBuilder, '<>', condition, logic)
+        break
+      case TConditionOperator.LESS_THAN:
+        this.parseSimpleCondition(queryBuilder, '<', condition, logic)
+        break
+      case TConditionOperator.GREATER_THAN:
+        this.parseSimpleCondition(queryBuilder, '>', condition, logic)
+        break
+      case TConditionOperator.LESS_OR_EQUALS:
+        this.parseSimpleCondition(queryBuilder, '<=', condition, logic)
+        break
+      case TConditionOperator.GREATER_OR_EQUALS:
+        this.parseSimpleCondition(queryBuilder, '>=', condition, logic)
+        break
+      case TConditionOperator.BETWEEN:
+        this.parseBetweenCondition(queryBuilder, condition, logic)
+        break
+      case TConditionOperator.LIKE:
+        this.parseLikeCondition(queryBuilder, condition, logic)
+        break
+      case TConditionOperator.IN:
+        this.parseInCondition(queryBuilder, condition, logic)
+        break
+    }
   }
 
-  protected parseBetweenCondition(queryBuilder: Knex.QueryBuilder, condition: any[]) {
-    queryBuilder.andWhereBetween(condition[1], [condition[2][0], condition[2][1]])
+  protected parseInCondition(queryBuilder: Knex.QueryBuilder, condition: IConditionItem, logic: TConditionLogic) {
+    if (Array.isArray(condition.value)) {
+      if (logic === 'and') {
+        queryBuilder.whereIn(condition.field, condition.value)
+      } else {
+        queryBuilder.orWhereIn(condition.field, condition.value)
+      }
+    }
   }
 
-  protected parseSimpleCondition(queryBuilder: Knex.QueryBuilder, exr: string, condition: any[]) {
-    queryBuilder.andWhere(condition[1], exr, condition[2])
+  protected parseLikeCondition(queryBuilder: Knex.QueryBuilder, condition: IConditionItem, logic: TConditionLogic) {
+    const value = `%${condition.value}%`
+    if (logic === 'and') {
+      queryBuilder.andWhere(condition.field, 'like', value)
+    } else {
+      queryBuilder.orWhere(condition.field, 'like', value)
+    }
+  }
+
+  protected parseBetweenCondition(queryBuilder: Knex.QueryBuilder, condition: IConditionItem, logic: TConditionLogic) {
+    if (Array.isArray(condition.value)) {
+      if (logic === 'and') {
+        queryBuilder.andWhereBetween(condition.field, [condition.value[0], condition.value[1]])
+      } else {
+        queryBuilder.orWhereBetween(condition.field, [condition.value[0], condition.value[1]])
+      }
+    }
+  }
+
+  protected parseSimpleCondition(queryBuilder: Knex.QueryBuilder, exr: string, condition: IConditionItem, logic: TConditionLogic) {
+    if (logic === 'and') {
+      queryBuilder.andWhere(condition.field, exr, condition.value)
+    } else {
+      queryBuilder.orWhere(condition.field, exr, condition.value)
+    }
   }
 
   protected options(condition: Condition) {
