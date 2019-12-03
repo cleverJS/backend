@@ -1,8 +1,9 @@
+import { ConditionDbParserDepricated } from './ConditionDbParserDepricated'
+import Knex from 'knex'
 import { ConditionDepricated } from '../../ConditionDepricated'
-import { ConditionMongoDbParser } from './ConditionMongoDbParser'
 
 describe('Test Conditions', () => {
-  it('should create a condition', () => {
+  it('should create a mysql condition', () => {
     const condition = new ConditionDepricated()
     condition.addEqualsCondition('a', 1)
     condition.addNotEqualsCondition('b', 2)
@@ -18,23 +19,15 @@ describe('Test Conditions', () => {
     condition.offset(5)
     condition.limit(15)
 
-    const parser = new ConditionMongoDbParser(condition)
-    expect({
-      a: 1,
-      b: { $ne: 2 },
-      c: { $lt: 3 },
-      d: { $gt: 4 },
-      e: { $lte: 5 },
-      f: { $gte: 6 },
-      g: { $gte: 7, $lte: 8 },
-      h: { $in: [9, 10] },
-      i: { $regex: 'asd', $options: 'i' },
-    }).toEqual(parser.filter())
-
-    expect({
-      limit: 15,
-      offset: 5,
-      sorts: [{ sort: 's1', dir: 'asc' }, { sort: 's2', dir: 'desc' }],
-    }).toEqual(parser.options())
+    const parser = new ConditionDbParserDepricated()
+    const queryBuilder = Knex({
+      client: 'mysql',
+    })
+    const qb = queryBuilder('test')
+    parser.parse(qb, condition)
+    expect(qb.toQuery()).toEqual(
+      // tslint:disable-next-line:max-line-length
+      "select * from `test` where `a` = 1 and `b` <> 2 and `c` < 3 and `d` > 4 and `e` <= 5 and `f` >= 6 and `g` between 7 and 8 and `h` in (9, 10) and `i` like '%asd%' order by `s1` asc, `s2` desc limit 15 offset 5"
+    )
   })
 })

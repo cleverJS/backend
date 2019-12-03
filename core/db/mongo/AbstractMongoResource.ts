@@ -1,6 +1,5 @@
 import { Mongo } from './Mongo'
 import { Db, InsertOneWriteOpResult, ObjectId } from 'mongodb'
-import { Condition } from '../Condition'
 import { ConditionMongoDbParser } from './condition/ConditionMongoDbParser'
 import { AbstractResource } from '../AbstractResource'
 import { logger } from '../../logger/logger'
@@ -8,6 +7,7 @@ import { AbstractEntity } from '../../entity/AbstractEntity'
 import { EntityFactory } from '../../entity/EntityFactory'
 import { AbstractObject } from '../../AbstractObject'
 
+// TODO: change any to Condition after ConditionMongoDbParser refactoring
 export abstract class AbstractMongoResource<T extends AbstractEntity<AbstractObject>> extends AbstractResource<T> {
   protected collectionName: string = ''
   protected db: Promise<Db | null>
@@ -31,7 +31,7 @@ export abstract class AbstractMongoResource<T extends AbstractEntity<AbstractObj
     return result
   }
 
-  public async findOne(condition: Condition) {
+  public async findOne(condition: any) {
     let result: T | null = null
 
     const db = await this.db
@@ -49,7 +49,7 @@ export abstract class AbstractMongoResource<T extends AbstractEntity<AbstractObj
     return result
   }
 
-  public async findAll(condition: Condition) {
+  public async findAll(condition: any) {
     const result: T[] = []
 
     const db = await this.db
@@ -69,7 +69,7 @@ export abstract class AbstractMongoResource<T extends AbstractEntity<AbstractObj
     return result
   }
 
-  public async count(condition?: Condition) {
+  public async count(condition?: any) {
     const db = await this.db
     if (db) {
       const conditionMongoDbParser = new ConditionMongoDbParser(condition)
@@ -122,7 +122,7 @@ export abstract class AbstractMongoResource<T extends AbstractEntity<AbstractObj
     return true
   }
 
-  public async deleteAll(condition?: Condition) {
+  public async deleteAll(condition?: any) {
     let result = null
     const db = await this.db
     if (db) {

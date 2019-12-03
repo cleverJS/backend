@@ -54,6 +54,10 @@ class FileResourceStub extends AbstractResource<File> {
     return data
   }
 
+  public mapToDB(data: any) {
+    return data
+  }
+
   public createEntity(data: AbstractObject): File {
     return this.entityFactory.create(data)
   }

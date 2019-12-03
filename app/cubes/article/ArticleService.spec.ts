@@ -37,7 +37,7 @@ describe('ArticleService', () => {
       resource: articleResourceSql,
     })
 
-    const result = await service.findOne(new Condition([]))
+    const result = await service.findOne(new Condition())
     console.log(result)
   })
 })
