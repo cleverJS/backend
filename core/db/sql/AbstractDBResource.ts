@@ -53,18 +53,7 @@ export abstract class AbstractDBResource<T extends AbstractEntity<AbstractObject
       logger.error(e)
     }
 
-    const result = []
-    if (rows.length) {
-      for (const row of rows) {
-        try {
-          const entity = this.createEntity(this.map(row))
-          result.push(entity)
-        } catch (e) {
-          logger.error(e)
-        }
-      }
-    }
-    return result
+    return this.createEntityList(rows)
   }
 
   public async count(condition?: Condition) {
@@ -93,15 +82,14 @@ export abstract class AbstractDBResource<T extends AbstractEntity<AbstractObject
     try {
       const data = this.mapToDB(item)
       if (data) {
-        // TODO: Is it necessary to clone data before delete id ?
-        const dbData = { ...data }
+        delete data[this.primaryKey]
         if (item.id) {
           const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: this.primaryKey, value: item.id }] })
-          return this.update(condition, dbData)
+          return this.update(condition, data)
         }
 
         const queryBuilder = this.connection(this.table)
-        const result = await queryBuilder.insert(dbData).returning(this.primaryKey)
+        const result = await queryBuilder.insert(data).returning(this.primaryKey)
         if (result) {
           item.id = result[0]
         }
@@ -152,6 +140,21 @@ export abstract class AbstractDBResource<T extends AbstractEntity<AbstractObject
 
   public createEntity(data: any) {
     return this.entityFactory.create(data)
+  }
+
+  protected createEntityList(rows: any[]) {
+    const result = []
+    if (rows.length) {
+      for (const row of rows) {
+        try {
+          const entity = this.createEntity(this.map(row))
+          result.push(entity)
+        } catch (e) {
+          logger.error(e)
+        }
+      }
+    }
+    return result
   }
 
   protected map(data: AbstractObject): any {
