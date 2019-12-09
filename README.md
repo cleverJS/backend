@@ -28,5 +28,4 @@ In src/configs/keys/https
 Node parameters: `--require ts-node/register --require tsconfig-paths/register`
 
 Working directory: `<PATH TO PROJECT DIRECTORY>`
-
 JavaScript file: `app/index.ts`
