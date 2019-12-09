@@ -34,10 +34,12 @@ export class ArticleController {
 
   private actionWSTest = async (request: WSRequest) => {
     console.log(request)
-    this.deps.wsServer.broadcast(connection => {
-      console.log(connection.id)
-      return Promise.resolve(new WSResponse({ service: 'article', action: 'save', type: 'event' }, { item: 1 }))
-    }).catch(logger.error)
+    this.deps.wsServer
+      .broadcast(connection => {
+        console.log(connection.id)
+        return Promise.resolve(new WSResponse({ service: 'article', action: 'save', type: 'event' }, { item: 1 }))
+      })
+      .catch(logger.error)
 
     return {
       status: 'success',
@@ -60,12 +62,15 @@ export class ArticleController {
 
   private actionGet = async (request: FastifyRequest, response: FastifyReply<ServerResponse>) => {
     logger.info(request)
-    const result = await this.deps.articleService.findById('5d47fe7f8246db8ab76b475e')
+    const factory = new EntityFactory(Article, Article.cast)
 
     response.send({
       status: 'success',
       data: {
-        article: result,
+        article: factory.create({
+          title: 'News',
+          author: 'Noname',
+        }),
       },
     })
   }
@@ -78,13 +83,15 @@ export class ArticleController {
 
     const result = await this.deps.articleService.save(item)
 
-    this.deps.wsServer.broadcast(connection => {
-      if (connection.state.hasOwnProperty('token')) {
-        return Promise.resolve(new WSResponse({ service: 'article', action: 'save', type: 'event' }, { item: result }))
-      }
+    this.deps.wsServer
+      .broadcast(connection => {
+        if (connection.state.hasOwnProperty('token')) {
+          return Promise.resolve(new WSResponse({ service: 'article', action: 'save', type: 'event' }, { item: result }))
+        }
 
-      return Promise.resolve(null)
-    }).catch(logger.error)
+        return Promise.resolve(null)
+      })
+      .catch(logger.error)
 
     return {
       hello: 'Create item',

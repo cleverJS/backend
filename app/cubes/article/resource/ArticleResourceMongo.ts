@@ -23,4 +23,8 @@ export class ArticleResourceMongo extends AbstractMongoResource<Article> {
   protected map(data: AbstractObject): typeof ArticleResourceMongo.scheme {
     return morphism(ArticleResourceMongo.scheme, data) as any
   }
+
+  protected mapToDB(item: Article): any {
+    return item.getData()
+  }
 }

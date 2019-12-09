@@ -14,6 +14,7 @@ export const defaults: ISettings = {
 
   http: {
     port: 8000,
+    host: '0.0.0.0',
   },
 
   mongodb: {
@@ -37,13 +38,5 @@ export const defaults: ISettings = {
     host: 'localhost',
     port: 6379,
     db: 0,
-  },
-
-  security: {
-    jwtToken: {
-      privateKey: path.join(__dirname, './keys/default/rs256.key'),
-      publicKey: path.join(__dirname, './keys/default/rs256.pub.key'),
-      algorithm: 'RS512',
-    },
   },
 }
