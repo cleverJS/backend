@@ -82,9 +82,7 @@ describe('Test FileService', () => {
 
     const item = await service.createFileFromPath('https://bsstc.com.au/assets/play-posters/The-Lighthouse-Girl-high-res.jpg')
 
-    expect(item).not.toBeUndefined()
     if (item) {
-      expect(item.id).not.toBeNull()
       expect(fs.existsSync(item.getFilePath())).toBeTruthy()
 
       fileResource.findById = jest.fn(() => {
@@ -110,7 +108,6 @@ describe('Test FileService', () => {
 
     expect(item).not.toBeUndefined()
     if (item) {
-      expect(item.id).not.toBeNull()
       expect(item.code).toEqual('code1')
       expect(item.mime).toEqual('image/gif')
       expect(item.sort).toEqual(110)

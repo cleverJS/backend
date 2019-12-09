@@ -1,10 +1,10 @@
 import { logger } from '../logger/logger'
 import { AbstractObject } from '../AbstractObject'
 
-export abstract class AbstractEntity<T extends AbstractObject> {
-  public id: string | number = ''
+export abstract class AbstractEntity<TypeData extends AbstractObject> {
+  public id: any = null
 
-  public setData(data: T) {
+  public setData(data: TypeData) {
     const properties: any = []
     if (data) {
       for (const key in data) {
@@ -20,7 +20,7 @@ export abstract class AbstractEntity<T extends AbstractObject> {
     Object.assign(this, properties)
   }
 
-  public getData(): T {
+  public getData(): TypeData {
     const data: any = {}
     for (const key in this) {
       if (this.hasOwnProperty(key)) {

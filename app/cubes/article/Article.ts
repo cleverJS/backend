@@ -2,24 +2,21 @@ import { AbstractEntity } from '../../../core/entity/AbstractEntity'
 import * as yup from 'yup'
 import { AbstractObject } from '../../../core/AbstractObject'
 
-interface IArticleData extends AbstractObject {
-  title: string
-  author: string
-}
+const scheme = yup.object().shape({
+  id: yup.number(),
+  title: yup.string(),
+  author: yup.string(),
+  content: yup.string(),
+})
 
-export class Article extends AbstractEntity<IArticleData> implements IArticleData {
+type TArticle = yup.InferType<typeof scheme>
+
+export class Article extends AbstractEntity<TArticle> implements TArticle {
   public title = ''
   public author = ''
+  public content = ''
 
-  public static cast(data: AbstractObject): IArticleData {
-    return yup
-      .object()
-      .shape({
-        id: yup.string(),
-        title: yup.string(),
-        author: yup.string(),
-      })
-      .noUnknown()
-      .cast(data)
+  public static cast(data: AbstractObject): TArticle {
+    return scheme.noUnknown().cast(data)
   }
 }
