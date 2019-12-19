@@ -1,5 +1,9 @@
+import Knex from 'knex'
 import path from 'path'
 import { ISettings } from './SettingsInterface'
+import * as connections from '../../knexfile'
+
+const knexConfig = (connections as any)[process.env.NODE_ENV || 'development'] as Knex.Config
 
 export const defaults: ISettings = {
   baseDir: path.resolve(`${__dirname}/../`),
@@ -22,12 +26,7 @@ export const defaults: ISettings = {
     db: 'backend',
   },
 
-  db: {
-    user: '',
-    password: '',
-    server: '',
-    database: '',
-  },
+  connection: knexConfig,
 
   websocket: {
     keepalive: 60 * 1000,

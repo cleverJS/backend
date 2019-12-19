@@ -51,6 +51,7 @@ export abstract class AbstractDBResource<T extends AbstractEntity<AbstractObject
       rows = await queryBuilder.select()
     } catch (e) {
       logger.error(e)
+      throw e
     }
 
     return this.createEntityList(rows)
@@ -96,7 +97,7 @@ export abstract class AbstractDBResource<T extends AbstractEntity<AbstractObject
       }
     } catch (e) {
       logger.error(e)
-      return false
+      throw e
     }
 
     return true
@@ -110,20 +111,21 @@ export abstract class AbstractDBResource<T extends AbstractEntity<AbstractObject
       return result > 0
     } catch (e) {
       logger.error(e)
+      throw e
     }
-
-    return false
   }
 
   public async truncate() {
     const queryBuilder = this.connection(this.table)
+    let result
     try {
-      return await queryBuilder.truncate()
+      result = await queryBuilder.truncate()
     } catch (e) {
       logger.error(e)
+      throw e
     }
 
-    return null
+    return result
   }
 
   public async delete(id: string) {
@@ -151,6 +153,7 @@ export abstract class AbstractDBResource<T extends AbstractEntity<AbstractObject
           result.push(entity)
         } catch (e) {
           logger.error(e)
+          throw e
         }
       }
     }

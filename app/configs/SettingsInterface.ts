@@ -3,6 +3,7 @@ import { IMongoConfig } from '../../core/db/mongo/config'
 import { IWSConfig } from '../../core/ws/config'
 import { IRedisConfig } from '../../core/db/redis/config'
 import { ILoggerConfig } from '../../core/logger/config'
+import Knex from 'knex'
 
 export interface ISettings {
   baseDir: string
@@ -14,11 +15,5 @@ export interface ISettings {
   websocket: IWSConfig
   mongodb: IMongoConfig
   redis: IRedisConfig
-
-  db: {
-    user: string
-    password: string
-    server: string
-    database: string
-  }
+  connection: Knex.Config
 }

@@ -17,6 +17,7 @@ export abstract class AbstractResource<T extends AbstractEntity<AbstractObject>>
   public abstract save(item: T): Promise<boolean>
   public abstract delete(id: string): Promise<boolean>
   public abstract deleteAll(condition: Condition): Promise<boolean>
+  public abstract truncate(): Promise<any>
   public abstract createEntity(data: any): T
   protected abstract map(data: AbstractObject): any
   protected abstract mapToDB(item: T): any

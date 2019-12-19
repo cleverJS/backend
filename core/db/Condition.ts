@@ -24,8 +24,8 @@ export interface IConditionItem {
 }
 
 export class Condition {
-  protected readonly conditionItemList?: IConditionItemList
-  protected sort: {sort: string, dir: TSortDirection}[] = []
+  protected conditionItemList?: IConditionItemList
+  protected sort: { sort: string; dir: TSortDirection }[] = []
   protected offsetValue?: number
   protected limitValue?: number
 
@@ -83,6 +83,20 @@ export class Condition {
 
   public getLimit() {
     return this.limitValue
+  }
+
+  public addCondition(conditionItemList: IConditionItemList, logic: TConditionLogic = 'and') {
+    if (this.conditionItemList) {
+      this.conditionItemList = {
+        logic,
+        conditions: [this.conditionItemList, conditionItemList],
+      }
+    } else {
+      this.conditionItemList = {
+        logic,
+        conditions: [conditionItemList],
+      }
+    }
   }
 
   public clone() {
