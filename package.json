@@ -1,6 +1,6 @@
 {
   "name": "backend",
-  "version": "1.0.0",
+  "version": "1.0.5",
   "description": "API",
   "author": "",
   "license": "MIT",
@@ -11,7 +11,7 @@
     "docs": "npx jsdoc -p -r -c ./jsdoc.conf.json -d ./docs ./README.md .",
     "test": "jest --detectOpenHandles",
     "test:cov": "jest --coverage",
-    "postinstall": "tsc -d"
+    "postinstall": "tsc -d && ts-node -T core/info.ts"
   },
   "dependencies": {
     "@types/fs-extra": "^8.0.1",

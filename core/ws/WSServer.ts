@@ -136,7 +136,7 @@ class WSServer {
       try {
         requestObject = JSON.parse(message)
       } catch (e) {
-        const errorResponse = WSResponse.fromRequest(requestObject)
+        const errorResponse = WSResponse.fromRequest(requestObject, 'error')
         errorResponse.error = e.message || 'System error'
         this.logger.error('request parse error:', e)
         this.send(id, errorResponse)
@@ -144,7 +144,7 @@ class WSServer {
       }
 
       if (typeof requestObject !== 'object') {
-        const errorResponse = WSResponse.fromRequest(requestObject)
+        const errorResponse = WSResponse.fromRequest(requestObject, 'error')
         errorResponse.error = 'HttpClient must be a serialized object'
         this.logger.error('request type error:', requestObject)
         this.send(id, errorResponse)
@@ -160,7 +160,7 @@ class WSServer {
           if (handler.validator) {
             const validationResult = await handler.validator(request)
             if (validationResult.status !== 'success') {
-              const errorResponse = WSResponse.fromRequest(requestObject)
+              const errorResponse = WSResponse.fromRequest(requestObject, 'error')
               errorResponse.error = validationResult.message || ''
               this.logger.error('request type error:', requestObject)
               this.send(id, errorResponse)
@@ -173,8 +173,13 @@ class WSServer {
           this.send(id, response)
         }
       } catch (e) {
-        const errorResponse = WSResponse.fromRequest(requestObject)
-        errorResponse.error = e.message || 'System error'
+        const errorResponse = WSResponse.fromRequest(requestObject, 'error')
+        if (process.env.NODE_ENV === 'production') {
+          errorResponse.error = 'System error'
+        } else {
+          errorResponse.error = e.message || 'System error'
+        }
+
         this.logger.error('request validate error:', e)
         this.send(id, errorResponse)
         return

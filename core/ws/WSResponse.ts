@@ -1,7 +1,7 @@
 import * as yup from 'yup'
 import { IWSRequest } from './WSRequest'
 
-type ResponseType = 'response' | 'event'
+type ResponseType = 'response' | 'event' | 'error'
 
 interface IWSResponseHeader {
   uuid?: string
