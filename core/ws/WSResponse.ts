@@ -1,7 +1,8 @@
 import * as yup from 'yup'
 import { IWSRequest } from './WSRequest'
 
-type ResponseType = 'response' | 'event' | 'error'
+const types = ['response', 'event', 'error'] as ['response', 'event', 'error']
+type ResponseType = typeof types[number]
 
 interface IWSResponseHeader {
   uuid?: string
@@ -32,15 +33,24 @@ export class WSResponse implements IWSResponse {
   /**
    */
   public validate() {
-    yup.object().shape({
-      header: yup.object().shape({
-        uuid: yup.string(),
-        service: yup.string().required(),
-        action: yup.string().required(),
-        type: yup.string().oneOf(['response', 'event']).required(),
-      }).required(),
-      payload: yup.object().required(),
-    }).validateSync(this)
+    yup
+      .object()
+      .shape({
+        header: yup
+          .object()
+          .shape({
+            uuid: yup.string(),
+            service: yup.string().required(),
+            action: yup.string().required(),
+            type: yup
+              .string()
+              .oneOf(types)
+              .required(),
+          })
+          .required(),
+        payload: yup.object().required(),
+      })
+      .validateSync(this)
   }
 
   /**
