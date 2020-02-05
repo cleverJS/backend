@@ -1,6 +1,3 @@
-# Resource
-
-```typescript
 import { AbstractDBResource } from '../../../../core/db/sql/AbstractDBResource'
 import { AbstractObject } from '../../../../core/AbstractObject'
 import { Article } from '../Article'
@@ -33,7 +30,3 @@ export class ArticleResource extends AbstractDBResource<Article> {
     return morphism(ArticleResource.schemeToDB, item.getData())
   }
 }
-
-```
-
-Method map is used for transform keys and values of raw data from external source. 

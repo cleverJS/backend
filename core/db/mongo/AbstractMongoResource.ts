@@ -135,6 +135,8 @@ export abstract class AbstractMongoResource<T extends AbstractEntity<AbstractObj
     return true
   }
 
+  public async truncate() {}
+
   public createEntity(record: any) {
     return this.entityFactory.create(this.map(record))
   }

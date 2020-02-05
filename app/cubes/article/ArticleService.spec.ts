@@ -1,5 +1,5 @@
 import { ArticleService } from './ArticleService'
-import { ArticleResourceSql } from './resource/ArticleResourceSql'
+import { ArticleResource } from './resource/ArticleResource'
 import { EntityFactory } from '../../../core/entity/EntityFactory'
 import { ConditionDbParser } from '../../../core/db/sql/condition/ConditionDbParser'
 import { Article } from './Article'
@@ -10,7 +10,7 @@ describe('ArticleService', () => {
   it('should sign up and sign in', async () => {
     const connection: Knex = jest.genMockFromModule('knex')
     const conditionDbParser = new ConditionDbParser()
-    const articleResourceSql = new ArticleResourceSql(connection, conditionDbParser, new EntityFactory(Article, Article.cast))
+    const articleResourceSql = new ArticleResource(connection, conditionDbParser, new EntityFactory(Article, Article.cast))
     const spyInstance = jest.spyOn(articleResourceSql, 'findOne')
 
     spyInstance.mockImplementation(() => {

@@ -1,12 +1,13 @@
-import { ArticleResourceMongo } from './cubes/article/resource/ArticleResourceMongo'
 import { EntityFactory } from '../core/entity/EntityFactory'
 import { Article } from './cubes/article/Article'
-import { Mongo } from '../core/db/mongo/Mongo'
+import Knex from 'knex'
+import { ArticleResource } from './cubes/article/resource/ArticleResource'
+import { ConditionDbParser } from '../core/db/sql/condition/ConditionDbParser'
 
 export class ResourceContainer {
-  public readonly articleResource: ArticleResourceMongo
+  public readonly articleResource: ArticleResource
 
-  constructor(mongo: Mongo) {
-    this.articleResource = new ArticleResourceMongo(mongo, new EntityFactory(Article, Article.cast))
+  constructor(connection: Knex) {
+    this.articleResource = new ArticleResource(connection, new ConditionDbParser(), new EntityFactory(Article, Article.cast))
   }
 }

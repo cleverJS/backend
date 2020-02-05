@@ -20,6 +20,15 @@ class FileResourceStub extends AbstractResource<File> {
     return Promise.resolve([])
   }
 
+  public findAllRaw(condition: Condition) {
+    logger.info(condition)
+    return Promise.resolve([])
+  }
+
+  public truncate() {
+    return Promise.resolve(false)
+  }
+
   public findOne(condition: Condition) {
     logger.info(condition)
     return Promise.resolve(null)

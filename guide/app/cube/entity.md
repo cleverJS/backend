@@ -3,39 +3,26 @@ An object that is not defined by its attributes,
 but rather by a thread of continuity and its [identity](https://en.wikipedia.org/wiki/Identity_(object-oriented_programming)).
 
 ```typescript
-import { AbstractEntity, IAbstractEntityData } from '../../../core/entity/AbstractEntity'
+import { AbstractEntity } from '../../../core/entity/AbstractEntity'
+import { AbstractObject } from '../../../core/AbstractObject'
 import * as yup from 'yup'
 
-export interface IArticleData extends IAbstractEntityData {
-  title: string
-  author: string
-}
+const scheme = yup.object().shape({
+  id: yup.number(),
+  title: yup.string(),
+  author: yup.string(),
+  content: yup.string(),
+})
 
-export class Article extends AbstractEntity implements IArticleData {
+type TArticle = yup.InferType<typeof scheme>
+
+export class Article extends AbstractEntity<TArticle> implements TArticle {
   public title = ''
   public author = ''
+  public content = ''
 
-  public getData(): IArticleData {
-    const data: any = {}
-    for (const key in this) {
-      if (this.hasOwnProperty(key)) {
-        data[key] = this[key]
-      }
-    }
-
-    return Article.cast(data)
-  }
-
-  public static cast(data: IArticleData) {
-    return yup
-      .object()
-      .shape({
-        id: yup.string(),
-        title: yup.string(),
-        author: yup.string(),
-      })
-      .noUnknown()
-      .cast(data)
+  public static cast(data: AbstractObject): TArticle {
+    return scheme.noUnknown().cast(data)
   }
 }
 ```

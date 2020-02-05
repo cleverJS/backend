@@ -19,18 +19,12 @@ export abstract class AbstractDBResource<T extends AbstractEntity<AbstractObject
     this.conditionParser = conditionParser
   }
 
-  public async findById(id: string) {
+  public async findById(id: string): Promise<T | null> {
     const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: this.primaryKey, value: id }] })
-    const result = await this.findOne(condition)
-
-    if (result) {
-      return result
-    }
-
-    return null
+    return this.findOne(condition)
   }
 
-  public async findOne(condition: Condition) {
+  public async findOne(condition: Condition): Promise<T | null> {
     const nextCondition = condition.clone()
     nextCondition.offset(0)
     nextCondition.limit(1)
@@ -42,7 +36,12 @@ export abstract class AbstractDBResource<T extends AbstractEntity<AbstractObject
     return null
   }
 
-  public async findAll(condition: Condition) {
+  public async findAll(condition: Condition): Promise<T[]> {
+    const rows = await this.findAllRaw(condition)
+    return this.createEntityList(rows)
+  }
+
+  public async findAllRaw(condition: Condition) {
     const queryBuilder = this.connection(this.table)
     this.conditionParser.parse(queryBuilder, condition)
 
@@ -54,10 +53,10 @@ export abstract class AbstractDBResource<T extends AbstractEntity<AbstractObject
       throw e
     }
 
-    return this.createEntityList(rows)
+    return rows
   }
 
-  public async count(condition?: Condition) {
+  public async count(condition?: Condition): Promise<number | null> {
     let conditionClone: Condition | undefined
     if (condition) {
       conditionClone = condition.clone()
@@ -144,7 +143,7 @@ export abstract class AbstractDBResource<T extends AbstractEntity<AbstractObject
     return this.entityFactory.create(data)
   }
 
-  protected createEntityList(rows: any[]) {
+  public createEntityList(rows: any[]) {
     const result = []
     if (rows.length) {
       for (const row of rows) {

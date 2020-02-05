@@ -27,6 +27,10 @@ export abstract class AbstractService<T extends AbstractEntity<AbstractObject>> 
     return this.deps.resource.findAll(condition)
   }
 
+  public async findAllRaw(condition: Condition) {
+    return this.deps.resource.findAllRaw(condition)
+  }
+
   public async count(condition?: Condition) {
     return this.deps.resource.count(condition)
   }
@@ -43,17 +47,30 @@ export abstract class AbstractService<T extends AbstractEntity<AbstractObject>> 
     return this.deps.resource.save(item)
   }
 
+  public createEntity(data: Partial<T>) {
+    return this.deps.resource.createEntity(data)
+  }
+
   public async list(paginator: Paginator, condition: Condition) {
+    const nextCondition = await this.prepareListCondition(paginator, condition)
+    return this.findAll(nextCondition)
+  }
+
+  public async listRaw(paginator: Paginator, condition: Condition) {
+    const nextCondition = await this.prepareListCondition(paginator, condition)
+    return this.findAllRaw(nextCondition)
+  }
+
+  protected async prepareListCondition(paginator: Paginator, condition: Condition) {
+    const nextCondition = condition.clone()
     let total = paginator.getTotal()
     if (!total) {
-      total = await this.count(condition) || 0
-      if (!total) {
-        return []
-      }
+      total = (await this.count(condition)) || 0
       paginator.setTotal(total)
     }
-    condition.limit(paginator.getLimit())
-    condition.offset(paginator.getOffset())
-    return this.findAll(condition)
+    nextCondition.limit(paginator.getLimit())
+    nextCondition.offset(paginator.getOffset())
+
+    return nextCondition
   }
 }

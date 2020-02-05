@@ -5,43 +5,30 @@ In cubes folder create Article with the following structure:
 - Article.ts
 - ArticleController.ts
 - ArticleService.ts
-- resource/ArticleResourceSql.ts
+- resource/ArticleResource.ts
 
 Article has the following fields - id, title, author. Describe article entity
 ```typescript
-import { AbstractEntity, IAbstractEntityData } from '../../../core/entity/AbstractEntity'
+import { AbstractEntity } from '../../../core/entity/AbstractEntity'
+import { AbstractObject } from '../../../core/AbstractObject'
 import * as yup from 'yup'
 
-export interface IArticleData extends IAbstractEntityData {
-  title: string
-  author: string
-}
+const scheme = yup.object().shape({
+  id: yup.number(),
+  title: yup.string(),
+  author: yup.string(),
+  content: yup.string(),
+})
 
-export class Article extends AbstractEntity implements IArticleData {
+type TArticle = yup.InferType<typeof scheme>
+
+export class Article extends AbstractEntity<TArticle> implements TArticle {
   public title = ''
   public author = ''
+  public content = ''
 
-  public getData(): IArticleData {
-    const data: any = {}
-    for (const key in this) {
-      if (this.hasOwnProperty(key)) {
-        data[key] = this[key]
-      }
-    }
-
-    return Article.cast(data)
-  }
-
-  public static cast(data: IArticleData) {
-    return yup
-      .object()
-      .shape({
-        id: yup.string(),
-        title: yup.string(),
-        author: yup.string(),
-      })
-      .noUnknown()
-      .cast(data)
+  public static cast(data: AbstractObject): TArticle {
+    return scheme.noUnknown().cast(data)
   }
 }
 ```
@@ -50,13 +37,13 @@ ArticleService. It should contains standard methods for usual CRUD
 (extend it with AbstractService) and also fetching articles by author
 
 ```typescript
-import { AbstractResource } from '../../../core/db/AbstractResource'
 import { Article } from './Article'
 import { AbstractService, IAbstractDependenciesList } from '../../../core/AbstractService'
-import { Condition } from '../../../core/db/Condition'
+import { Condition, TConditionOperator } from '../../../core/db/Condition'
+import { ArticleResource } from './resource/ArticleResource'
 
 export interface IDependenciesList extends IAbstractDependenciesList<Article> {
-  resource: AbstractResource<Article>
+  resource: ArticleResource
 }
 
 export class ArticleService extends AbstractService<Article> {
@@ -67,40 +54,46 @@ export class ArticleService extends AbstractService<Article> {
   }
 
   public async findByAuthor(author: string) {
-    const condition = new Condition([{ operator: Condition.EQUALS, field: 'author', value: author }])
+    const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: 'author', value: author }] })
     return await this.deps.resource.findOne(condition)
   }
 }
 ``` 
 
-ArticleResourceMongo. It contains map which transform keys and values to appropriate
+ArticleResource. It contains map which transform keys and values to appropriate
 entity fields
 
 ```typescript
-import { AbstractMongoResource } from '../../../../core/db/mongo/AbstractMongoResource'
-import { Article, IArticleData } from '../Article'
+import { AbstractDBResource } from '../../../../core/db/sql/AbstractDBResource'
 import { AbstractObject } from '../../../../core/AbstractObject'
+import { Article } from '../Article'
 import { morphism } from 'morphism'
-import { ObjectId } from 'mongodb'
 
-export class ArticleResourceMongo extends AbstractMongoResource<Article> {
-  protected collectionName = 'article'
+export class ArticleResource extends AbstractDBResource<Article> {
+  protected table = 'article'
 
   public static scheme = {
-    id: {
-      path: '_id',
-      fn: (value: ObjectId) => {
-        return value.toHexString()
-      },
-    },
+    id: 'id',
     title: 'title',
-    author: 'author',
+    author: 'Author',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
   }
 
-  protected map(data: AbstractObject): IArticleData {
-    return morphism(ArticleResourceMongo.scheme, data) as any
+  public static schemeToDB = {
+    id: 'id',
+    title: 'title',
+    author: 'Author',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt',
+  }
+
+  protected map(data: AbstractObject): typeof ArticleResource.scheme {
+    return morphism(ArticleResource.scheme, data) as any
+  }
+
+  protected mapToDB(item: Article): any {
+    return morphism(ArticleResource.schemeToDB, item.getData())
   }
 }
 ```
@@ -190,18 +183,20 @@ Register cube in application.
 In `ResourceContainer` initialize `ArticleResource`
 
 ```typescript
-import { ArticleResourceMongo } from './cubes/article/resource/ArticleResourceMongo'
 import { EntityFactory } from '../core/entity/EntityFactory'
 import { Article } from './cubes/article/Article'
-import { Mongo } from '../core/db/mongo/Mongo'
+import Knex from 'knex'
+import { ArticleResource } from './cubes/article/resource/ArticleResource'
+import { ConditionDbParser } from '../core/db/sql/condition/ConditionDbParser'
 
 export class ResourceContainer {
-  public readonly articleResource: ArticleResourceMongo
+  public readonly articleResource: ArticleResource
 
-  constructor(mongo: Mongo) {
-    this.articleResource = new ArticleResourceMongo(mongo, new EntityFactory(Article, Article.cast))
+  constructor(connection: Knex) {
+    this.articleResource = new ArticleResource(connection, new ConditionDbParser(), new EntityFactory(Article, Article.cast))
   }
 }
+
 ```
 
 In `ServiceContainer` initialize `ArticleService`

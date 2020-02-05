@@ -1,10 +1,10 @@
-import { AbstractResource } from '../../../core/db/AbstractResource'
 import { Article } from './Article'
 import { AbstractService, IAbstractDependenciesList } from '../../../core/AbstractService'
 import { Condition, TConditionOperator } from '../../../core/db/Condition'
+import { ArticleResource } from './resource/ArticleResource'
 
 export interface IDependenciesList extends IAbstractDependenciesList<Article> {
-  resource: AbstractResource<Article>
+  resource: ArticleResource
 }
 
 export class ArticleService extends AbstractService<Article> {

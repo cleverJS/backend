@@ -4,7 +4,7 @@ Add dependencies to package.json
 ```json
 {
   "dependencies": {
-    "backendJS": "github:ssaraikin/backend#master"
+    "cleverJS": "github:cleverJS/backend#1.0.6"
   }
 }
 ```
@@ -13,10 +13,10 @@ Add path and include to tsconfig.json
 ```json
 {
     "paths": {
-      "backendJS/*": ["./node_modules/backendJS/build/*"]
+      "cleverJS/*": ["./node_modules/cleverJS/build/*"]
     },
     
-    "include": ["node_modules/backendJS/**/*"]
+    "include": ["node_modules/cleverJS/**/*"]
 }
 ```
 

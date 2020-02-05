@@ -1,6 +1,6 @@
 import { AbstractEntity } from '../../../core/entity/AbstractEntity'
-import * as yup from 'yup'
 import { AbstractObject } from '../../../core/AbstractObject'
+import * as yup from 'yup'
 
 const scheme = yup.object().shape({
   id: yup.number(),

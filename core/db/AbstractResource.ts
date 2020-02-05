@@ -13,6 +13,7 @@ export abstract class AbstractResource<T extends AbstractEntity<AbstractObject>>
   public abstract findById(id: string): Promise<T | null>
   public abstract findOne(condition: Condition): Promise<T | null>
   public abstract findAll(condition: Condition): Promise<T[]>
+  public abstract findAllRaw(condition: Condition): Promise<any[]>
   public abstract count(condition?: Condition): Promise<number | null>
   public abstract save(item: T): Promise<boolean>
   public abstract delete(id: string): Promise<boolean>
