@@ -16,6 +16,7 @@ export abstract class AbstractResource<T extends AbstractEntity<AbstractObject>>
   public abstract findAllRaw(condition: Condition): Promise<any[]>
   public abstract count(condition?: Condition): Promise<number | null>
   public abstract save(item: T): Promise<boolean>
+  public abstract batchInsert(item: T[]): Promise<number[]>
   public abstract delete(id: string): Promise<boolean>
   public abstract deleteAll(condition: Condition): Promise<boolean>
   public abstract truncate(): Promise<any>

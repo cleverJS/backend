@@ -102,6 +102,16 @@ export abstract class AbstractDBResource<T extends AbstractEntity<AbstractObject
     return true
   }
 
+  public async batchInsert(items: T[]) {
+    const rows = items.map(i => {
+      const data = this.mapToDB(i)
+      delete data[this.primaryKey]
+      return data
+    })
+    this.connection.table(this.table)
+    return this.connection.batchInsert(this.table, rows).returning('id')
+  }
+
   public async update(condition: Condition, data: AbstractObject) {
     try {
       const queryBuilder = this.connection(this.table)
