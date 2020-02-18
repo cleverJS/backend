@@ -169,11 +169,11 @@ export abstract class AbstractDBResource<T extends AbstractEntity<AbstractObject
     return result
   }
 
-  protected map(data: AbstractObject): any {
+  public map(data: AbstractObject): any {
     return data
   }
 
-  protected mapToDB(item: T): any {
+  public mapToDB(item: T): any {
     return item.getData()
   }
 }
