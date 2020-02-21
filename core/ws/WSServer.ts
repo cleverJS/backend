@@ -28,13 +28,13 @@ interface IHandlers {
   [EVENT_REQUEST]: Map<string, Request>
 }
 
-class WSServer {
-  private ws: WebSocket.Server | null = null
-  private readonly logger = loggerNamespace('WSServer')
-  private readonly port: number
-  private readonly connections: Map<string, IConnection> = new Map()
-  private readonly keepAliveTimeout: number | null
-  private readonly handlers: IHandlers = {
+export class WSServer {
+  protected ws: WebSocket.Server | null = null
+  protected readonly logger = loggerNamespace('WSServer')
+  protected readonly port: number
+  protected readonly connections: Map<string, IConnection> = new Map()
+  protected readonly keepAliveTimeout: number | null
+  protected readonly handlers: IHandlers = {
     [EVENT_REQUEST]: new Map(),
   }
 
@@ -64,7 +64,7 @@ class WSServer {
    * @param id
    * @param response
    */
-  public send(id: string, response: WSResponse) {
+  public async send(id: string, response: WSResponse) {
     try {
       response.validate()
     } catch (e) {
@@ -111,9 +111,9 @@ class WSServer {
 
   /**
    */
-  private init() {
+  protected init() {
     this.ws = new WebSocket.Server({ port: this.port })
-    this.ws.on('connection', (client: WebSocket) => {
+    this.ws.on('connection', async (client: WebSocket) => {
       const id = uuid()
       const state = {}
       const connection: IConnection = { id, client, state }
@@ -129,7 +129,7 @@ class WSServer {
    * @param id
    * @param client
    */
-  private handleMessage({ id, client }: IConnection) {
+  protected handleMessage({ id, client }: IConnection) {
     client.on('message', async (message: string) => {
       let requestObject: any
 
@@ -157,20 +157,12 @@ class WSServer {
         const key = `${request.header.service}:${request.header.action}`
         const handler = this.handlers[EVENT_REQUEST].get(key)
         if (handler) {
-          if (handler.validator) {
-            const validationResult = await handler.validator(request)
-            if (validationResult.status !== 'success') {
-              const errorResponse = WSResponse.fromRequest(requestObject, 'error')
-              errorResponse.error = validationResult.message || ''
-              this.logger.error('request type error:', requestObject)
-              this.send(id, errorResponse)
-              return
-            }
-          }
-
           const response = WSResponse.fromRequest(requestObject)
-          response.payload = await handler.handler(request, this.getConnection(id))
-          this.send(id, response)
+          handler.handler(request, this.getConnection(id)).then(async payload => {
+            response.payload = payload
+            this.send(id, response)
+          })
+          return
         }
       } catch (e) {
         const errorResponse = WSResponse.fromRequest(requestObject, 'error')
@@ -190,7 +182,7 @@ class WSServer {
   /**
    * @param connection
    */
-  private handleKeepAlive(connection: IConnection) {
+  protected handleKeepAlive(connection: IConnection) {
     if (this.keepAliveTimeout) {
       connection.keepAlive = setInterval(() => {
         connection.client.ping()
@@ -203,13 +195,11 @@ class WSServer {
    * @param client
    * @param keepAlive
    */
-  private handleClose({ id, client, keepAlive }: IConnection) {
-    client.on('close', () => {
+  protected handleClose({ id, client, keepAlive }: IConnection) {
+    client.on('close', async () => {
       keepAlive && clearInterval(keepAlive)
       this.connections.delete(id)
       this.logger.debug('disconnected: ', id)
     })
   }
 }
-
-export { WSServer }
