@@ -1,5 +1,6 @@
 import WebSocket from 'ws'
 import { v4 as uuid } from 'uuid'
+import { EventEmitter } from 'events'
 import { WSRequest } from './WSRequest'
 import { WSResponse } from './WSResponse'
 import { loggerNamespace } from '../logger/logger'
@@ -9,6 +10,8 @@ import { resolvePromiseMap } from '../utils/promise'
 
 export const EVENT_REQUEST = 'request'
 const KEEP_ALIVE_DEFAULT = 1000 * 60
+const EVENT_CONNECT = 'connect'
+const EVENT_DISCONNECT = 'disconnect'
 
 export interface IConnection {
   id: string
@@ -30,6 +33,7 @@ interface IHandlers {
 
 export class WSServer {
   protected ws: WebSocket.Server | null = null
+  protected bus: EventEmitter = new EventEmitter()
   protected readonly logger = loggerNamespace('WSServer')
   protected readonly port: number
   protected readonly connections: Map<string, IConnection> = new Map()
@@ -80,6 +84,14 @@ export class WSServer {
     }
   }
 
+  /**
+   */
+  public getConnections(): IConnection[] {
+    return [...this.connections.values()]
+  }
+
+  /**
+   */
   public getConnection(id: string) {
     const connection = this.connections.get(id)
     if (!connection) {
@@ -111,6 +123,20 @@ export class WSServer {
 
   /**
    */
+  public onConnect(handler: (id: string) => void): () => void {
+    this.bus.addListener(EVENT_CONNECT, handler)
+    return () => this.bus.removeListener(EVENT_CONNECT, handler)
+  }
+
+  /**
+   */
+  public onDisconnect(handler: (id: string) => void): () => void {
+    this.bus.addListener(EVENT_DISCONNECT, handler)
+    return () => this.bus.removeListener(EVENT_DISCONNECT, handler)
+  }
+
+  /**
+   */
   protected init() {
     this.ws = new WebSocket.Server({ port: this.port })
     this.ws.on('connection', async (client: WebSocket) => {
@@ -122,6 +148,7 @@ export class WSServer {
       this.handleMessage(connection)
       this.handleKeepAlive(connection)
       this.handleClose(connection)
+      this.bus.emit(EVENT_CONNECT, id)
     })
   }
 
@@ -200,6 +227,7 @@ export class WSServer {
       keepAlive && clearInterval(keepAlive)
       this.connections.delete(id)
       this.logger.debug('disconnected: ', id)
+      this.bus.emit(EVENT_DISCONNECT, id)
     })
   }
 }
