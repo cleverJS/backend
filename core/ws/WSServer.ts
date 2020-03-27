@@ -1,6 +1,6 @@
 import WebSocket from 'ws'
 import { v4 as uuid } from 'uuid'
-import * as events from 'events'
+import { EventEmitter } from 'events'
 import { WSRequest } from './WSRequest'
 import { WSResponse } from './WSResponse'
 import { loggerNamespace } from '../logger/logger'
@@ -33,7 +33,7 @@ interface IHandlers {
 
 export class WSServer {
   protected ws: WebSocket.Server | null = null
-  protected bus: events.EventEmitter = new events.EventEmitter()
+  protected bus: EventEmitter = new EventEmitter()
   protected readonly logger = loggerNamespace('WSServer')
   protected readonly port: number
   protected readonly connections: Map<string, IConnection> = new Map()
