@@ -22,6 +22,7 @@
     "@types/uuid": "^7.0.2",
     "@types/ws": "^7.2.3",
     "@types/yup": "^0.26.34",
+    "@types/mongodb": "^3.5.4",
     "ts-node": "^8.8.1",
     "tsconfig-paths": "^3.9.0",
     "axios": "^0.19.2",
@@ -37,12 +38,12 @@
     "uuid": "^7.0.3",
     "ws": "^7.2.3",
     "yup": "^0.28.3",
-    "morphism": "^1.12.3"
+    "morphism": "^1.12.3",
+    "mongodb": "^3.5.5"
   },
   "devDependencies": {
     "@types/jest": "^25.1.4",
     "@types/pretty-hrtime": "^1.0.0",
-    "@types/mongodb": "^3.5.4",
     "jest": "^25.2.4",
     "prettier": "^2.0.2",
     "ts-jest": "^25.3.0",
@@ -53,7 +54,6 @@
     "tslint-sonarts": "^1.9.0",
     "typescript-tslint-plugin": "^0.5.5",
     "pretty-hrtime": "^1.0.3",
-    "mongodb": "^3.5.5",
     "pg": "^8.0.0"
   }
 }
