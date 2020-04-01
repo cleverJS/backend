@@ -1,4 +1,4 @@
-import mongo from 'mongodb'
+import mongo, { MongoClient, MongoError } from 'mongodb'
 import { Ready } from '../../utils/ready'
 import { logger } from '../../logger/logger'
 import { IMongoConfig } from './config'
@@ -14,7 +14,7 @@ export class Mongo {
     this.url = config.url
     this.db = config.db
 
-    mongo.MongoClient.connect(this.url, { useNewUrlParser: true, useUnifiedTopology: true }, (err, client) => {
+    mongo.MongoClient.connect(this.url, { useNewUrlParser: true, useUnifiedTopology: true }, (err: MongoError, client: MongoClient) => {
       if (err) {
         logger.error(err)
       }
@@ -33,13 +33,12 @@ export class Mongo {
       logger.info('MongoDB connection closing')
       const connection = await this.getClient()
       if (connection) {
-        connection.close((error, result) => {
-          logger.info([error, result])
+        connection.close((error: MongoError) => {
+          logger.info([error])
           if (error) {
             logger.error(error)
           } else {
             logger.info('MongoDB connection closed')
-            logger.info(result)
           }
         })
       }
