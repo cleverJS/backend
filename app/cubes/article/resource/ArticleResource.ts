@@ -22,11 +22,11 @@ export class ArticleResource extends AbstractDBResource<Article> {
     updatedAt: 'updatedAt',
   }
 
-  protected map(data: AbstractObject): typeof ArticleResource.scheme {
+  public map(data: AbstractObject): typeof ArticleResource.scheme {
     return morphism(ArticleResource.scheme, data) as any
   }
 
-  protected mapToDB(item: Article): any {
+  public mapToDB(item: Article): any {
     return morphism(ArticleResource.schemeToDB, item.getData())
   }
 }

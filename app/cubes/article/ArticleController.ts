@@ -3,7 +3,7 @@ import { logger } from '../../../core/logger/logger'
 import { ArticleService } from './ArticleService'
 import { ServerResponse } from 'http'
 import { FastifyReply, FastifyRequest } from 'fastify'
-import { WSServer } from '../../../core/ws/WSServer'
+import { IConnection, WSServer } from '../../../core/ws/WSServer'
 import { WSRequest } from '../../../core/ws/WSRequest'
 import { Article } from './Article'
 import { EntityFactory } from '../../../core/entity/EntityFactory'
@@ -23,20 +23,15 @@ export class ArticleController {
     this.init().catch(logger.error)
   }
 
-  private async init() {
-    this.deps.wsServer.onRequest('article', 'test', this.actionWSTest)
-    this.deps.wsServer.onRequest('article', 'get', this.actionWSGet)
-    this.deps.wsServer.onRequest('article', 'update', this.actionWSGet)
-    const instance = this.deps.http.getServer()
-    instance.get('/article', this.actionGet)
-    instance.get('/articleService/save', this.actionSave)
+  // @ts-ignore
+  public handleWSTest = async (request: WSRequest, connection: IConnection) => {
+    return this.actionWSTest(request)
   }
 
-  private actionWSTest = async (request: WSRequest) => {
-    console.log(request)
+  // @ts-ignore
+  public actionWSTest = async (request: WSRequest) => {
     this.deps.wsServer
-      .broadcast(connection => {
-        console.log(connection.id)
+      .broadcast(() => {
         return Promise.resolve(new WSResponse({ service: 'article', action: 'save', type: 'event' }, { item: 1 }))
       })
       .catch(logger.error)
@@ -46,7 +41,7 @@ export class ArticleController {
     }
   }
 
-  private actionWSGet = async (request: WSRequest) => {
+  public actionWSGet = async (request: WSRequest) => {
     logger.info(request)
     const factory = new EntityFactory(Article, Article.cast)
     return {
@@ -60,7 +55,7 @@ export class ArticleController {
     }
   }
 
-  private actionGet = async (request: FastifyRequest, response: FastifyReply<ServerResponse>) => {
+  public actionGet = async (request: FastifyRequest, response: FastifyReply<ServerResponse>) => {
     logger.info(request)
     const factory = new EntityFactory(Article, Article.cast)
 
@@ -75,7 +70,7 @@ export class ArticleController {
     })
   }
 
-  private actionSave = async () => {
+  public actionSave = async () => {
     const factory = new EntityFactory(Article, Article.cast)
     const item = factory.create({
       title: 'hello',
@@ -84,7 +79,7 @@ export class ArticleController {
     const result = await this.deps.articleService.save(item)
 
     this.deps.wsServer
-      .broadcast(connection => {
+      .broadcast((connection : IConnection) => {
         if (connection.state.hasOwnProperty('token')) {
           return Promise.resolve(new WSResponse({ service: 'article', action: 'save', type: 'event' }, { item: result }))
         }
@@ -97,5 +92,14 @@ export class ArticleController {
       hello: 'Create item',
       collection: result,
     }
+  }
+
+  protected async init() {
+    this.deps.wsServer.onRequest('article', 'test', this.handleWSTest)
+    this.deps.wsServer.onRequest('article', 'get', this.actionWSGet)
+    this.deps.wsServer.onRequest('article', 'update', this.actionWSGet)
+    const instance = this.deps.http.getServer()
+    instance.get('/article', this.actionGet)
+    instance.get('/articleService/save', this.actionSave)
   }
 }

@@ -8,6 +8,8 @@ export enum TConditionOperator {
   BETWEEN,
   LIKE,
   IN,
+  IS_NULL,
+  IS_NOT_NULL,
 }
 type TSortDirection = 'asc' | 'desc'
 export type TConditionLogic = 'and' | 'or'

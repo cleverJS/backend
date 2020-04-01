@@ -4,7 +4,7 @@ import { IWSRequest } from './WSRequest'
 const types = ['response', 'event', 'error'] as ['response', 'event', 'error']
 type ResponseType = typeof types[number]
 
-interface IWSResponseHeader {
+export interface IWSResponseHeader {
   uuid?: string
   service: string
   action: string

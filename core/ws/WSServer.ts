@@ -3,7 +3,7 @@ import { v4 as uuid } from 'uuid'
 import { EventEmitter } from 'events'
 import { WSRequest } from './WSRequest'
 import { WSResponse } from './WSResponse'
-import { loggerNamespace } from '../logger/logger'
+import { loggerNamespace, logger } from '../logger/logger'
 import { IWSConfig } from './config'
 import { AbstractObject } from '../AbstractObject'
 import { resolvePromiseMap } from '../utils/promise'
@@ -139,6 +139,8 @@ export class WSServer {
    */
   protected init() {
     this.ws = new WebSocket.Server({ port: this.port })
+
+    logger.info(`Websocket Server started on 0.0.0.0:${this.port}`)
     this.ws.on('connection', async (client: WebSocket) => {
       const id = uuid()
       const state = {}

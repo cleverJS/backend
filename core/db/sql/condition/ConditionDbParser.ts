@@ -92,6 +92,12 @@ export class ConditionDbParser {
       case TConditionOperator.IN:
         this.parseInCondition(queryBuilder, condition, logic)
         break
+      case TConditionOperator.IS_NULL:
+        this.parseNullCondition(queryBuilder, condition, logic)
+        break
+      case TConditionOperator.IS_NOT_NULL:
+        this.parseIsNotNullCondition(queryBuilder, condition, logic)
+        break
     }
   }
 
@@ -129,6 +135,22 @@ export class ConditionDbParser {
       queryBuilder.andWhere(condition.field, exr, condition.value)
     } else {
       queryBuilder.orWhere(condition.field, exr, condition.value)
+    }
+  }
+
+  protected parseNullCondition(queryBuilder: Knex.QueryBuilder, condition: IConditionItem, logic: TConditionLogic) {
+    if (logic === 'and') {
+      queryBuilder.whereNull(condition.field)
+    } else {
+      queryBuilder.orWhereNull(condition.field)
+    }
+  }
+
+  protected parseIsNotNullCondition(queryBuilder: Knex.QueryBuilder, condition: IConditionItem, logic: TConditionLogic) {
+    if (logic === 'and') {
+      queryBuilder.whereNotNull(condition.field)
+    } else {
+      queryBuilder.orWhereNotNull(condition.field)
     }
   }
 
