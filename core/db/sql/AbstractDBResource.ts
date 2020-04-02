@@ -109,7 +109,7 @@ export abstract class AbstractDBResource<T extends AbstractEntity<AbstractObject
       return data
     })
     this.connection.table(this.table)
-    return this.connection.batchInsert(this.table, rows).returning('id')
+    return this.connection.batchInsert(this.table, rows).returning(this.primaryKey)
   }
 
   public async update(condition: Condition, data: AbstractObject) {
