@@ -89,8 +89,8 @@ export abstract class AbstractDBResource<T extends AbstractEntity<Record<string,
 
         const queryBuilder = this.connection(this.table)
         const result = await queryBuilder.insert(data).returning(this.primaryKey)
-        if (result) {
-          const [id] = result[0]
+        if (result && result.length > 0) {
+          const [id] = result
           item.id = id
         }
       }
