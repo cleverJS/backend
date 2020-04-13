@@ -1,7 +1,6 @@
 import { TransportInterface, LogLevel } from './TransportInterface'
 
 export class TransportConsole implements TransportInterface {
-
   /**
    * @param level
    * @param msg

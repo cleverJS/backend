@@ -1,6 +1,6 @@
+import Knex from 'knex'
 import { EntityFactory } from '../core/entity/EntityFactory'
 import { Article } from './cubes/article/Article'
-import Knex from 'knex'
 import { ArticleResource } from './cubes/article/resource/ArticleResource'
 import { ConditionDbParser } from '../core/db/sql/condition/ConditionDbParser'
 

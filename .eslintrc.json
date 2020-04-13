@@ -1,0 +1,125 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "project": "./tsconfig.json",
+    "sourceType": "module",
+    "ecmaVersion": 2018,
+    "tsconfigRootDir": "."
+  },
+  "env": {
+    "node": true,
+    "es6": true,
+    "jest": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "airbnb-base",
+    "plugin:eslint-comments/recommended",
+    "plugin:promise/recommended",
+    "plugin:jest/recommended",
+    "plugin:node/recommended",
+    "plugin:sonarjs/recommended",
+    "plugin:import/errors",
+    "plugin:import/warnings",
+    "plugin:import/typescript",
+    "plugin:@typescript-eslint/recommended",
+    // Disable rules from packages above that could interfere with prettier
+    "prettier",
+    // Add extra exclusions for plugins used
+    "prettier/@typescript-eslint",
+    // Turn on prettier rules
+    "plugin:prettier/recommended",
+    // Add security rules last to make sure they are not overridden
+    "plugin:security/recommended"
+  ],
+  "plugins": [
+    "eslint-comments",
+    "promise",
+    "jest",
+    "node",
+    "import",
+    "sonarjs",
+    "prettier",
+    "security",
+    "optimize-regex",
+    "no-loops",
+    "@typescript-eslint"
+  ],
+  "rules": {
+    "@typescript-eslint/no-unused-vars": 0,
+    "@typescript-eslint/interface-name-prefix": 0,
+    "@typescript-eslint/no-explicit-any": 0,
+    "@typescript-eslint/explicit-function-return-type": 0,
+    "@typescript-eslint/ban-ts-ignore": 0,
+    "@typescript-eslint/no-inferrable-types": 0,
+    "class-methods-use-this": 0,
+    "lines-between-class-members": 0,
+    "prefer-promise-reject-errors": 0,
+    "require-await": 1,
+    "node/no-missing-import": 0,
+    "import/prefer-default-export": 0,
+    "import/extensions": 0,
+    "no-new": 0,
+    "no-param-reassign": 0,
+    "no-loops/no-loops": 0,
+    "no-plusplus": 0,
+    "security/detect-non-literal-fs-filename": 0,
+    "dot-notation": 0,
+    "optimize-regex/optimize-regex": "warn",
+    "quotes": [
+      "error",
+      "single"
+    ],
+    "no-useless-escape": [
+      "off"
+    ],
+    "no-console": [
+      "error"
+    ],
+    "no-underscore-dangle": [
+      "error",
+      {
+        "allow": ["_id"]
+      }
+    ],
+    "linebreak-style": [
+      "error",
+      "unix"
+    ],
+    // Allow typescript style imports
+    "node/no-unsupported-features/es-syntax": [
+      "error",
+      {
+        "ignores": ["modules"]
+      }
+    ],
+    // Prettier already tries to keep code to 80 columns, but this rule attempts
+    // to cover remaining cases.
+    "max-len": [
+      "error",
+      {
+        "code": 150,
+        "ignoreStrings": true,
+        "ignoreTemplateLiterals": true,
+        "ignoreUrls": true
+      }
+    ],
+    // Allow disabling eslint rules for an entire file.
+    // Useful for things like the logger module, where no-console is disabled.
+    "eslint-comments/disable-enable-pair": [
+      "error",
+      {
+        "allowWholeFile": true
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": "test/**/*.js",
+      "rules": {
+        // Needed to import supertest in test files
+        "node/no-unpublished-require": "off"
+      }
+    }
+  ]
+}

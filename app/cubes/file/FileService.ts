@@ -57,10 +57,10 @@ export class FileService {
     sort: number = 100,
     data: object = {}
   ) {
-    const fileName = `${Date.now()}_${newFileName ? newFileName : this.getFilenameFromPath(pathOrUrl)}`
+    const fileName = `${Date.now()}_${newFileName || this.getFilenameFromPath(pathOrUrl)}`
     const urlPath = await this.createUrlPath(this.baseDir, code, fileName)
     const url = urlPath + path.sep + fileName
-    this.copyFileToDestination(pathOrUrl, this.baseDir + url)
+    await this.copyFileToDestination(pathOrUrl, this.baseDir + url)
 
     let item
     try {
@@ -75,10 +75,10 @@ export class FileService {
       })
       await this.deps.resource.save(item)
     } catch (e) {
-      console.log(e)
+      logger.error(e)
     }
 
-    return item ? item : null
+    return item || null
   }
 
   public async delete(id: string) {
@@ -95,9 +95,9 @@ export class FileService {
 
   protected async copyFileToDestination(source: string, destination: string) {
     if (source.substr(0, 4).toLocaleLowerCase() === 'http') {
-      this.deps.httpClient.download(source, destination).catch(logger.error)
+      await this.deps.httpClient.download(source, destination).catch(logger.error)
     } else {
-      fs.copyFile(source, destination).catch(logger.error)
+      await fs.copyFile(source, destination).catch(logger.error)
     }
   }
 

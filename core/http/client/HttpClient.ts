@@ -1,15 +1,14 @@
-import axios, { AxiosInstance, AxiosRequestConfig, Method } from 'axios'
-import { RequestCancel } from './RequestCancel'
-import { AbstractObject } from '../../AbstractObject'
-import { logger } from '../../logger/logger'
+import axios, { AxiosInstance, AxiosRequestConfig, Canceler, Method } from 'axios'
 import * as fs from 'fs-extra'
+import { RequestCancel } from './RequestCancel'
+import { logger } from '../../logger/logger'
 
 axios.defaults.withCredentials = true
 
 export class HttpClient {
   private readonly client: AxiosInstance
   private readonly extendedConfig?: AxiosRequestConfig
-  private headers: AbstractObject = {}
+  private headers: Record<string, any> = {}
 
   public constructor(extendedConfig?: AxiosRequestConfig) {
     this.extendedConfig = extendedConfig
@@ -19,27 +18,27 @@ export class HttpClient {
     })
   }
 
-  public async get(url: string, payload: Object = {}, cancelObject?: RequestCancel) {
+  public get(url: string, payload: Record<string, any> = {}, cancelObject?: RequestCancel) {
     return this.do('GET', url, payload, cancelObject)
   }
 
-  public async post(url: string, payload: Object = {}, cancelObject?: RequestCancel) {
+  public post(url: string, payload: Record<string, any> = {}, cancelObject?: RequestCancel) {
     return this.do('POST', url, payload, cancelObject)
   }
 
-  public async put(url: string, payload: Object = {}, cancelObject?: RequestCancel) {
+  public put(url: string, payload: Record<string, any> = {}, cancelObject?: RequestCancel) {
     return this.do('PUT', url, payload, cancelObject)
   }
 
-  public async patch(url: string, payload: Object = {}, cancelObject?: RequestCancel) {
+  public patch(url: string, payload: Record<string, any> = {}, cancelObject?: RequestCancel) {
     return this.do('PATCH', url, payload, cancelObject)
   }
 
-  public async delete(url: string, payload: Object = {}, cancelObject?: RequestCancel) {
+  public delete(url: string, payload: Record<string, any> = {}, cancelObject?: RequestCancel) {
     return this.do('DELETE', url, payload, cancelObject)
   }
 
-  public async download(url: string, destination: string, payload: AbstractObject = {}, cancelObject?: RequestCancel) {
+  public async download(url: string, destination: string, payload: Record<string, any> = {}, cancelObject?: RequestCancel) {
     const config: AxiosRequestConfig = {
       url,
       method: 'GET',
@@ -59,11 +58,11 @@ export class HttpClient {
     })
   }
 
-  public setHeaders(headers: AbstractObject) {
+  public setHeaders(headers: Record<string, any>) {
     this.headers = headers
   }
 
-  protected async do(method: Method, url: string, payload: Object, cancelObject?: RequestCancel): Promise<AbstractObject> {
+  protected async do(method: Method, url: string, payload: Record<string, any>, cancelObject?: RequestCancel): Promise<Record<string, any>> {
     const config: AxiosRequestConfig = {
       method,
       url,
@@ -73,16 +72,17 @@ export class HttpClient {
       cancelToken: this.cancelToken(cancelObject),
     }
 
-    method === 'GET' ? (config.params = payload) : (config.data = payload)
+    if (method === 'GET') {
+      config.params = payload
+    } else {
+      config.data = payload
+    }
 
     try {
       const { data } = await this.client({ ...config, ...this.extendedConfig })
       return data || {}
     } catch (error) {
-      const message =
-        error.response && error.response.data && error.response.data.message
-          ? error.response.data.message
-          : null
+      const message = error.response && error.response.data && error.response.data.message ? error.response.data.message : null
       logger.error(message || error)
       error.serverMessage = message
       throw error
@@ -90,7 +90,7 @@ export class HttpClient {
   }
 
   protected cancelToken(cancelObject?: RequestCancel) {
-    return new axios.CancelToken(c => {
+    return new axios.CancelToken((c: Canceler) => {
       if (cancelObject) {
         cancelObject.setCancelFunction(c)
       }

@@ -3,24 +3,24 @@ import { v4 as uuid } from 'uuid'
 import { EventEmitter } from 'events'
 import { WSRequest } from './WSRequest'
 import { WSResponse } from './WSResponse'
-import { loggerNamespace, logger } from '../logger/logger'
+import { logger, loggerNamespace } from '../logger/logger'
 import { IWSConfig } from './config'
-import { AbstractObject } from '../AbstractObject'
 import { resolvePromiseMap } from '../utils/promise'
 
-export const EVENT_REQUEST = 'request'
+const EVENT_REQUEST = 'request'
 const KEEP_ALIVE_DEFAULT = 1000 * 60
 const EVENT_CONNECT = 'connect'
 const EVENT_DISCONNECT = 'disconnect'
+const MESSAGE_SYSTEM_ERROR = 'System error'
 
 export interface IConnection {
   id: string
   client: WebSocket
   keepAlive?: NodeJS.Timeout
-  state: AbstractObject
+  state: Record<string, any>
 }
 
-export type RequestHandler = (request: WSRequest, connection: IConnection) => Promise<AbstractObject>
+export type RequestHandler = (request: WSRequest, connection: IConnection) => Promise<Record<string, any>>
 export type RequestValidator = (request: WSRequest) => Promise<{ status: 'success' | 'fail' | 'error'; message?: string }>
 interface Request {
   handler: RequestHandler
@@ -28,7 +28,7 @@ interface Request {
 }
 
 interface IHandlers {
-  [EVENT_REQUEST]: Map<string, Request>
+  [k: string]: Map<string, Request>
 }
 
 export class WSServer {
@@ -41,6 +41,7 @@ export class WSServer {
   protected readonly handlers: IHandlers = {
     [EVENT_REQUEST]: new Map(),
   }
+  protected readonly eventRequestCode: string = EVENT_REQUEST
 
   public constructor(config: IWSConfig) {
     this.port = config.port
@@ -55,20 +56,20 @@ export class WSServer {
    * @param validator
    */
   public onRequest(service: string, action: string, handler: RequestHandler, validator?: RequestValidator): Function {
-    if (!this.handlers[EVENT_REQUEST]) {
-      this.handlers[EVENT_REQUEST] = new Map()
+    if (!this.handlers[this.eventRequestCode]) {
+      this.handlers[this.eventRequestCode] = new Map()
     }
     const key = `${service}:${action}`
-    this.handlers[EVENT_REQUEST].set(key, { handler, validator })
+    this.handlers[this.eventRequestCode].set(key, { handler, validator })
 
-    return () => this.handlers[EVENT_REQUEST].get(key)
+    return () => this.handlers[this.eventRequestCode].get(key)
   }
 
   /**
    * @param id
    * @param response
    */
-  public async send(id: string, response: WSResponse) {
+  public send(id: string, response: WSResponse) {
     try {
       response.validate()
     } catch (e) {
@@ -103,18 +104,22 @@ export class WSServer {
   /**
    */
   public destroy() {
-    this.ws && this.ws.close()
+    if (this.ws) {
+      this.ws.close()
+    }
   }
 
   public async broadcast(cb: (connection: IConnection) => Promise<WSResponse | null>) {
     const map = new Map()
+
     for (const [connectionId, connection] of this.connections.entries()) {
       map.set(connectionId, cb(connection))
     }
 
     const resolves = await resolvePromiseMap<string, WSResponse | null>(map)
 
-    for (const { id, item } of resolves) {
+    for (let i = 0; i < resolves.length; i++) {
+      const { id, item } = resolves[parseInt(`${i}`, 10)]
       if (id && item) {
         this.send(id, item)
       }
@@ -141,7 +146,7 @@ export class WSServer {
     this.ws = new WebSocket.Server({ port: this.port })
 
     logger.info(`Websocket Server started on 0.0.0.0:${this.port}`)
-    this.ws.on('connection', async (client: WebSocket) => {
+    this.ws.on('connection', (client: WebSocket) => {
       const id = uuid()
       const state = {}
       const connection: IConnection = { id, client, state }
@@ -166,7 +171,7 @@ export class WSServer {
         requestObject = JSON.parse(message)
       } catch (e) {
         const errorResponse = WSResponse.fromRequest(requestObject, 'error')
-        errorResponse.error = e.message || 'System error'
+        errorResponse.error = e.message || MESSAGE_SYSTEM_ERROR
         this.logger.error('request parse error:', e)
         this.send(id, errorResponse)
         return
@@ -184,26 +189,23 @@ export class WSServer {
         const request = new WSRequest(requestObject)
         this.logger.debug(`request from ${id}:`, request)
         const key = `${request.header.service}:${request.header.action}`
-        const handler = this.handlers[EVENT_REQUEST].get(key)
+        const handler = this.handlers[this.eventRequestCode].get(key)
         if (handler) {
           const response = WSResponse.fromRequest(requestObject)
-          handler.handler(request, this.getConnection(id)).then(async payload => {
-            response.payload = payload
-            this.send(id, response)
-          })
+          response.payload = await handler.handler(request, this.getConnection(id))
+          this.send(id, response)
           return
         }
       } catch (e) {
         const errorResponse = WSResponse.fromRequest(requestObject, 'error')
         if (process.env.NODE_ENV === 'production') {
-          errorResponse.error = 'System error'
+          errorResponse.error = MESSAGE_SYSTEM_ERROR
         } else {
-          errorResponse.error = e.message || 'System error'
+          errorResponse.error = e.message || MESSAGE_SYSTEM_ERROR
         }
 
         this.logger.error('request validate error:', e)
         this.send(id, errorResponse)
-        return
       }
     })
   }
@@ -225,8 +227,10 @@ export class WSServer {
    * @param keepAlive
    */
   protected handleClose({ id, client, keepAlive }: IConnection) {
-    client.on('close', async () => {
-      keepAlive && clearInterval(keepAlive)
+    client.on('close', () => {
+      if (keepAlive) {
+        clearInterval(keepAlive)
+      }
       this.connections.delete(id)
       this.logger.debug('disconnected: ', id)
       this.bus.emit(EVENT_DISCONNECT, id)

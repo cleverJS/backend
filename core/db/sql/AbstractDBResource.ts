@@ -5,9 +5,8 @@ import { logger } from '../../logger/logger'
 import { Condition, TConditionOperator } from '../Condition'
 import { ConditionDbParser } from './condition/ConditionDbParser'
 import { EntityFactory } from '../../entity/EntityFactory'
-import { AbstractObject } from '../../AbstractObject'
 
-export abstract class AbstractDBResource<T extends AbstractEntity<AbstractObject>> extends AbstractResource<T> {
+export abstract class AbstractDBResource<T extends AbstractEntity<Record<string, any>>> extends AbstractResource<T> {
   protected primaryKey = 'id'
   protected table: string = ''
   protected connection: Knex
@@ -19,7 +18,7 @@ export abstract class AbstractDBResource<T extends AbstractEntity<AbstractObject
     this.conditionParser = conditionParser
   }
 
-  public async findById(id: string): Promise<T | null> {
+  public findById(id: string): Promise<T | null> {
     const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: this.primaryKey, value: id }] })
     return this.findOne(condition)
   }
@@ -69,7 +68,7 @@ export abstract class AbstractDBResource<T extends AbstractEntity<AbstractObject
     const result = await queryBuilder.count('* as count')
     if (result) {
       if (typeof result[0].count === 'string') {
-        return parseInt(result[0].count)
+        return parseInt(result[0].count, 10)
       }
 
       return result[0].count
@@ -91,7 +90,8 @@ export abstract class AbstractDBResource<T extends AbstractEntity<AbstractObject
         const queryBuilder = this.connection(this.table)
         const result = await queryBuilder.insert(data).returning(this.primaryKey)
         if (result) {
-          item.id = result[0]
+          const [id] = result[0]
+          item.id = id
         }
       }
     } catch (e) {
@@ -102,17 +102,20 @@ export abstract class AbstractDBResource<T extends AbstractEntity<AbstractObject
     return true
   }
 
-  public async batchInsert(items: T[]) {
-    const rows = items.map(i => {
+  public batchInsert(items: T[]) {
+    const rows = items.map((i) => {
       const data = this.mapToDB(i)
       delete data[this.primaryKey]
       return data
     })
-    this.connection.table(this.table)
     return this.connection.batchInsert(this.table, rows).returning(this.primaryKey)
   }
 
-  public async update(condition: Condition, data: AbstractObject) {
+  public batchInsertRaw(rows: Record<string, any>[]) {
+    return this.connection.batchInsert(this.table, rows).returning(this.primaryKey)
+  }
+
+  public async update(condition: Condition, data: Record<string, any>) {
     try {
       const queryBuilder = this.connection(this.table)
       this.conditionParser.parse(queryBuilder, condition)
@@ -137,9 +140,9 @@ export abstract class AbstractDBResource<T extends AbstractEntity<AbstractObject
     return result
   }
 
-  public async delete(id: string) {
+  public delete(id: string) {
     const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: this.primaryKey, value: id }] })
-    return await this.deleteAll(condition)
+    return this.deleteAll(condition)
   }
 
   public async deleteAll(condition?: Condition) {
@@ -156,7 +159,8 @@ export abstract class AbstractDBResource<T extends AbstractEntity<AbstractObject
   public createEntityList(rows: any[]) {
     const result = []
     if (rows.length) {
-      for (const row of rows) {
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[parseInt(`${i}`, 10)]
         try {
           const entity = this.createEntity(this.map(row))
           result.push(entity)
@@ -169,7 +173,7 @@ export abstract class AbstractDBResource<T extends AbstractEntity<AbstractObject
     return result
   }
 
-  public map(data: AbstractObject): any {
+  public map(data: Record<string, any>): any {
     return data
   }
 

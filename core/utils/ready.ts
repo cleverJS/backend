@@ -3,7 +3,7 @@ export class Ready {
   public readonly promise: Promise<any>
 
   constructor() {
-    this.promise = new Promise(resolve => {
+    this.promise = new Promise((resolve) => {
       this.resolve = () => {
         resolve()
         this.resolved = true

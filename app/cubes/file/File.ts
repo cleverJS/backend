@@ -1,6 +1,5 @@
 import { AbstractEntity } from '../../../core/entity/AbstractEntity'
 import * as yup from 'yup'
-import { AbstractObject } from '../../../core/AbstractObject'
 
 const scheme = yup.object().shape({
   id: yup.string(),
@@ -32,7 +31,7 @@ export class File extends AbstractEntity<TFile> implements TFile {
     return `${this.baseDir}${this.url}`
   }
 
-  public static cast(data: AbstractObject): TFile {
+  public static cast(data: Record<string, any>): TFile {
     return scheme.noUnknown().cast(data)
   }
 }

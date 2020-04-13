@@ -105,7 +105,7 @@ export class Condition {
     const condition = new Condition(this.conditionItemList, this.offsetValue, this.limitValue)
 
     if (this.sort.length) {
-      this.sort.forEach(s => {
+      this.sort.forEach((s) => {
         condition.addSort(s.sort, s.dir)
       })
     }

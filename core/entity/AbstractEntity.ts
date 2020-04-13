@@ -1,7 +1,6 @@
 import { logger } from '../logger/logger'
-import { AbstractObject } from '../AbstractObject'
 
-export abstract class AbstractEntity<TypeData extends AbstractObject> {
+export abstract class AbstractEntity<TypeData extends Record<string, any>> {
   public id: any = null
 
   public setData(data: TypeData) {
@@ -35,7 +34,7 @@ export abstract class AbstractEntity<TypeData extends AbstractObject> {
    * @throws TypeError
    * @param data
    */
-  public static cast(data: AbstractObject) {
+  public static cast(data: Record<string, any>) {
     logger.error('Should be override for casting data', data)
     throw new Error('Should be override')
   }

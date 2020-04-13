@@ -1,14 +1,13 @@
-import { Mongo } from './Mongo'
 import { Db, InsertOneWriteOpResult, ObjectId } from 'mongodb'
+import { Mongo } from './Mongo'
 import { ConditionMongoDbParser } from './condition/ConditionMongoDbParser'
 import { AbstractResource } from '../AbstractResource'
 import { logger } from '../../logger/logger'
 import { AbstractEntity } from '../../entity/AbstractEntity'
 import { EntityFactory } from '../../entity/EntityFactory'
-import { AbstractObject } from '../../AbstractObject'
 
 // TODO: change any to Condition after ConditionMongoDbParser refactoring
-export abstract class AbstractMongoResource<T extends AbstractEntity<AbstractObject>> extends AbstractResource<T> {
+export abstract class AbstractMongoResource<T extends AbstractEntity<Record<string, any>>> extends AbstractResource<T> {
   protected collectionName: string = ''
   protected db: Promise<Db | null>
 

@@ -1,11 +1,23 @@
 import { AbstractDBResource } from '../../../../core/db/sql/AbstractDBResource'
-import { AbstractObject } from '../../../../core/AbstractObject'
-import { File, IFileData } from '../File'
+import { File } from '../File'
 
 export class FileResourceSql extends AbstractDBResource<File> {
   protected table = 'file'
 
-  protected map(data: AbstractObject): IFileData {
+  public static scheme = {
+    id: 'id',
+    code: 'code',
+    name: 'name',
+    mime: 'mime',
+    baseDir: 'baseDir',
+    url: 'url',
+    sort: 'sort',
+    data: 'data',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt',
+  }
+
+  public map(data: Record<string, any>): typeof FileResourceSql.scheme {
     return {
       id: data.id,
       code: data.code,

@@ -14,7 +14,7 @@ export class Redis {
     this.handle()
   }
 
-  public async get(key: string): Promise<string> {
+  public get(key: string): Promise<string> {
     return new Promise((resolve, reject) =>
       this.client.get(key, (err, result) => {
         if (!err) {
@@ -25,7 +25,7 @@ export class Redis {
     )
   }
 
-  public async mget(keys: string[] | string): Promise<string[]> {
+  public mget(keys: string[] | string): Promise<string[]> {
     return new Promise((resolve, reject) =>
       this.client.mget(keys, (err, result) => {
         if (!err && result) {
@@ -36,7 +36,7 @@ export class Redis {
     )
   }
 
-  public async set(key: string, value: string): Promise<boolean> {
+  public set(key: string, value: string): Promise<boolean> {
     return new Promise((resolve, reject) =>
       this.client.set(key, value, (err, result) => {
         if (!err && result === 'OK') {
@@ -47,7 +47,7 @@ export class Redis {
     )
   }
 
-  public async del(keys: string[]): Promise<number> {
+  public del(keys: string[]): Promise<number> {
     return new Promise((resolve, reject) =>
       this.client.del(keys, (err, result) => {
         if (!err && result) {
@@ -58,7 +58,7 @@ export class Redis {
     )
   }
 
-  public async exists(keys: string[]): Promise<number> {
+  public exists(keys: string[]): Promise<number> {
     return new Promise((resolve, reject) =>
       this.client.exists(keys, (err, result) => {
         if (!err && result) {
@@ -76,7 +76,7 @@ export class Redis {
   }
 
   private handle() {
-    this.client.on('error', err => {
+    this.client.on('error', (err) => {
       logger.error(`Redis error: ${err}`)
     })
   }

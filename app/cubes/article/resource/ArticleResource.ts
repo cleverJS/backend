@@ -1,5 +1,4 @@
 import { AbstractDBResource } from '../../../../core/db/sql/AbstractDBResource'
-import { AbstractObject } from '../../../../core/AbstractObject'
 import { Article } from '../Article'
 import { morphism } from 'morphism'
 
@@ -22,7 +21,7 @@ export class ArticleResource extends AbstractDBResource<Article> {
     updatedAt: 'updatedAt',
   }
 
-  public map(data: AbstractObject): typeof ArticleResource.scheme {
+  public map(data: Record<string, any>): typeof ArticleResource.scheme {
     return morphism(ArticleResource.scheme, data) as any
   }
 

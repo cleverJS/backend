@@ -1,49 +1,48 @@
 import { AbstractResource } from './db/AbstractResource'
 import { AbstractEntity } from './entity/AbstractEntity'
 import { Condition } from './db/Condition'
-import { AbstractObject } from './AbstractObject'
 import { Paginator } from './utils/Paginator'
 
-export interface IAbstractDependenciesList<T extends AbstractEntity<AbstractObject>> {
+export interface IAbstractDependenciesList<T extends AbstractEntity<Record<string, any>>> {
   resource: AbstractResource<T>
 }
 
-export abstract class AbstractService<T extends AbstractEntity<AbstractObject>> {
+export abstract class AbstractService<T extends AbstractEntity<Record<string, any>>> {
   protected deps: IAbstractDependenciesList<T>
 
   protected constructor(deps: IAbstractDependenciesList<T>) {
     this.deps = deps
   }
 
-  public async findById(id: string) {
+  public findById(id: string) {
     return this.deps.resource.findById(id)
   }
 
-  public async findOne(condition: Condition) {
+  public findOne(condition: Condition) {
     return this.deps.resource.findOne(condition)
   }
 
-  public async findAll(condition: Condition) {
+  public findAll(condition: Condition) {
     return this.deps.resource.findAll(condition)
   }
 
-  public async findAllRaw(condition: Condition) {
+  public findAllRaw(condition: Condition) {
     return this.deps.resource.findAllRaw(condition)
   }
 
-  public async count(condition?: Condition) {
+  public count(condition?: Condition) {
     return this.deps.resource.count(condition)
   }
 
-  public async delete(id: string) {
+  public delete(id: string) {
     return this.deps.resource.delete(id)
   }
 
-  public async deleteAll(condition: Condition) {
+  public deleteAll(condition: Condition) {
     return this.deps.resource.deleteAll(condition)
   }
 
-  public async save(item: T) {
+  public save(item: T) {
     return this.deps.resource.save(item)
   }
 

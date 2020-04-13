@@ -7,7 +7,6 @@ import { logger } from '../../../core/logger/logger'
 import { HttpClient } from '../../../core/http/client/HttpClient'
 import { File } from './File'
 import { EntityFactory } from '../../../core/entity/EntityFactory'
-import { AbstractObject } from '../../../core/AbstractObject'
 
 // jest.mock('./repository/FileResourceMongo')
 class FileResourceStub extends AbstractResource<File> {
@@ -67,7 +66,7 @@ class FileResourceStub extends AbstractResource<File> {
     return data
   }
 
-  public createEntity(data: AbstractObject): File {
+  public createEntity(data: Record<string, any>): File {
     return this.entityFactory.create(data)
   }
 }

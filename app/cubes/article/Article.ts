@@ -1,5 +1,4 @@
 import { AbstractEntity } from '../../../core/entity/AbstractEntity'
-import { AbstractObject } from '../../../core/AbstractObject'
 import * as yup from 'yup'
 
 const scheme = yup.object().shape({
@@ -16,7 +15,7 @@ export class Article extends AbstractEntity<TArticle> implements TArticle {
   public author = ''
   public content = ''
 
-  public static cast(data: AbstractObject): TArticle {
+  public static cast(data: Record<string, any>): TArticle {
     return scheme.noUnknown().cast(data)
   }
 }

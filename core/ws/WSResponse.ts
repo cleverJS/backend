@@ -13,7 +13,7 @@ export interface IWSResponseHeader {
 
 export interface IWSResponse {
   header: IWSResponseHeader
-  payload: Object
+  payload: Record<string, any>
 }
 
 export class WSResponse implements IWSResponse {
@@ -25,7 +25,7 @@ export class WSResponse implements IWSResponse {
    * @param header
    * @param payload
    */
-  public constructor(header?: IWSResponseHeader, payload?: Object) {
+  public constructor(header?: IWSResponseHeader, payload?: Record<string, any>) {
     this.header = header || { service: '', action: '', type: 'response' }
     this.payload = payload || {}
   }
@@ -42,10 +42,7 @@ export class WSResponse implements IWSResponse {
             uuid: yup.string(),
             service: yup.string().required(),
             action: yup.string().required(),
-            type: yup
-              .string()
-              .oneOf(types)
-              .required(),
+            type: yup.string().oneOf(types).required(),
           })
           .required(),
         payload: yup.object().required(),
