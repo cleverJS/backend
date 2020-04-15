@@ -35,14 +35,16 @@ export abstract class AbstractDBResource<T extends AbstractEntity<Record<string,
     return null
   }
 
-  public async findAll(condition: Condition): Promise<T[]> {
+  public async findAll(condition?: Condition): Promise<T[]> {
     const rows = await this.findAllRaw(condition)
     return this.createEntityList(rows)
   }
 
-  public async findAllRaw(condition: Condition) {
+  public async findAllRaw(condition?: Condition) {
     const queryBuilder = this.connection(this.table)
-    this.conditionParser.parse(queryBuilder, condition)
+    if (condition) {
+      this.conditionParser.parse(queryBuilder, condition)
+    }
 
     let rows: any[] = []
     try {
@@ -147,7 +149,9 @@ export abstract class AbstractDBResource<T extends AbstractEntity<Record<string,
 
   public async deleteAll(condition?: Condition) {
     const queryBuilder = this.connection(this.table)
-    this.conditionParser.parse(queryBuilder, condition)
+    if (condition) {
+      this.conditionParser.parse(queryBuilder, condition)
+    }
     const response = await queryBuilder.delete()
     return response > 0
   }

@@ -10,7 +10,7 @@ export interface IAbstractDependenciesList<T extends AbstractEntity<Record<strin
 export abstract class AbstractService<T extends AbstractEntity<Record<string, any>>> {
   protected deps: IAbstractDependenciesList<T>
 
-  protected constructor(deps: IAbstractDependenciesList<T>) {
+  public constructor(deps: IAbstractDependenciesList<T>) {
     this.deps = deps
   }
 
@@ -22,11 +22,11 @@ export abstract class AbstractService<T extends AbstractEntity<Record<string, an
     return this.deps.resource.findOne(condition)
   }
 
-  public findAll(condition: Condition) {
+  public findAll(condition?: Condition) {
     return this.deps.resource.findAll(condition)
   }
 
-  public findAllRaw(condition: Condition) {
+  public findAllRaw(condition?: Condition) {
     return this.deps.resource.findAllRaw(condition)
   }
 
@@ -38,7 +38,7 @@ export abstract class AbstractService<T extends AbstractEntity<Record<string, an
     return this.deps.resource.delete(id)
   }
 
-  public deleteAll(condition: Condition) {
+  public deleteAll(condition?: Condition) {
     return this.deps.resource.deleteAll(condition)
   }
 
