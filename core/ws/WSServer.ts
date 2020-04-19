@@ -1,11 +1,13 @@
 import WebSocket from 'ws'
 import { v4 as uuid } from 'uuid'
 import { EventEmitter } from 'events'
-import { WSRequest } from './WSRequest'
+import { Server } from 'http'
+import { IWSRequest, WSRequest } from './WSRequest'
 import { WSResponse } from './WSResponse'
 import { logger, loggerNamespace } from '../logger/logger'
 import { IWSConfig } from './config'
 import { resolvePromiseMap } from '../utils/promise'
+import { WSRequestValidator } from './validator/WSRequestValidator'
 
 const EVENT_REQUEST = 'request'
 const KEEP_ALIVE_DEFAULT = 1000 * 60
@@ -33,7 +35,7 @@ interface IHandlers {
 
 export class WSServer {
   protected ws: WebSocket.Server | null = null
-  protected bus: EventEmitter = new EventEmitter()
+  protected bus: EventEmitter
   protected readonly logger = loggerNamespace('WSServer')
   protected readonly port: number
   protected readonly connections: Map<string, IConnection> = new Map()
@@ -42,11 +44,14 @@ export class WSServer {
     [EVENT_REQUEST]: new Map(),
   }
   protected readonly eventRequestCode: string = EVENT_REQUEST
+  protected readonly validatorRequest: WSRequestValidator
 
-  public constructor(config: IWSConfig) {
+  public constructor(config: IWSConfig, server?: Server) {
+    this.validatorRequest = new WSRequestValidator()
+    this.bus = new EventEmitter()
     this.port = config.port
     this.keepAliveTimeout = config.keepalive || KEEP_ALIVE_DEFAULT
-    this.init()
+    this.init(server)
   }
 
   /**
@@ -56,9 +61,6 @@ export class WSServer {
    * @param validator
    */
   public onRequest(service: string, action: string, handler: RequestHandler, validator?: RequestValidator): Function {
-    if (!this.handlers[this.eventRequestCode]) {
-      this.handlers[this.eventRequestCode] = new Map()
-    }
     const key = `${service}:${action}`
     this.handlers[this.eventRequestCode].set(key, { handler, validator })
 
@@ -66,21 +68,21 @@ export class WSServer {
   }
 
   /**
-   * @param id
+   * @param connection
    * @param response
    */
-  public send(id: string, response: WSResponse) {
-    try {
-      response.validate()
-    } catch (e) {
-      this.logger.error('response validate error:', e)
-    }
-
-    const connection = this.getConnection(id)
+  public send(connection: IConnection, response: WSResponse) {
     if (connection) {
       const { client } = connection
+
       if (client.readyState === WebSocket.OPEN) {
         client.send(response.toString())
+      } else if ([WebSocket.CLOSED, WebSocket.CLOSING].includes(client.readyState)) {
+        this.logger.warn('Force closing')
+        this.handleClose(connection)
+        client.terminate()
+      } else {
+        this.logger.error(new Error(`Connection is not open: '${client.readyState}'`))
       }
     }
   }
@@ -113,15 +115,18 @@ export class WSServer {
     const map = new Map()
 
     for (const [connectionId, connection] of this.connections.entries()) {
-      map.set(connectionId, cb(connection))
+      if (connection.client.readyState === WebSocket.OPEN) {
+        map.set(connectionId, cb(connection))
+      }
     }
 
     const resolves = await resolvePromiseMap<string, WSResponse | null>(map)
 
     for (let i = 0; i < resolves.length; i++) {
       const { id, item } = resolves[parseInt(`${i}`, 10)]
-      if (id && item) {
-        this.send(id, item)
+      const connection = this.connections.get(id)
+      if (connection && item) {
+        this.send(connection, item)
       }
     }
   }
@@ -140,10 +145,12 @@ export class WSServer {
     return () => this.bus.removeListener(EVENT_DISCONNECT, handler)
   }
 
-  /**
-   */
-  protected init() {
-    this.ws = new WebSocket.Server({ port: this.port })
+  protected init(server?: Server) {
+    if (server) {
+      this.ws = new WebSocket.Server({ server })
+    } else {
+      this.ws = new WebSocket.Server({ port: this.port })
+    }
 
     logger.info(`Websocket Server started on 0.0.0.0:${this.port}`)
     this.ws.on('connection', (client: WebSocket) => {
@@ -155,6 +162,7 @@ export class WSServer {
       this.handleMessage(connection)
       this.handleKeepAlive(connection)
       this.handleClose(connection)
+      this.handleError(connection)
       this.bus.emit(EVENT_CONNECT, id)
     })
   }
@@ -164,50 +172,61 @@ export class WSServer {
    * @param client
    */
   protected handleMessage({ id, client }: IConnection) {
-    client.on('message', async (message: string) => {
-      let requestObject: any
+    client.on('message', (message: string) => {
+      let requestObject: IWSRequest
 
       try {
         requestObject = JSON.parse(message)
       } catch (e) {
-        const errorResponse = WSResponse.fromRequest(requestObject, 'error')
-        errorResponse.error = e.message || MESSAGE_SYSTEM_ERROR
         this.logger.error('request parse error:', e)
-        this.send(id, errorResponse)
         return
       }
 
+      const connection = this.getConnection(id)
       if (typeof requestObject !== 'object') {
-        const errorResponse = WSResponse.fromRequest(requestObject, 'error')
-        errorResponse.error = 'HttpClient must be a serialized object'
         this.logger.error('request type error:', requestObject)
-        this.send(id, errorResponse)
+        this.sendError(requestObject, connection, 'HttpClient must be a serialized object')
         return
       }
 
       try {
         const request = new WSRequest(requestObject)
-        this.logger.debug(`request from ${id}:`, request)
-        const key = `${request.header.service}:${request.header.action}`
-        const handler = this.handlers[this.eventRequestCode].get(key)
-        if (handler) {
-          const response = WSResponse.fromRequest(requestObject)
-          response.payload = await handler.handler(request, this.getConnection(id))
-          this.send(id, response)
-          return
+        if (this.validatorRequest.validate(request)) {
+          this.logger.debug(`request from ${id}:`, request)
+          const key = `${request.header.service}:${request.header.action}`
+          const handler = this.handlers[this.eventRequestCode].get(key)
+          if (handler) {
+            const response = WSResponse.fromRequest(requestObject)
+            handler
+              .handler(request, connection)
+              .then((payload: Record<string, any>) => {
+                response.payload = payload
+                return this.send(connection, response)
+              })
+              .catch(logger.error)
+          } else {
+            const messageError = `Handler does not exist ${key}`
+            this.logger.error(messageError)
+            this.sendError(requestObject, connection, messageError)
+          }
         }
       } catch (e) {
-        const errorResponse = WSResponse.fromRequest(requestObject, 'error')
+        let errMessage = ''
         if (process.env.NODE_ENV === 'production') {
-          errorResponse.error = MESSAGE_SYSTEM_ERROR
+          errMessage = MESSAGE_SYSTEM_ERROR
         } else {
-          errorResponse.error = e.message || MESSAGE_SYSTEM_ERROR
+          errMessage = e.message || MESSAGE_SYSTEM_ERROR
         }
-
-        this.logger.error('request validate error:', e)
-        this.send(id, errorResponse)
+        this.logger.error(e)
+        this.sendError(requestObject, connection, errMessage)
       }
     })
+  }
+
+  protected sendError(requestObject: IWSRequest, connection: IConnection, message: string) {
+    const errorResponse = WSResponse.fromRequest(requestObject, 'error')
+    errorResponse.error = message
+    return this.send(connection, errorResponse)
   }
 
   /**
@@ -216,7 +235,11 @@ export class WSServer {
   protected handleKeepAlive(connection: IConnection) {
     if (this.keepAliveTimeout) {
       connection.keepAlive = setInterval(() => {
-        connection.client.ping()
+        if (connection.client.readyState === WebSocket.OPEN) {
+          connection.client.ping()
+        } else {
+          logger.debug('Try to WebSocket client ping but connection not ready.')
+        }
       }, this.keepAliveTimeout)
     }
   }
@@ -234,6 +257,12 @@ export class WSServer {
       this.connections.delete(id)
       this.logger.debug('disconnected: ', id)
       this.bus.emit(EVENT_DISCONNECT, id)
+    })
+  }
+
+  protected handleError({ id, client }: IConnection) {
+    client.on('error', (err: Error) => {
+      this.logger.error(`Connection ${id}: `, err)
     })
   }
 }

@@ -1,5 +1,3 @@
-import * as yup from 'yup'
-
 export interface IWSRequestHeader {
   uuid?: string
   service: string
@@ -20,28 +18,7 @@ export class WSRequest implements IWSRequest {
    * @param requestObj
    */
   public constructor(requestObj: IWSRequest) {
-    WSRequest.validate(requestObj)
     this.header = requestObj.header
     this.payload = requestObj.payload
-  }
-
-  /**
-   * @param messageObj
-   */
-  public static validate(messageObj: IWSRequest) {
-    yup
-      .object()
-      .shape({
-        header: yup
-          .object()
-          .shape({
-            uuid: yup.string(),
-            service: yup.string().required(),
-            action: yup.string().required(),
-          })
-          .required(),
-        payload: yup.object().required(),
-      })
-      .validateSync(messageObj)
   }
 }

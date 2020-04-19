@@ -1,4 +1,3 @@
-import * as yup from 'yup'
 import { IWSRequest } from './WSRequest'
 
 const types = ['response', 'event', 'error'] as ['response', 'event', 'error']
@@ -28,26 +27,6 @@ export class WSResponse implements IWSResponse {
   public constructor(header?: IWSResponseHeader, payload?: Record<string, any>) {
     this.header = header || { service: '', action: '', type: 'response' }
     this.payload = payload || {}
-  }
-
-  /**
-   */
-  public validate() {
-    yup
-      .object()
-      .shape({
-        header: yup
-          .object()
-          .shape({
-            uuid: yup.string(),
-            service: yup.string().required(),
-            action: yup.string().required(),
-            type: yup.string().oneOf(types).required(),
-          })
-          .required(),
-        payload: yup.object().required(),
-      })
-      .validateSync(this)
   }
 
   /**
