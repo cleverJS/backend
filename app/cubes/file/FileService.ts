@@ -8,6 +8,7 @@ import { AbstractResource } from '../../../core/db/AbstractResource'
 import { logger } from '../../../core/logger/logger'
 import { HttpClient } from '../../../core/http/client/HttpClient'
 import { File } from './File'
+import { Duplex } from 'stream'
 
 interface IDependenciesList extends IAbstractDependenciesList<File> {
   resource: AbstractResource<File>
@@ -18,10 +19,17 @@ export class FileService {
   protected deps: IDependenciesList
   protected baseDir: string
   protected baseUrl: string = '/usr'
+  protected tmpDir: string = ''
 
   public constructor(baseDir: string, deps: IDependenciesList) {
     this.deps = deps
     this.baseDir = baseDir
+    this.deps = deps
+
+    if (!fs.existsSync(baseDir)) {
+      fs.mkdirpSync(baseDir)
+    }
+    this.tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cleverjs-files'))
   }
 
   public async createFileFromContent(
@@ -34,19 +42,32 @@ export class FileService {
     parseBase64: boolean = true
   ) {
     let item
-    const tmpContent = parseBase64 ? this.parseBase64Data(content) : { content, mime }
+    const tmpContent = parseBase64 ? this.parseBase64Data(content) : { mime, content: Buffer.from(content) }
     if (tmpContent) {
-      const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'file-'))
-      try {
-        const tmpFile = path.normalize(`${tmpDir}${path.sep}${uuid()}`)
-        await fs.writeFile(tmpFile, tmpContent.content, { encoding: 'utf-8' })
-        item = await this.createFileFromPath(tmpFile, newFileName, tmpContent.mime, code, sort, data)
-      } catch (e) {
-        logger.error(e)
-      }
+      item = this.createFileFromStream(FileService.bufferToStream(tmpContent.content), newFileName, tmpContent.mime, code, sort, data)
     }
 
     return item
+  }
+
+  public createFileFromStream(
+    stream: Duplex,
+    newFileName: string,
+    mime: string | null = null,
+    code: string | null = null,
+    sort: number = 100,
+    data: object = {}
+  ): Promise<File | null | undefined> {
+    const tmpFile = path.normalize(`${this.tmpDir}${path.sep}${uuid()}`)
+    const writeStream = fs.createWriteStream(tmpFile, { encoding: 'utf-8' })
+    stream.pipe(writeStream)
+    return new Promise(resolve => {
+      writeStream.on('close', () => {
+        stream.destroy()
+        const item = this.createFileFromPath(tmpFile, newFileName, mime, code, sort, data)
+        resolve(item)
+      })
+    })
   }
 
   public async createFileFromPath(
@@ -57,10 +78,12 @@ export class FileService {
     sort: number = 100,
     data: object = {}
   ) {
-    const fileName = `${Date.now()}_${newFileName || this.getFilenameFromPath(pathOrUrl)}`
+    const realFileName = newFileName || this.getFilenameFromPath(pathOrUrl)
+    const fileName = `${Date.now()}_${realFileName}`
     const urlPath = await this.createUrlPath(this.baseDir, code, fileName)
-    const url = urlPath + path.sep + fileName
-    await this.copyFileToDestination(pathOrUrl, this.baseDir + url)
+    const url = `${urlPath}${path.sep}${fileName}`
+    const destinationPath = `${this.baseDir}${url}`;
+    await this.copyFileToDestination(pathOrUrl, destinationPath)
 
     let item
     try {
@@ -88,16 +111,27 @@ export class FileService {
     }
   }
 
+  public static bufferToStream(buffer: Buffer) {
+    const stream = new Duplex()
+    stream.push(buffer)
+    stream.push(null)
+
+    stream.on("error", (error: Error) => {
+      logger.error(error)
+    })
+    return stream
+  }
+
   protected async deleteFile(item: File) {
     const dir = item.baseDir + item.url
     await fs.remove(dir)
   }
 
-  protected async copyFileToDestination(source: string, destination: string) {
+  protected copyFileToDestination(source: string, destination: string) {
     if (source.substr(0, 4).toLocaleLowerCase() === 'http') {
-      await this.deps.httpClient.download(source, destination).catch(logger.error)
+      return this.deps.httpClient.download(source, destination)
     } else {
-      await fs.copyFile(source, destination).catch(logger.error)
+      return fs.copyFile(source, destination).catch(logger.error)
     }
   }
 
@@ -120,7 +154,7 @@ export class FileService {
       if (match && match[1] && match[2]) {
         return {
           mime: match[1],
-          content: Buffer.from(match[2], 'base64'),
+          content: Buffer.from(match[2]),
         }
       }
     }
