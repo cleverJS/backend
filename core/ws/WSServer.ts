@@ -1,5 +1,5 @@
 import WebSocket from 'ws'
-import { v4 as uuid } from 'uuid'
+import { v4 as uuidV4 } from 'uuid'
 import { EventEmitter } from 'events'
 import { Server } from 'http'
 import { IWSRequest, WSRequest } from './WSRequest'
@@ -154,7 +154,7 @@ export class WSServer {
 
     logger.info(`Websocket Server started on 0.0.0.0:${this.port}`)
     this.ws.on('connection', (client: WebSocket) => {
-      const id = uuid()
+      const id = uuidV4()
       const state = {}
       const connection: IConnection = { id, client, state }
       this.connections.set(id, connection)

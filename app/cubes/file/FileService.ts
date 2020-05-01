@@ -1,14 +1,14 @@
 import fs from 'fs-extra'
 import path from 'path'
 import os from 'os'
-import { v4 as uuid } from 'uuid'
+import { v4 as uuidV4 } from 'uuid'
 import md5 from 'md5'
+import { Duplex } from 'stream'
 import { IAbstractDependenciesList } from '../../../core/AbstractService'
 import { AbstractResource } from '../../../core/db/AbstractResource'
 import { logger } from '../../../core/logger/logger'
 import { HttpClient } from '../../../core/http/client/HttpClient'
 import { File } from './File'
-import { Duplex } from 'stream'
 
 interface IDependenciesList extends IAbstractDependenciesList<File> {
   resource: AbstractResource<File>
@@ -58,10 +58,10 @@ export class FileService {
     sort: number = 100,
     data: object = {}
   ): Promise<File | null | undefined> {
-    const tmpFile = path.normalize(`${this.tmpDir}${path.sep}${uuid()}`)
+    const tmpFile = path.normalize(`${this.tmpDir}${path.sep}${uuidV4()}`)
     const writeStream = fs.createWriteStream(tmpFile, { encoding: 'utf-8' })
     stream.pipe(writeStream)
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       writeStream.on('close', () => {
         stream.destroy()
         const item = this.createFileFromPath(tmpFile, newFileName, mime, code, sort, data)
@@ -82,7 +82,7 @@ export class FileService {
     const fileName = `${Date.now()}_${realFileName}`
     const urlPath = await this.createUrlPath(this.baseDir, code, fileName)
     const url = `${urlPath}${path.sep}${fileName}`
-    const destinationPath = `${this.baseDir}${url}`;
+    const destinationPath = `${this.baseDir}${url}`
     await this.copyFileToDestination(pathOrUrl, destinationPath)
 
     let item
@@ -116,7 +116,7 @@ export class FileService {
     stream.push(buffer)
     stream.push(null)
 
-    stream.on("error", (error: Error) => {
+    stream.on('error', (error: Error) => {
       logger.error(error)
     })
     return stream
@@ -130,9 +130,9 @@ export class FileService {
   protected copyFileToDestination(source: string, destination: string) {
     if (source.substr(0, 4).toLocaleLowerCase() === 'http') {
       return this.deps.httpClient.download(source, destination)
-    } else {
-      return fs.copyFile(source, destination).catch(logger.error)
     }
+
+    return fs.copyFile(source, destination).catch(logger.error)
   }
 
   protected async createUrlPath(baseDir: string, code: string | null, fileName: string) {

@@ -5,7 +5,7 @@ import { ResourceContainer } from './ResourceContainer'
 import { ServiceContainer } from './ServiceContainer'
 import { RouteContainer } from './RouteContainer'
 import { HttpServer } from '../core/http/HttpServer'
-import { logger } from "../core/logger/logger";
+import { logger } from '../core/logger/logger'
 
 export class App {
   private readonly httpServer: HttpServer
