@@ -29,8 +29,9 @@ export const defaults: ISettings = {
   connection: knexConfig,
 
   websocket: {
-    keepalive: 20 * 1000,
     port: 8001,
+    keepalive: 20 * 1000,
+    path: '/ws',
   },
 
   redis: {

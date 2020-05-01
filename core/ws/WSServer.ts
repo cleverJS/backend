@@ -37,7 +37,7 @@ export class WSServer {
   protected ws: WebSocket.Server | null = null
   protected bus: EventEmitter
   protected readonly logger = loggerNamespace('WSServer')
-  protected readonly port: number
+  protected readonly config: IWSConfig
   protected readonly connections: Map<string, IConnection> = new Map()
   protected readonly keepAliveTimeout: number | null
   protected readonly handlers: IHandlers = {
@@ -49,7 +49,7 @@ export class WSServer {
   public constructor(config: IWSConfig, server?: Server) {
     this.validatorRequest = new WSRequestValidator()
     this.bus = new EventEmitter()
-    this.port = config.port
+    this.config = config
     this.keepAliveTimeout = config.keepalive || KEEP_ALIVE_DEFAULT
     this.init(server)
   }
@@ -146,13 +146,14 @@ export class WSServer {
   }
 
   protected init(server?: Server) {
+    const { port, path } = this.config
     if (server) {
-      this.ws = new WebSocket.Server({ server })
+      this.ws = new WebSocket.Server({ server, path })
     } else {
-      this.ws = new WebSocket.Server({ port: this.port })
+      this.ws = new WebSocket.Server({ path, port })
     }
 
-    logger.info(`Websocket Server started on 0.0.0.0:${this.port}`)
+    logger.info(`Websocket Server started on 0.0.0.0:${port}${path}`)
     this.ws.on('connection', (client: WebSocket) => {
       const id = uuidV4()
       const state = {}
