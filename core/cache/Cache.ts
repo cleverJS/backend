@@ -18,7 +18,7 @@ export class Cache {
 
   public async get(key: string | string[]) {
     const item = await this.service.getCache().getItem(Cache.key(key))
-    if (item.isHit) {
+    if (item.isHit()) {
       return item.get()
     }
 
@@ -42,7 +42,7 @@ export class Cache {
   }
 
   public invalidate(key: string) {
-    this.service.getCache().deleteItem(Cache.key(key))
+    return this.service.getCache().deleteItem(Cache.key(key))
   }
 
   public invalidateTags() {
