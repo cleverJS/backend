@@ -42,7 +42,7 @@ export class Cache {
   }
 
   public invalidate(key: string) {
-    this.service.getCache().deleteItem(Cache.key(key))
+    return this.service.getCache().deleteItem(Cache.key(key))
   }
 
   public invalidateTags() {
