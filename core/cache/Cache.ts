@@ -18,7 +18,7 @@ export class Cache {
 
   public async get(key: string | string[]) {
     const item = await this.service.getCache().getItem(Cache.key(key))
-    if (item.isHit) {
+    if (item.isHit()) {
       return item.get()
     }
 
