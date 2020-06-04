@@ -15,14 +15,14 @@ const EVENT_CONNECT = 'connect'
 const EVENT_DISCONNECT = 'disconnect'
 const MESSAGE_SYSTEM_ERROR = 'System error'
 
-export interface IConnection {
+export interface IConnection<T extends Record<string, any>> {
   id: string
   client: WebSocket
   keepAlive?: NodeJS.Timeout
-  state: Record<string, any>
+  state: T
 }
 
-export type RequestHandler = (request: WSRequest, connection: IConnection) => Promise<Record<string, any>>
+export type RequestHandler = (request: WSRequest, connection: IConnection<any>) => Promise<Record<string, any>>
 export type RequestValidator = (request: WSRequest) => Promise<{ status: 'success' | 'fail' | 'error'; message?: string }>
 interface Request {
   handler: RequestHandler
@@ -38,7 +38,7 @@ export class WSServer {
   protected bus: EventEmitter
   protected readonly logger = loggerNamespace('WSServer')
   protected readonly config: IWSConfig
-  protected readonly connections: Map<string, IConnection> = new Map()
+  protected readonly connections: Map<string, IConnection<Record<string, any>>> = new Map()
   protected readonly keepAliveTimeout: number | null
   protected readonly handlers: IHandlers = {
     [EVENT_REQUEST]: new Map(),
@@ -60,18 +60,18 @@ export class WSServer {
    * @param handler
    * @param validator
    */
-  public onRequest(service: string, action: string, handler: RequestHandler, validator?: RequestValidator): Function {
+  public onRequest(service: string, action: string, handler: RequestHandler, validator?: RequestValidator): () => Request | undefined {
     const key = `${service}:${action}`
     this.handlers[this.eventRequestCode].set(key, { handler, validator })
 
-    return () => this.handlers[this.eventRequestCode].get(key)
+    return (): Request | undefined => this.handlers[this.eventRequestCode].get(key)
   }
 
   /**
    * @param connection
    * @param response
    */
-  public send(connection: IConnection, response: WSResponse) {
+  public send(connection: IConnection<Record<string, any>>, response: WSResponse): void {
     if (connection) {
       const { client } = connection
 
@@ -89,13 +89,13 @@ export class WSServer {
 
   /**
    */
-  public getConnections(): IConnection[] {
+  public getConnections(): IConnection<Record<string, any>>[] {
     return [...this.connections.values()]
   }
 
   /**
    */
-  public getConnection(id: string) {
+  public getConnection(id: string): IConnection<Record<string, any>> {
     const connection = this.connections.get(id)
     if (!connection) {
       throw new Error('Connection was not found')
@@ -105,13 +105,13 @@ export class WSServer {
 
   /**
    */
-  public destroy() {
+  public destroy(): void {
     if (this.ws) {
       this.ws.close()
     }
   }
 
-  public async broadcast(cb: (connection: IConnection) => Promise<WSResponse | null>) {
+  public async broadcast(cb: (connection: IConnection<Record<string, any>>) => Promise<WSResponse | null>): Promise<void> {
     const map = new Map()
 
     for (const [connectionId, connection] of this.connections.entries()) {
@@ -133,19 +133,19 @@ export class WSServer {
 
   /**
    */
-  public onConnect(handler: (id: string) => void): () => void {
+  public onConnect(handler: (id: string) => void): () => EventEmitter {
     this.bus.addListener(EVENT_CONNECT, handler)
-    return () => this.bus.removeListener(EVENT_CONNECT, handler)
+    return (): EventEmitter => this.bus.removeListener(EVENT_CONNECT, handler)
   }
 
   /**
    */
-  public onDisconnect(handler: (id: string) => void): () => void {
+  public onDisconnect(handler: (id: string) => void): () => EventEmitter {
     this.bus.addListener(EVENT_DISCONNECT, handler)
-    return () => this.bus.removeListener(EVENT_DISCONNECT, handler)
+    return (): EventEmitter => this.bus.removeListener(EVENT_DISCONNECT, handler)
   }
 
-  protected init(server?: Server) {
+  protected init(server?: Server): void {
     const { port, path } = this.config
     if (server) {
       this.ws = new WebSocket.Server({ server, path })
@@ -156,8 +156,8 @@ export class WSServer {
     logger.info(`Websocket Server started on 0.0.0.0:${port}${path}`)
     this.ws.on('connection', (client: WebSocket) => {
       const id = uuidV4()
-      const state = {}
-      const connection: IConnection = { id, client, state }
+      const state: Record<string, any> = {}
+      const connection: IConnection<Record<string, any>> = { id, client, state }
       this.connections.set(id, connection)
       this.logger.debug('connected: ', id)
       this.handleMessage(connection)
@@ -172,7 +172,7 @@ export class WSServer {
    * @param id
    * @param client
    */
-  protected handleMessage({ id, client }: IConnection) {
+  protected handleMessage({ id, client }: IConnection<Record<string, any>>): void {
     client.on('message', (message: string) => {
       let requestObject: IWSRequest
 
@@ -212,7 +212,7 @@ export class WSServer {
           }
         }
       } catch (e) {
-        let errMessage = ''
+        let errMessage
         if (process.env.NODE_ENV === 'production') {
           errMessage = MESSAGE_SYSTEM_ERROR
         } else {
@@ -224,7 +224,7 @@ export class WSServer {
     })
   }
 
-  protected sendError(requestObject: IWSRequest, connection: IConnection, message: string) {
+  protected sendError(requestObject: IWSRequest, connection: IConnection<Record<string, any>>, message: string): void {
     const errorResponse = WSResponse.fromRequest(requestObject, 'error')
     errorResponse.error = message
     return this.send(connection, errorResponse)
@@ -233,7 +233,7 @@ export class WSServer {
   /**
    * @param connection
    */
-  protected handleKeepAlive(connection: IConnection) {
+  protected handleKeepAlive(connection: IConnection<Record<string, any>>): void {
     if (this.keepAliveTimeout) {
       connection.keepAlive = setInterval(() => {
         if (connection.client.readyState === WebSocket.OPEN) {
@@ -250,7 +250,7 @@ export class WSServer {
    * @param client
    * @param keepAlive
    */
-  protected handleClose({ id, client, keepAlive }: IConnection) {
+  protected handleClose({ id, client, keepAlive }: IConnection<Record<string, any>>): void {
     client.on('close', () => {
       if (keepAlive) {
         clearInterval(keepAlive)
@@ -261,7 +261,7 @@ export class WSServer {
     })
   }
 
-  protected handleError({ id, client }: IConnection) {
+  protected handleError({ id, client }: IConnection<Record<string, any>>): void {
     client.on('error', (err: Error) => {
       this.logger.error(`Connection ${id}: `, err)
     })

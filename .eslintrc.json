@@ -7,10 +7,24 @@
     "tsconfigRootDir": "."
   },
   "env": {
+    "browser": false,
     "node": true,
     "es6": true,
     "jest": true
   },
+  "plugins": [
+    "@typescript-eslint",
+    "eslint-comments",
+    "promise",
+    "jest",
+    "node",
+    "import",
+    "sonarjs",
+    "prettier",
+    "security",
+    "optimize-regex",
+    "no-loops"
+  ],
   "extends": [
     "eslint:recommended",
     "airbnb-base",
@@ -31,19 +45,6 @@
     "plugin:prettier/recommended",
     // Add security rules last to make sure they are not overridden
     "plugin:security/recommended"
-  ],
-  "plugins": [
-    "eslint-comments",
-    "promise",
-    "jest",
-    "node",
-    "import",
-    "sonarjs",
-    "prettier",
-    "security",
-    "optimize-regex",
-    "no-loops",
-    "@typescript-eslint"
   ],
   "rules": {
     "@typescript-eslint/no-unused-vars": 0,

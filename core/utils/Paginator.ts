@@ -2,48 +2,57 @@ export class Paginator {
   protected currentPage: number = 1
   protected itemsPerPage: number = 10
   protected total: number = 0
+  protected skipTotal: boolean = false
 
-  public getPageCount() {
+  public getPageCount(): number {
     if (!this.getItemsPerPage()) {
       return 0
     }
     return Math.ceil(this.getTotal() / this.getItemsPerPage())
   }
 
-  public getCurrentPage() {
+  public getCurrentPage(): number {
     return this.currentPage
   }
 
-  public setCurrentPage(currentPage: number) {
+  public setCurrentPage(currentPage: number): void {
     this.currentPage = currentPage
   }
 
-  public getItemsPerPage() {
+  public getItemsPerPage(): number {
     return this.itemsPerPage
   }
 
-  public setItemsPerPage(value: number) {
+  public setItemsPerPage(value: number): void {
     this.itemsPerPage = value
   }
 
-  public getTotal() {
+  public getTotal(): number {
     return this.total
   }
 
-  public setTotal(total: number) {
+  public setTotal(total: number): void {
     this.total = total
     this.validate()
   }
 
-  public getOffset() {
+  public setSkipTotal(value: boolean): void {
+    this.skipTotal = value
+  }
+
+  public isSkipTotal(): boolean {
+    return this.skipTotal
+  }
+
+  public getOffset(): number {
     return this.itemsPerPage * (this.currentPage - 1)
   }
 
-  public getLimit() {
+  public getLimit(): number {
     return this.itemsPerPage
   }
 
-  public getCurrentPages() {
+  public getCurrentPages(): number[] {
     const result = []
     const pageCurrent = this.getCurrentPage()
     const pageCount = this.getPageCount()
@@ -71,7 +80,7 @@ export class Paginator {
     return result
   }
 
-  protected validate() {
+  protected validate(): void {
     if (this.currentPage < 1) {
       this.currentPage = 1
     }
