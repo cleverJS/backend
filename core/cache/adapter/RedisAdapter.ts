@@ -2,13 +2,14 @@ import { AdapterInterface } from './AdapterInterface'
 import { CacheItemInterface } from '../CacheItemInterface'
 import { CacheItem } from '../CacheItem'
 import { Redis } from '../../db/redis/Redis'
-import { logger } from '../../logger/logger'
+import { loggerNamespace } from '../../logger/logger'
 
 interface IDependencies {
   redis: Redis
 }
 
 export class RedisAdapter implements AdapterInterface {
+  protected readonly logger = loggerNamespace('RedisAdapter')
   private readonly deps: IDependencies
 
   public constructor(deps: IDependencies) {
@@ -20,13 +21,13 @@ export class RedisAdapter implements AdapterInterface {
   }
 
   public async getItems(keys: string[]) {
-    return (await this.deps.redis.mget(keys)).map(i => {
+    return (await this.deps.redis.mget(keys)).map((i) => {
       return JSON.parse(i)
     })
   }
 
   public async hasItem(key: string) {
-    return await this.deps.redis.exists([key]) > 0
+    return (await this.deps.redis.exists([key])) > 0
   }
 
   public async clear() {
@@ -34,21 +35,21 @@ export class RedisAdapter implements AdapterInterface {
   }
 
   public async deleteItem(key: string) {
-    return await this.deps.redis.del([key]) > 0
+    return (await this.deps.redis.del([key])) > 0
   }
 
   public async deleteItems(keys: string[]) {
-    return await this.deps.redis.del(keys) > 0
+    return (await this.deps.redis.del(keys)) > 0
   }
 
   public async save(item: CacheItemInterface) {
     const result = await this.deps.redis.set(item.getKey(), JSON.stringify(item))
-    logger.info('save', result)
+    this.logger.info('save', result)
     return false
   }
 
   public async saveDeferred(item: CacheItemInterface) {
-    logger.info(item)
+    this.logger.info(item)
     return false
   }
 

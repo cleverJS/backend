@@ -4,9 +4,8 @@ import { EventEmitter } from 'events'
 import { Server } from 'http'
 import { IWSRequest, WSRequest } from './WSRequest'
 import { WSResponse } from './WSResponse'
-import { logger, loggerNamespace } from '../logger/logger'
+import { loggerNamespace } from '../logger/logger'
 import { IWSConfig } from './config'
-import { resolvePromiseMap } from '../utils/promise'
 import { WSRequestValidator } from './validator/WSRequestValidator'
 
 const EVENT_REQUEST = 'request'
@@ -23,10 +22,8 @@ export interface IConnection<T extends Record<string, any>> {
 }
 
 export type RequestHandler = (request: WSRequest, connection: IConnection<any>) => Promise<Record<string, any>>
-export type RequestValidator = (request: WSRequest) => Promise<{ status: 'success' | 'fail' | 'error'; message?: string }>
 interface Request {
   handler: RequestHandler
-  validator?: RequestValidator
 }
 
 interface IHandlers {
@@ -58,11 +55,10 @@ export class WSServer {
    * @param service
    * @param action
    * @param handler
-   * @param validator
    */
-  public onRequest(service: string, action: string, handler: RequestHandler, validator?: RequestValidator): () => Request | undefined {
+  public onRequest(service: string, action: string, handler: RequestHandler): () => Request | undefined {
     const key = `${service}:${action}`
-    this.handlers[this.eventRequestCode].set(key, { handler, validator })
+    this.handlers[this.eventRequestCode].set(key, { handler })
 
     return (): Request | undefined => this.handlers[this.eventRequestCode].get(key)
   }
@@ -71,12 +67,15 @@ export class WSServer {
    * @param connection
    * @param response
    */
-  public send(connection: IConnection<Record<string, any>>, response: WSResponse): void {
+  public async send(connection: IConnection<Record<string, any>>, response: Promise<WSResponse | null>): Promise<void> {
     if (connection) {
       const { client } = connection
 
       if (client.readyState === WebSocket.OPEN) {
-        client.send(response.toString())
+        const result = await response
+        if (result) {
+          client.send(result.toString())
+        }
       } else if ([WebSocket.CLOSED, WebSocket.CLOSING].includes(client.readyState)) {
         this.logger.warn('Force closing')
         this.handleClose(connection)
@@ -107,26 +106,17 @@ export class WSServer {
    */
   public destroy(): void {
     if (this.ws) {
+      this.logger.info('server destroy')
       this.ws.close()
     }
   }
 
-  public async broadcast(cb: (connection: IConnection<Record<string, any>>) => Promise<WSResponse | null>): Promise<void> {
-    const map = new Map()
-
-    for (const [connectionId, connection] of this.connections.entries()) {
-      if (connection.client.readyState === WebSocket.OPEN) {
-        map.set(connectionId, cb(connection))
-      }
-    }
-
-    const resolves = await resolvePromiseMap<string, WSResponse | null>(map)
-
-    for (let i = 0; i < resolves.length; i++) {
-      const { id, item } = resolves[parseInt(`${i}`, 10)]
-      const connection = this.connections.get(id)
-      if (connection && item) {
-        this.send(connection, item)
+  public broadcast(cb: (connection: IConnection<Record<string, any>>) => Promise<WSResponse | null>): void {
+    const connectionArray = Array.from(this.connections.values())
+    for (let i = 0; i < connectionArray.length; i++) {
+      const conn = connectionArray[i]
+      if (conn.client.readyState === WebSocket.OPEN) {
+        this.send(conn, cb(conn)).catch(this.logger.error)
       }
     }
   }
@@ -153,7 +143,7 @@ export class WSServer {
       this.ws = new WebSocket.Server({ path, port })
     }
 
-    logger.info(`Websocket Server started on 0.0.0.0:${port}${path}`)
+    this.logger.info(`Websocket Server started on 0.0.0.0:${port}${path}`)
     this.ws.on('connection', (client: WebSocket) => {
       const id = uuidV4()
       const state: Record<string, any> = {}
@@ -169,10 +159,10 @@ export class WSServer {
   }
 
   /**
-   * @param id
-   * @param client
+   * @param connection
    */
-  protected handleMessage({ id, client }: IConnection<Record<string, any>>): void {
+  protected handleMessage(connection: IConnection<Record<string, any>>): void {
+    const { client, id } = connection
     client.on('message', (message: string) => {
       let requestObject: IWSRequest
 
@@ -183,33 +173,24 @@ export class WSServer {
         return
       }
 
-      const connection = this.getConnection(id)
       if (typeof requestObject !== 'object') {
         this.logger.error('request type error:', requestObject)
-        this.sendError(requestObject, connection, 'HttpClient must be a serialized object')
+        this.sendError(requestObject, connection, 'HttpClient must be a serialized object').catch(this.logger.error)
         return
       }
 
       try {
         const request = new WSRequest(requestObject)
-        if (this.validatorRequest.validate(request)) {
-          this.logger.debug(`request from ${id}:`, request)
-          const key = `${request.header.service}:${request.header.action}`
-          const handler = this.handlers[this.eventRequestCode].get(key)
-          if (handler) {
-            const response = WSResponse.fromRequest(requestObject)
-            handler
-              .handler(request, connection)
-              .then((payload: Record<string, any>) => {
-                response.payload = payload
-                return this.send(connection, response)
-              })
-              .catch(logger.error)
-          } else {
-            const messageError = `Handler does not exist ${key}`
-            this.logger.error(messageError)
-            this.sendError(requestObject, connection, messageError)
-          }
+        this.logger.debug(`request from ${id}:`, request)
+        const key = `${request.header.service}:${request.header.action}`
+        const handler = this.handlers[this.eventRequestCode].get(key)
+        if (handler) {
+          const response = WSResponse.fromRequest(requestObject, handler.handler(request, connection))
+          this.send(connection, response).catch(this.logger.error)
+        } else {
+          const messageError = `Handler does not exist ${key}`
+          this.logger.error(messageError)
+          this.sendError(requestObject, connection, messageError).catch(this.logger.error)
         }
       } catch (e) {
         let errMessage
@@ -219,15 +200,15 @@ export class WSServer {
           errMessage = e.message || MESSAGE_SYSTEM_ERROR
         }
         this.logger.error(e)
-        this.sendError(requestObject, connection, errMessage)
+        this.sendError(requestObject, connection, errMessage).catch(this.logger.error)
       }
     })
   }
 
-  protected sendError(requestObject: IWSRequest, connection: IConnection<Record<string, any>>, message: string): void {
-    const errorResponse = WSResponse.fromRequest(requestObject, 'error')
+  protected async sendError(requestObject: IWSRequest, connection: IConnection<Record<string, any>>, message: string): Promise<void> {
+    const errorResponse = await WSResponse.fromRequest(requestObject, Promise.resolve({}), 'error')
     errorResponse.error = message
-    return this.send(connection, errorResponse)
+    return this.send(connection, Promise.resolve(errorResponse))
   }
 
   /**
@@ -239,7 +220,7 @@ export class WSServer {
         if (connection.client.readyState === WebSocket.OPEN) {
           connection.client.ping()
         } else {
-          logger.debug('Try to WebSocket client ping but connection not ready.')
+          this.logger.debug('Try to WebSocket client ping but connection not ready.')
         }
       }, this.keepAliveTimeout)
     }

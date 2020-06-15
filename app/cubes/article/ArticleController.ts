@@ -1,6 +1,14 @@
 import { ArticleService } from './ArticleService'
-import { WSServer } from '../../../core/ws/WSServer'
+import { IConnection, WSServer } from "../../../core/ws/WSServer";
 import { WSRequest } from '../../../core/ws/WSRequest'
+import { sleep } from "../../../core/utils/sleep";
+
+interface IConnectionState {
+  token: string
+}
+
+interface IAppConnection extends IConnection<IConnectionState> {
+}
 
 interface IDependencies {
   articleService: ArticleService
@@ -16,14 +24,16 @@ export class ArticleController {
   }
 
   // @ts-ignore
-  public actionWSTest = async (request: WSRequest) => {
+  public actionWSTest = async (request: WSRequest, connection: IAppConnection) => {
+    await sleep(2000)
     return {
       status: 'success',
     }
   }
 
   // @ts-ignore
-  public actionWSTest2 = async (request: WSRequest) => {
+  public actionWSTest2 = async (request: WSRequest, connection: IConnection) => {
+    await sleep(500)
     return {
       status: 'success',
     }

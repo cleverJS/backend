@@ -1,12 +1,13 @@
 import Knex from 'knex'
 import { AbstractEntity } from '../../entity/AbstractEntity'
 import { AbstractResource } from '../AbstractResource'
-import { logger } from '../../logger/logger'
 import { Condition, TConditionOperator } from '../Condition'
 import { ConditionDbParser } from './condition/ConditionDbParser'
 import { EntityFactory } from '../../entity/EntityFactory'
+import { loggerNamespace } from '../../logger/logger'
 
 export abstract class AbstractDBResource<T extends AbstractEntity<Record<string, any>>> extends AbstractResource<T> {
+  protected readonly logger = loggerNamespace('AbstractDBResource')
   protected primaryKey = 'id'
   protected table: string = ''
   protected connection: Knex
@@ -18,7 +19,7 @@ export abstract class AbstractDBResource<T extends AbstractEntity<Record<string,
     this.conditionParser = conditionParser
   }
 
-  public findById(id: string): Promise<T | null> {
+  public findById(id: string | number): Promise<T | null> {
     const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: this.primaryKey, value: id }] })
     return this.findOne(condition)
   }
@@ -50,7 +51,7 @@ export abstract class AbstractDBResource<T extends AbstractEntity<Record<string,
     try {
       rows = await queryBuilder.select()
     } catch (e) {
-      logger.error(e)
+      this.logger.error(e)
       throw e
     }
 
@@ -97,7 +98,7 @@ export abstract class AbstractDBResource<T extends AbstractEntity<Record<string,
         }
       }
     } catch (e) {
-      logger.error(e)
+      this.logger.error(e)
       throw e
     }
 
@@ -124,7 +125,7 @@ export abstract class AbstractDBResource<T extends AbstractEntity<Record<string,
       const result = await queryBuilder.update(data)
       return result > 0
     } catch (e) {
-      logger.error(e)
+      this.logger.error(e)
       throw e
     }
   }
@@ -135,14 +136,14 @@ export abstract class AbstractDBResource<T extends AbstractEntity<Record<string,
     try {
       result = await queryBuilder.truncate()
     } catch (e) {
-      logger.error(e)
+      this.logger.error(e)
       throw e
     }
 
     return result
   }
 
-  public delete(id: string) {
+  public delete(id: string | number) {
     const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: this.primaryKey, value: id }] })
     return this.deleteAll(condition)
   }
@@ -169,7 +170,7 @@ export abstract class AbstractDBResource<T extends AbstractEntity<Record<string,
           const entity = this.createEntity(this.map(row))
           result.push(entity)
         } catch (e) {
-          logger.error(e)
+          this.logger.error(e)
           throw e
         }
       }

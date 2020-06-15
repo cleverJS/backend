@@ -69,7 +69,8 @@
       //      ]
     }
   },
-  "exclude": ["node_modules", "build", "core/**/*.spec.ts", "app/**/*.spec.ts", "tests", "example"],
+  "exclude": ["node_modules", "build", "core/**/*.spec.ts",
+    "app/**/*.spec.ts", "tests", "example"],
   "include": ["core/**/*"],
   "plugins": [
     {

@@ -11,7 +11,7 @@ export const defaults: ISettings = {
   runtimeTestDir: path.resolve(`${__dirname}/../../runtime/test`),
 
   logger: {
-    debug: true,
+    debug: false,
     warn: true,
     info: true,
   },
@@ -29,7 +29,7 @@ export const defaults: ISettings = {
   connection: knexConfig,
 
   websocket: {
-    port: 8001,
+    port: 8000,
     keepalive: 20 * 1000,
     path: '/ws',
   },

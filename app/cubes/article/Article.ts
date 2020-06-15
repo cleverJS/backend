@@ -1,7 +1,7 @@
 import { AbstractEntity } from '../../../core/entity/AbstractEntity'
 import * as yup from 'yup'
 
-const scheme = yup.object().shape({
+const scheme = yup.object().required().shape({
   id: yup.number(),
   title: yup.string(),
   author: yup.string(),
@@ -11,9 +11,9 @@ const scheme = yup.object().shape({
 type TArticle = yup.InferType<typeof scheme>
 
 export class Article extends AbstractEntity<TArticle> implements TArticle {
-  public title = ''
-  public author = ''
-  public content = ''
+  public title: string = ''
+  public author: string = ''
+  public content: string = ''
 
   public static cast(data: Record<string, any>): TArticle {
     return scheme.noUnknown().cast(data)

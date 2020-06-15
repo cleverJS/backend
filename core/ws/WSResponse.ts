@@ -46,14 +46,16 @@ export class WSResponse implements IWSResponse {
 
   /**
    * @param request
+   * @param payload
    * @param type
    */
-  public static fromRequest(request: IWSRequest, type: ResponseType = 'response'): WSResponse {
+  public static async fromRequest(request: IWSRequest, payload: Promise<Record<string, any>>, type: ResponseType = 'response'): Promise<WSResponse> {
     const response = new WSResponse()
     response.header.uuid = request.header.uuid
     response.header.service = request.header.service
     response.header.action = request.header.action
     response.header.type = type
+    response.payload = await payload
     return response
   }
 }
