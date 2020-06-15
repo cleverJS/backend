@@ -67,7 +67,7 @@ export class WSServer {
    * @param connection
    * @param response
    */
-  public async send(connection: IConnection<Record<string, any>>, response: Promise<WSResponse | null>): Promise<void> {
+  public async send(connection: IConnection<any>, response: Promise<WSResponse | null>): Promise<void> {
     if (connection) {
       const { client } = connection
 
@@ -88,13 +88,13 @@ export class WSServer {
 
   /**
    */
-  public getConnections(): IConnection<Record<string, any>>[] {
+  public getConnections(): IConnection<any>[] {
     return [...this.connections.values()]
   }
 
   /**
    */
-  public getConnection(id: string): IConnection<Record<string, any>> {
+  public getConnection(id: string): IConnection<any> {
     const connection = this.connections.get(id)
     if (!connection) {
       throw new Error('Connection was not found')
@@ -111,7 +111,7 @@ export class WSServer {
     }
   }
 
-  public broadcast(cb: (connection: IConnection<Record<string, any>>) => Promise<WSResponse | null>): void {
+  public broadcast(cb: (connection: IConnection<any>) => Promise<WSResponse | null>): void {
     const connectionArray = Array.from(this.connections.values())
     for (let i = 0; i < connectionArray.length; i++) {
       const conn = connectionArray[i]
@@ -147,7 +147,7 @@ export class WSServer {
     this.ws.on('connection', (client: WebSocket) => {
       const id = uuidV4()
       const state: Record<string, any> = {}
-      const connection: IConnection<Record<string, any>> = { id, client, state }
+      const connection: IConnection<any> = { id, client, state }
       this.connections.set(id, connection)
       this.logger.debug('connected: ', id)
       this.handleMessage(connection)
@@ -161,7 +161,7 @@ export class WSServer {
   /**
    * @param connection
    */
-  protected handleMessage(connection: IConnection<Record<string, any>>): void {
+  protected handleMessage(connection: IConnection<any>): void {
     const { client, id } = connection
     client.on('message', (message: string) => {
       let requestObject: IWSRequest
@@ -205,7 +205,7 @@ export class WSServer {
     })
   }
 
-  protected async sendError(requestObject: IWSRequest, connection: IConnection<Record<string, any>>, message: string): Promise<void> {
+  protected async sendError(requestObject: IWSRequest, connection: IConnection<any>, message: string): Promise<void> {
     const errorResponse = await WSResponse.fromRequest(requestObject, Promise.resolve({}), 'error')
     errorResponse.error = message
     return this.send(connection, Promise.resolve(errorResponse))
@@ -214,7 +214,7 @@ export class WSServer {
   /**
    * @param connection
    */
-  protected handleKeepAlive(connection: IConnection<Record<string, any>>): void {
+  protected handleKeepAlive(connection: IConnection<any>): void {
     if (this.keepAliveTimeout) {
       connection.keepAlive = setInterval(() => {
         if (connection.client.readyState === WebSocket.OPEN) {
@@ -231,7 +231,7 @@ export class WSServer {
    * @param client
    * @param keepAlive
    */
-  protected handleClose({ id, client, keepAlive }: IConnection<Record<string, any>>): void {
+  protected handleClose({ id, client, keepAlive }: IConnection<any>): void {
     client.on('close', () => {
       if (keepAlive) {
         clearInterval(keepAlive)
@@ -242,7 +242,7 @@ export class WSServer {
     })
   }
 
-  protected handleError({ id, client }: IConnection<Record<string, any>>): void {
+  protected handleError({ id, client }: IConnection<any>): void {
     client.on('error', (err: Error) => {
       this.logger.error(`Connection ${id}: `, err)
     })
