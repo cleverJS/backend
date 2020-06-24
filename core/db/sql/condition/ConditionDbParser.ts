@@ -9,7 +9,7 @@ interface IConditionOptions {
 }
 
 export class ConditionDbParser {
-  public parse(queryBuilder: Knex.QueryBuilder, condition?: Condition) {
+  public parse(queryBuilder: Knex.QueryBuilder, condition?: Condition): void {
     if (!condition) {
       return
     }
@@ -36,24 +36,28 @@ export class ConditionDbParser {
     }
   }
 
-  protected parseConditionItemList(queryBuilder: Knex.QueryBuilder, conditionItemList: IConditionItemList, itemListLogic: TConditionLogic = 'and') {
+  protected parseConditionItemList(
+    queryBuilder: Knex.QueryBuilder,
+    conditionItemList: IConditionItemList,
+    itemListLogic: TConditionLogic = 'and'
+  ): void {
     const logic: TConditionLogic = itemListLogic || conditionItemList.logic
     if (conditionItemList) {
       if (logic === 'and') {
-        queryBuilder.andWhere(query => {
+        queryBuilder.andWhere((query) => {
           this.parseConditions(query, conditionItemList)
         })
       }
 
       if (logic === 'or') {
-        queryBuilder.orWhere(query => {
+        queryBuilder.orWhere((query) => {
           this.parseConditions(query, conditionItemList)
         })
       }
     }
   }
 
-  protected parseConditions(queryBuilder: Knex.QueryBuilder, conditionItemList: IConditionItemList) {
+  protected parseConditions(queryBuilder: Knex.QueryBuilder, conditionItemList: IConditionItemList): void {
     for (const cond of conditionItemList.conditions) {
       if (isInstanceOf<IConditionItemList>(cond, 'conditions')) {
         this.parseConditionItemList(queryBuilder, cond, conditionItemList.logic)
@@ -63,7 +67,7 @@ export class ConditionDbParser {
     }
   }
 
-  protected parseCondition(queryBuilder: Knex.QueryBuilder, condition: IConditionItem, logic: TConditionLogic = 'and') {
+  protected parseCondition(queryBuilder: Knex.QueryBuilder, condition: IConditionItem, logic: TConditionLogic = 'and'): void {
     switch (condition.operator) {
       case TConditionOperator.EQUALS:
         this.parseSimpleCondition(queryBuilder, '=', condition, logic)
@@ -89,6 +93,9 @@ export class ConditionDbParser {
       case TConditionOperator.LIKE:
         this.parseLikeCondition(queryBuilder, condition, logic)
         break
+      case TConditionOperator.NOT_LIKE:
+        this.parseNotLikeCondition(queryBuilder, condition, logic)
+        break
       case TConditionOperator.IN:
         this.parseInCondition(queryBuilder, condition, logic)
         break
@@ -101,7 +108,7 @@ export class ConditionDbParser {
     }
   }
 
-  protected parseInCondition(queryBuilder: Knex.QueryBuilder, condition: IConditionItem, logic: TConditionLogic) {
+  protected parseInCondition(queryBuilder: Knex.QueryBuilder, condition: IConditionItem, logic: TConditionLogic): void {
     if (Array.isArray(condition.value)) {
       if (logic === 'and') {
         queryBuilder.whereIn(condition.field, condition.value)
@@ -111,16 +118,25 @@ export class ConditionDbParser {
     }
   }
 
-  protected parseLikeCondition(queryBuilder: Knex.QueryBuilder, condition: IConditionItem, logic: TConditionLogic) {
-    const value = `%${condition.value}%`
+  protected parseLikeCondition(queryBuilder: Knex.QueryBuilder, condition: IConditionItem, logic: TConditionLogic): void {
+    const { value, field } = condition
     if (logic === 'and') {
-      queryBuilder.andWhere(condition.field, 'like', value)
+      queryBuilder.andWhere(field, 'like', value)
     } else {
-      queryBuilder.orWhere(condition.field, 'like', value)
+      queryBuilder.orWhere(field, 'like', value)
     }
   }
 
-  protected parseBetweenCondition(queryBuilder: Knex.QueryBuilder, condition: IConditionItem, logic: TConditionLogic) {
+  protected parseNotLikeCondition(queryBuilder: Knex.QueryBuilder, condition: IConditionItem, logic: TConditionLogic): void {
+    const { value, field } = condition
+    if (logic === 'and') {
+      queryBuilder.andWhere(field, 'not like', value)
+    } else {
+      queryBuilder.orWhere(field, 'not like', value)
+    }
+  }
+
+  protected parseBetweenCondition(queryBuilder: Knex.QueryBuilder, condition: IConditionItem, logic: TConditionLogic): void {
     if (Array.isArray(condition.value)) {
       if (logic === 'and') {
         queryBuilder.andWhereBetween(condition.field, [condition.value[0], condition.value[1]])
@@ -130,7 +146,7 @@ export class ConditionDbParser {
     }
   }
 
-  protected parseSimpleCondition(queryBuilder: Knex.QueryBuilder, exr: string, condition: IConditionItem, logic: TConditionLogic) {
+  protected parseSimpleCondition(queryBuilder: Knex.QueryBuilder, exr: string, condition: IConditionItem, logic: TConditionLogic): void {
     if (logic === 'and') {
       queryBuilder.andWhere(condition.field, exr, condition.value)
     } else {
@@ -138,7 +154,7 @@ export class ConditionDbParser {
     }
   }
 
-  protected parseNullCondition(queryBuilder: Knex.QueryBuilder, condition: IConditionItem, logic: TConditionLogic) {
+  protected parseNullCondition(queryBuilder: Knex.QueryBuilder, condition: IConditionItem, logic: TConditionLogic): void {
     if (logic === 'and') {
       queryBuilder.whereNull(condition.field)
     } else {
@@ -146,7 +162,7 @@ export class ConditionDbParser {
     }
   }
 
-  protected parseIsNotNullCondition(queryBuilder: Knex.QueryBuilder, condition: IConditionItem, logic: TConditionLogic) {
+  protected parseIsNotNullCondition(queryBuilder: Knex.QueryBuilder, condition: IConditionItem, logic: TConditionLogic): void {
     if (logic === 'and') {
       queryBuilder.whereNotNull(condition.field)
     } else {
@@ -154,7 +170,7 @@ export class ConditionDbParser {
     }
   }
 
-  protected options(condition: Condition) {
+  protected options(condition: Condition): IConditionOptions {
     const result: IConditionOptions = {}
 
     if (condition) {

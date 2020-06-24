@@ -7,6 +7,7 @@ export enum TConditionOperator {
   GREATER_OR_EQUALS,
   BETWEEN,
   LIKE,
+  NOT_LIKE,
   IN,
   IS_NULL,
   IS_NOT_NULL,

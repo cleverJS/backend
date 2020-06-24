@@ -1,6 +1,6 @@
-import Knex from 'knex'
-import { ConditionDbParser } from './ConditionDbParser'
-import { Condition, TConditionOperator } from '../../Condition'
+import Knex from "knex";
+import { ConditionDbParser } from "./ConditionDbParser";
+import { Condition, TConditionOperator } from "../../Condition";
 
 describe('Test Conditions', () => {
   let condition1: Condition
@@ -165,5 +165,36 @@ describe('Test Conditions', () => {
     qb = connection.table('test')
     parser.parse(qb, condition1)
     expect(qb.toQuery()).toEqual('select * from `test` where (((`a` = 1 or `b` = 2) and (`c` = 1)) or (`d` = 1))')
+  })
+
+  it('should add like', () => {
+    const parser = new ConditionDbParser()
+    const connection = Knex({
+                              client: 'mysql',
+                            })
+
+    let qb = connection.table('test')
+    const condition1 = new Condition({ conditions: [{ operator: TConditionOperator.LIKE, field: 'a', value: '%test'}]})
+
+    parser.parse(qb, condition1)
+    expect(qb.toQuery()).toEqual('select * from `test` where (`a` like \'%test\')')
+
+    qb = connection.table('test')
+    const condition2 = new Condition({ conditions: [{ operator: TConditionOperator.LIKE, field: 'a', value: '%test%'}]})
+
+    parser.parse(qb, condition2)
+    expect(qb.toQuery()).toEqual('select * from `test` where (`a` like \'%test%\')')
+
+    qb = connection.table('test')
+    const condition3 = new Condition({ conditions: [{ operator: TConditionOperator.NOT_LIKE, field: 'a', value: '%test%'}]})
+
+    parser.parse(qb, condition3)
+    expect(qb.toQuery()).toEqual('select * from `test` where (`a` not like \'%test%\')')
+
+    qb = connection.table('test')
+    const condition4 = new Condition({ conditions: [{ operator: TConditionOperator.NOT_LIKE, field: 'a', value: 'test%'}]})
+
+    parser.parse(qb, condition4)
+    expect(qb.toQuery()).toEqual('select * from `test` where (`a` not like \'test%\')')
   })
 })
