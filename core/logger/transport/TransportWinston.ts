@@ -5,7 +5,7 @@ import { LogLevel, TransportInterface } from './TransportInterface'
 export class TransportWinston implements TransportInterface {
   protected readonly logger: winston.Logger
 
-  public constructor(logDir: string) {
+  public constructor(logDir: string, enableConsoleLog: boolean = false) {
     if (!fs.existsSync(logDir)) {
       fs.mkdirpSync(logDir)
     }
@@ -44,7 +44,7 @@ export class TransportWinston implements TransportInterface {
     //
     // If we're not in production then log to the `console` with the format:
     //
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== 'production' || enableConsoleLog) {
       this.logger.add(
         new winston.transports.Console({
           handleExceptions: true,
