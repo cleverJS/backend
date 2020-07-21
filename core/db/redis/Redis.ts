@@ -16,9 +16,9 @@ export class Redis {
 
   public get(key: string): Promise<string> {
     return new Promise((resolve, reject) =>
-      this.client.get(key, (err, result) => {
+      this.client.get(key, (err: Error | null, result: string | null) => {
         if (!err) {
-          return resolve(result)
+          return resolve(result || undefined)
         }
         return reject(result)
       })
@@ -27,7 +27,7 @@ export class Redis {
 
   public mget(keys: string[] | string): Promise<string[]> {
     return new Promise((resolve, reject) =>
-      this.client.mget(keys, (err, result) => {
+      this.client.mget(keys, (err: Error | null, result: string[]) => {
         if (!err && result) {
           return resolve(result)
         }
@@ -38,7 +38,7 @@ export class Redis {
 
   public set(key: string, value: string): Promise<boolean> {
     return new Promise((resolve, reject) =>
-      this.client.set(key, value, (err, result) => {
+      this.client.set(key, value, (err: Error | null, result: 'OK') => {
         if (!err && result === 'OK') {
           return resolve(true)
         }
@@ -49,7 +49,7 @@ export class Redis {
 
   public del(keys: string[]): Promise<number> {
     return new Promise((resolve, reject) =>
-      this.client.del(keys, (err, result) => {
+      this.client.del(keys, (err: Error | null, result: number) => {
         if (!err && result) {
           return resolve(result)
         }
@@ -60,7 +60,7 @@ export class Redis {
 
   public exists(keys: string[]): Promise<number> {
     return new Promise((resolve, reject) =>
-      this.client.exists(keys, (err, result) => {
+      this.client.exists(keys, (err: Error | null, result: number) => {
         if (!err && result) {
           return resolve(result)
         }
