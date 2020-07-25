@@ -1,4 +1,4 @@
-import fastify from 'fastify'
+import fastify, { FastifyInstance } from 'fastify'
 import { Server, IncomingMessage, ServerResponse } from 'http'
 import { loggerNamespace } from '../logger/logger'
 import { Ready } from '../utils/ready'
@@ -7,7 +7,7 @@ import { IHttpServerConfig } from './config'
 export class HttpServer {
   private readonly logger = loggerNamespace('HttpServer')
   private connected = new Ready()
-  private readonly server: fastify.FastifyInstance<Server, IncomingMessage, ServerResponse>
+  private readonly server: FastifyInstance<Server, IncomingMessage, ServerResponse>
   private readonly port: number = 5000
   private readonly address: string = '0.0.0.0'
 
@@ -17,7 +17,7 @@ export class HttpServer {
     this.address = config.host
   }
 
-  public async start() {
+  public async start(): Promise<void> {
     try {
       await this.server.listen(this.port, this.address)
       this.connected.resolve()
@@ -28,13 +28,13 @@ export class HttpServer {
     }
   }
 
-  public getServer(): fastify.FastifyInstance<Server, IncomingMessage, ServerResponse> {
+  public getServer(): FastifyInstance<Server, IncomingMessage, ServerResponse> {
     return this.server
   }
 
-  public async destroy() {
+  public async destroy(): Promise<void> {
     this.logger.info('destroy')
     const server = await this.getServer()
-    server.close().catch(this.logger.error)
+    server.close()
   }
 }
