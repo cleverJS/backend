@@ -97,7 +97,7 @@ export abstract class AbstractElasticIndex {
     const params: Update = {
       id,
       body,
-      refresh: 'true',
+      refresh: true,
       index: this.getIndex(),
     }
     const response = await this.client.update(params)
@@ -111,7 +111,7 @@ export abstract class AbstractElasticIndex {
     try {
       const { body: bulkResponse } = await this.client.bulk({
         body,
-        refresh: 'true',
+        refresh: true,
       })
 
       if (bulkResponse.errors) {
