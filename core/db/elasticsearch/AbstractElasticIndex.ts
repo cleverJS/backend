@@ -1,4 +1,5 @@
 import { Client } from '@elastic/elasticsearch'
+import { ApiResponse } from '@elastic/elasticsearch/lib/Transport'
 import { DeleteByQuery, Msearch, Update } from '@elastic/elasticsearch/api/requestParams'
 import { loggerNamespace } from '../../logger/logger'
 
@@ -140,7 +141,7 @@ export abstract class AbstractElasticIndex {
     }
   }
 
-  public searchDocumentById(id: string) {
+  public searchDocumentById(id: string): Promise<ApiResponse> {
     const params = {
       index: this.getIndex(),
       body: {
@@ -154,7 +155,7 @@ export abstract class AbstractElasticIndex {
     return this.client.search(params)
   }
 
-  public searchDocument(params: Record<string, any>) {
+  public searchDocument(params: Record<string, any>): Promise<ApiResponse> {
     params['index'] = this.getIndex()
     return this.client.search(params)
   }
@@ -187,7 +188,7 @@ export abstract class AbstractElasticIndex {
     }
   }
 
-  public multiSearch(dataset: Record<string, any>[]) {
+  public multiSearch(dataset: Record<string, any>[]): Promise<ApiResponse | null> {
     const body = dataset.flatMap((doc) => [{ index: this.getIndex() }, doc]) as any
 
     const p: Msearch = {
@@ -198,7 +199,7 @@ export abstract class AbstractElasticIndex {
       return this.client.msearch(p)
     }
 
-    return null
+    return Promise.resolve(null)
   }
 
   public getIndex(): string {
