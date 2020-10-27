@@ -6,9 +6,9 @@ import { logger } from '../../logger/logger'
 axios.defaults.withCredentials = true
 
 export class HttpClient {
-  private readonly client: AxiosInstance
-  private readonly extendedConfig?: AxiosRequestConfig
-  private headers: Record<string, any> = {}
+  protected readonly client: AxiosInstance
+  protected readonly extendedConfig?: AxiosRequestConfig
+  protected headers: Record<string, any> = {}
 
   public constructor(extendedConfig?: AxiosRequestConfig) {
     this.extendedConfig = extendedConfig
