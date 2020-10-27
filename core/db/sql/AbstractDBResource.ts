@@ -85,16 +85,17 @@ export abstract class AbstractDBResource<T extends AbstractEntity<Record<string,
       const data = this.mapToDB(item)
       if (data) {
         delete data[this.primaryKey]
-        if (item.id) {
-          const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: this.primaryKey, value: item.id }] })
+        const id = item.getId()
+        if (id) {
+          const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: this.primaryKey, value: id }] })
           return this.update(condition, data)
         }
 
         const queryBuilder = this.connection(this.table)
         const result = await queryBuilder.insert(data).returning(this.primaryKey)
         if (result && result.length > 0) {
-          const [id] = result
-          item.id = id
+          const [identificator] = result
+          item.setId(identificator)
         }
       }
     } catch (e) {

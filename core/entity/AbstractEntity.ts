@@ -1,25 +1,20 @@
 import { logger } from '../logger/logger'
 
-export abstract class AbstractEntity<TypeData extends Record<string, any>> {
-  public id: any = null
-
-  public setData(data: TypeData) {
+export abstract class AbstractEntity<T extends Record<string, any>> {
+  public setData(data: T): void {
     const properties: any = []
-    if (data) {
-      for (const key in data) {
-        if (data.hasOwnProperty(key) && this.hasOwnProperty(key)) {
-          const value = data[key]
-          if (typeof value !== 'function') {
-            properties[key] = data[key]
-          }
-        }
+    const dataKeyList: string[] = Object.keys(data)
+    for (let i = 0; i < dataKeyList.length; i++) {
+      const key: string = dataKeyList[i]
+      if (key in this) {
+        properties[key] = data[key]
       }
     }
 
     Object.assign(this, properties)
   }
 
-  public getData(): TypeData {
+  public getData(): T {
     const data: any = {}
     for (const key in this) {
       if (this.hasOwnProperty(key)) {
@@ -29,6 +24,10 @@ export abstract class AbstractEntity<TypeData extends Record<string, any>> {
 
     return data
   }
+
+  public abstract getId(): any
+
+  public abstract setId(id: any): void
 
   /**
    * @throws TypeError

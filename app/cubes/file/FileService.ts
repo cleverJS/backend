@@ -38,7 +38,7 @@ export class FileService {
     mime: string | null = null,
     code: string | null = null,
     sort: number = 100,
-    data: object = {},
+    data: Record<string, any> = {},
     parseBase64: boolean = true
   ) {
     let item
@@ -56,7 +56,7 @@ export class FileService {
     mime: string | null = null,
     code: string | null = null,
     sort: number = 100,
-    data: object = {}
+    data: Record<string, any> = {}
   ): Promise<File | null | undefined> {
     const tmpFile = path.normalize(`${this.tmpDir}${path.sep}${uuidV4()}`)
     const writeStream = fs.createWriteStream(tmpFile, { encoding: 'utf-8' })
@@ -76,7 +76,7 @@ export class FileService {
     mime: string | null = null,
     code: string | null = null,
     sort: number = 100,
-    data: object = {}
+    data: Record<string, any> = {}
   ) {
     const realFileName = newFileName || this.getFilenameFromPath(pathOrUrl)
     const fileName = `${Date.now()}_${realFileName}`
@@ -104,7 +104,7 @@ export class FileService {
     return item || null
   }
 
-  public async delete(id: string) {
+  public async delete(id: number) {
     const item = await this.deps.resource.findById(id)
     if (item) {
       await Promise.all([this.deleteFile(item), this.deps.resource.delete(id)])

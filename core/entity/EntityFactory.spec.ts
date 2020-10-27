@@ -8,12 +8,22 @@ interface ITest extends Object {
 }
 
 class Test extends AbstractEntity<ITest> implements ITest {
+  public id = 0
   public title = ''
   public internal = ''
+
+  public getId(): number {
+    return this.id
+  }
+
+  public setId(id: number): void {
+    this.id = id
+  }
 
   public static cast(data: any) {
     return yup
       .object()
+      .required()
       .shape({
         id: yup.string(),
         title: yup.string(),

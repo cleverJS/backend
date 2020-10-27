@@ -117,7 +117,7 @@ describe('Test FileService', () => {
         return Promise.resolve(item)
       })
 
-      await service.delete(String(item.id))
+      await service.delete(item.getId())
 
       expect(fs.existsSync(item.getFilePath())).not.toBeTruthy()
     }
@@ -149,7 +149,7 @@ describe('Test FileService', () => {
         return Promise.resolve(item)
       })
 
-      await service.delete(String(item.id))
+      await service.delete(item.getId())
 
       expect(fs.existsSync(item.getFilePath())).not.toBeTruthy()
     }
@@ -182,7 +182,7 @@ describe('Test FileService', () => {
         return Promise.resolve(item)
       })
 
-      await service.delete(String(item.id))
+      await service.delete(item.getId())
 
       expect(fs.existsSync(item.getFilePath())).not.toBeTruthy()
     }
