@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosRequestConfig, Canceler, Method } from 'axios'
+import axios, { AxiosInstance, AxiosRequestConfig, Canceler, CancelToken, Method } from 'axios'
 import * as fs from 'fs-extra'
 import { RequestCancel } from './RequestCancel'
 import { logger } from '../../logger/logger'
@@ -89,7 +89,7 @@ export class HttpClient {
     }
   }
 
-  protected cancelToken(cancelObject?: RequestCancel) {
+  protected cancelToken(cancelObject?: RequestCancel): CancelToken {
     return new axios.CancelToken((c: Canceler) => {
       if (cancelObject) {
         cancelObject.setCancelFunction(c)

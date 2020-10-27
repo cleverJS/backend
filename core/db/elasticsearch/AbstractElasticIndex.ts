@@ -201,7 +201,7 @@ export abstract class AbstractElasticIndex {
     return null
   }
 
-  public getIndex() {
+  public getIndex(): string {
     return `${this.prefix}-${this.index}`
   }
 
