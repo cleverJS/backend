@@ -58,7 +58,7 @@ export abstract class AbstractDBResource<T extends AbstractEntity<Record<string,
     return rows
   }
 
-  public async count(condition?: Condition): Promise<number | null> {
+  public async count(condition?: Readonly<Condition>): Promise<number | null> {
     let conditionClone: Condition | undefined
     if (condition) {
       conditionClone = condition.clone()

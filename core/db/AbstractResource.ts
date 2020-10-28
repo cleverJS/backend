@@ -13,7 +13,7 @@ export abstract class AbstractResource<T extends AbstractEntity<Record<string, a
   public abstract findOne(condition: Condition): Promise<T | null>
   public abstract findAll(condition?: Condition): Promise<T[]>
   public abstract findAllRaw(condition?: Condition): Promise<any[]>
-  public abstract count(condition?: Condition): Promise<number | null>
+  public abstract count(condition?: Readonly<Condition>): Promise<number | null>
   public abstract delete(id: string | number): Promise<boolean>
   public abstract deleteAll(condition?: Condition): Promise<boolean>
   public abstract save(item: T): Promise<boolean>
