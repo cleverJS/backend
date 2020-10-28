@@ -1,6 +1,8 @@
 import { logger } from '../logger/logger'
 
 export abstract class AbstractEntity<T extends Record<string, any>> {
+  public id?: number | string | null
+
   public setData(data: T): void {
     const properties: any = []
     const dataKeyList: string[] = Object.keys(data)
@@ -24,10 +26,6 @@ export abstract class AbstractEntity<T extends Record<string, any>> {
 
     return data
   }
-
-  public abstract getId(): any
-
-  public abstract setId(id: any): void
 
   /**
    * @throws TypeError

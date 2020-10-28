@@ -85,18 +85,12 @@ export abstract class AbstractDBResource<T extends AbstractEntity<Record<string,
       const data = this.mapToDB(item)
       if (data) {
         delete data[this.primaryKey]
-        const id = item.getId()
+        const { id } = item
         if (id) {
           const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: this.primaryKey, value: id }] })
           return this.update(condition, data)
         }
-
-        const queryBuilder = this.connection(this.table)
-        const result = await queryBuilder.insert(data).returning(this.primaryKey)
-        if (result && result.length > 0) {
-          const [identificator] = result
-          item.setId(identificator)
-        }
+        item.id = await this.insert(data)
       }
     } catch (e) {
       this.logger.error(e)
@@ -119,7 +113,18 @@ export abstract class AbstractDBResource<T extends AbstractEntity<Record<string,
     return this.connection.batchInsert(this.table, rows).returning(this.primaryKey)
   }
 
-  public async update(condition: Condition, data: Record<string, any>) {
+  public async insert(data: Record<string, any>): Promise<any | null> {
+    const queryBuilder = this.connection(this.table)
+    const result = await queryBuilder.insert(data).returning(this.primaryKey)
+    if (result && result.length > 0) {
+      const [identificator] = result
+      return identificator
+    }
+
+    return null
+  }
+
+  public async update(condition: Condition, data: Record<string, any>): Promise<boolean> {
     try {
       const queryBuilder = this.connection(this.table)
       this.conditionParser.parse(queryBuilder, condition)
@@ -180,10 +185,14 @@ export abstract class AbstractDBResource<T extends AbstractEntity<Record<string,
   }
 
   public map(data: Record<string, any>): any {
+    if (this.primaryKey !== 'id' && data[this.primaryKey]) {
+      data.id = data[this.primaryKey]
+    }
     return data
   }
 
   public mapToDB(item: T): any {
-    return item.getData()
+    const { id, ...data } = item.getData()
+    return data
   }
 }

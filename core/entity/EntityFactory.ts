@@ -2,7 +2,7 @@ import { AbstractEntity } from './AbstractEntity'
 
 export class EntityFactory<T extends AbstractEntity<Record<string, any>>> {
   protected EntityClass: new () => T
-  protected cast: (data: Record<string, any>) => Record<string, any>
+  public readonly cast: (data: Record<string, any>) => Record<string, any>
 
   public constructor(EntityClass: new () => T, cast: (data: Record<string, any>) => Record<string, any>) {
     this.EntityClass = EntityClass

@@ -35,14 +35,6 @@ export class File extends AbstractEntity<TFile> implements TFile {
     return `${this.baseDir}${this.url}`
   }
 
-  public getId(): number {
-    return this.id
-  }
-
-  public setId(id: number): void {
-    this.id = id
-  }
-
   public static cast(data: Record<string, any>): TFile {
     return scheme.noUnknown().cast(data)
   }

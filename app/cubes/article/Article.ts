@@ -19,12 +19,4 @@ export class Article extends AbstractEntity<TArticle> implements TArticle {
   public static cast(data: Record<string, any>): TArticle {
     return scheme.noUnknown().cast(data)
   }
-
-  public getId(): number {
-    return this.id
-  }
-
-  public setId(id: number): void {
-    this.id = id
-  }
 }
