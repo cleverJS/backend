@@ -2,4 +2,4 @@
 
 1. [Prepare](app/prepare.md)
 2. [App](app/application.md)
-2. [Cubes](app/cube.md)
+2. [Modules](app/modules.md)

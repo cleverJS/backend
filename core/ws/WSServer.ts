@@ -130,7 +130,7 @@ export class WSServer {
 
   /**
    */
-  public onDisconnect(handler: (id: string) => void): () => EventEmitter {
+  public onDisconnect(handler: (state: any) => void): () => EventEmitter {
     this.bus.addListener(EVENT_DISCONNECT, handler)
     return (): EventEmitter => this.bus.removeListener(EVENT_DISCONNECT, handler)
   }
@@ -236,9 +236,10 @@ export class WSServer {
       if (keepAlive) {
         clearInterval(keepAlive)
       }
+      const state = this.connections.get(id)?.state
+      this.bus.emit(EVENT_DISCONNECT, state)
       this.connections.delete(id)
       this.logger.debug('disconnected: ', id)
-      this.bus.emit(EVENT_DISCONNECT, id)
     })
   }
 

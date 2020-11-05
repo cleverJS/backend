@@ -1,4 +1,4 @@
-import Knex from 'knex'
+import Knex, { QueryBuilder } from 'knex'
 import { AbstractEntity } from '../../entity/AbstractEntity'
 import { AbstractResource } from '../AbstractResource'
 import { Condition, TConditionOperator } from '../Condition'
@@ -8,10 +8,10 @@ import { loggerNamespace } from '../../logger/logger'
 
 export abstract class AbstractDBResource<T extends AbstractEntity<Record<string, any>>> extends AbstractResource<T> {
   protected readonly logger = loggerNamespace('AbstractDBResource')
+  protected readonly connection: Knex
+  protected readonly conditionParser: ConditionDbParser
   protected primaryKey = 'id'
   protected table: string = ''
-  protected connection: Knex
-  protected conditionParser: ConditionDbParser
 
   public constructor(connection: Knex, conditionParser: ConditionDbParser, entityFactory: EntityFactory<T>) {
     super(entityFactory)
@@ -41,8 +41,8 @@ export abstract class AbstractDBResource<T extends AbstractEntity<Record<string,
     return this.createEntityList(rows)
   }
 
-  public async findAllRaw(condition?: Condition) {
-    const queryBuilder = this.connection(this.table)
+  public async findAllRaw(condition?: Condition): Promise<any[]> {
+    const queryBuilder: QueryBuilder = this.connection(this.table)
     if (condition) {
       this.conditionParser.parse(queryBuilder, condition)
     }
@@ -66,7 +66,7 @@ export abstract class AbstractDBResource<T extends AbstractEntity<Record<string,
       conditionClone.offset(undefined)
       conditionClone.limit(undefined)
     }
-    const queryBuilder = this.connection(this.table)
+    const queryBuilder: QueryBuilder = this.connection(this.table)
     this.conditionParser.parse(queryBuilder, conditionClone)
     const result = await queryBuilder.count('* as count')
     if (result) {
@@ -114,7 +114,7 @@ export abstract class AbstractDBResource<T extends AbstractEntity<Record<string,
   }
 
   public async insert(data: Record<string, any>): Promise<any | null> {
-    const queryBuilder = this.connection(this.table)
+    const queryBuilder: QueryBuilder = this.connection(this.table)
     const result = await queryBuilder.insert(data).returning(this.primaryKey)
     if (result && result.length > 0) {
       const [identificator] = result
@@ -126,7 +126,7 @@ export abstract class AbstractDBResource<T extends AbstractEntity<Record<string,
 
   public async update(condition: Condition, data: Record<string, any>): Promise<boolean> {
     try {
-      const queryBuilder = this.connection(this.table)
+      const queryBuilder: QueryBuilder = this.connection(this.table)
       this.conditionParser.parse(queryBuilder, condition)
       const result = await queryBuilder.update(data)
       return result > 0
@@ -137,7 +137,7 @@ export abstract class AbstractDBResource<T extends AbstractEntity<Record<string,
   }
 
   public async truncate() {
-    const queryBuilder = this.connection(this.table)
+    const queryBuilder: QueryBuilder = this.connection(this.table)
     let result
     try {
       result = await queryBuilder.truncate()
@@ -155,7 +155,7 @@ export abstract class AbstractDBResource<T extends AbstractEntity<Record<string,
   }
 
   public async deleteAll(condition?: Condition) {
-    const queryBuilder = this.connection(this.table)
+    const queryBuilder: QueryBuilder = this.connection(this.table)
     if (condition) {
       this.conditionParser.parse(queryBuilder, condition)
     }

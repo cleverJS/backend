@@ -3,7 +3,7 @@
 Core for development in [Domain Driven Design](https://en.wikipedia.org/wiki/Domain-driven_design) (DDD) terms.
 Contains the following functional:
 
-### Cubes (plugins) - Entity + Service + Factory + Resource
+### Modules (plugins) - Entity + Service + Factory + Resource
 
 [Entity](../core/entity/AbstractEntity.ts) - An object that is not defined by its attributes,
 but rather by a thread of continuity and its [identity](https://en.wikipedia.org/wiki/Identity_(object-oriented_programming)).

@@ -14,7 +14,7 @@ export abstract class AbstractService<T extends AbstractEntity<Record<string, an
     this.deps = deps
   }
 
-  public findById(id: string): Promise<T | null> {
+  public findById(id: string | number): Promise<T | null> {
     return this.deps.resource.findById(id)
   }
 

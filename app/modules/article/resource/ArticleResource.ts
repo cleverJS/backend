@@ -1,6 +1,6 @@
+import { morphism } from 'morphism'
 import { AbstractDBResource } from '../../../../core/db/sql/AbstractDBResource'
 import { Article } from '../Article'
-import { morphism } from 'morphism'
 
 export class ArticleResource extends AbstractDBResource<Article> {
   protected table = 'article'

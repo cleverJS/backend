@@ -1,4 +1,4 @@
-import { ArticleController } from './cubes/article/ArticleController'
+import { ArticleController } from './modules/article/ArticleController'
 import { ServiceContainer } from './ServiceContainer'
 import { WSServer } from '../core/ws/WSServer'
 

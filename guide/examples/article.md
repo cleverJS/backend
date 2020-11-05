@@ -1,6 +1,6 @@
 # Article
 
-In cubes folder create Article with the following structure:
+In modules folder create Article with the following structure:
 
 - Article.ts
 - ArticleController.ts
@@ -178,15 +178,15 @@ export class ArticleController {
 }
 ```
 
-Register cube in application.
+Register module in application.
 
 In `ResourceContainer` initialize `ArticleResource`
 
 ```typescript
 import { EntityFactory } from '../core/entity/EntityFactory'
-import { Article } from './cubes/article/Article'
+import { Article } from './modules/article/Article'
 import Knex from 'knex'
-import { ArticleResource } from './cubes/article/resource/ArticleResource'
+import { ArticleResource } from './modules/article/resource/ArticleResource'
 import { ConditionDbParser } from '../core/db/sql/condition/ConditionDbParser'
 
 export class ResourceContainer {
@@ -202,7 +202,7 @@ export class ResourceContainer {
 In `ServiceContainer` initialize `ArticleService`
 ```typescript
 import { ResourceContainer } from './ResourceContainer'
-import { ArticleService } from './cubes/article/ArticleService'
+import { ArticleService } from './modules/article/ArticleService'
 
 export class ServiceContainer {
   public readonly articleService: ArticleService
@@ -217,7 +217,7 @@ export class ServiceContainer {
 
 In `RouteContainer` initialize `ArticleController`
 ```typescript
-import { ArticleController } from './cubes/article/ArticleController'
+import { ArticleController } from './modules/article/ArticleController'
 import { ServiceContainer } from './ServiceContainer'
 import { HttpServer } from '../core/http/HttpServer'
 import { Cache } from '../core/cache/Cache'

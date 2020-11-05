@@ -1,5 +1,5 @@
 import { ResourceContainer } from './ResourceContainer'
-import { ArticleService } from './cubes/article/ArticleService'
+import { ArticleService } from './modules/article/ArticleService'
 
 export class ServiceContainer {
   public readonly articleService: ArticleService

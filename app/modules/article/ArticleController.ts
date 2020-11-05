@@ -1,10 +1,10 @@
+import { v4 as uuid4 } from 'uuid'
 import { ArticleService } from './ArticleService'
-import { IConnection, WSServer } from "../../../core/ws/WSServer";
+import { IConnection, WSServer } from '../../../core/ws/WSServer'
 import { WSRequest } from '../../../core/ws/WSRequest'
-import { sleep } from "../../../core/utils/sleep";
-import { logger } from "../../../core/logger/logger";
-import { WSResponse } from "../../../core/ws/WSResponse";
-import { v4 as uuid4 } from "uuid";
+import { sleep } from '../../../core/utils/sleep'
+import { logger } from '../../../core/logger/logger'
+import { WSResponse } from '../../../core/ws/WSResponse'
 
 interface IConnectionState {
   token: string
@@ -30,8 +30,8 @@ export class ArticleController {
   public actionWSTest = async (request: WSRequest, connection: IAppConnection) => {
     await sleep(2000)
 
-    this.deps.wsServer.broadcast(async (connection: IAppConnection) => {
-      logger.info(`Broadcast to ${connection.id}`)
+    this.deps.wsServer.broadcast(async (con) => {
+      logger.info(`Broadcast to ${con.state.id}`)
       return new WSResponse({ uuid: uuid4(), service: 'broadcast', action: 'test', type: 'event' }, { date: new Date() })
     })
 
@@ -51,5 +51,9 @@ export class ArticleController {
   protected init() {
     this.deps.wsServer.onRequest('article', 'test', this.actionWSTest)
     this.deps.wsServer.onRequest('article', 'test2', this.actionWSTest2)
+
+    this.deps.wsServer.onDisconnect((state: IConnectionState) => {
+      console.log(state.token)
+    })
   }
 }

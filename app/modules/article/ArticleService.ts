@@ -10,12 +10,12 @@ export interface IDependenciesList extends IAbstractDependenciesList<Article> {
 export class ArticleService extends AbstractService<Article> {
   protected deps!: IDependenciesList
 
-  constructor(deps: IDependenciesList) {
+  public constructor(deps: IDependenciesList) {
     super(deps)
   }
 
-  public async findByAuthor(author: string) {
+  public findByAuthor(author: string): Promise<Article | null> {
     const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: 'author', value: author }] })
-    return await this.deps.resource.findOne(condition)
+    return this.deps.resource.findOne(condition)
   }
 }
