@@ -1,11 +1,12 @@
+// eslint-disable-next-line max-classes-per-file
 import * as yup from 'yup'
+import path from 'path'
 import Knex from 'knex'
 import fs from 'fs-extra'
 import { AbstractEntity } from '../../../core/entity/AbstractEntity'
 import { EntityFactory } from '../../../core/entity/EntityFactory'
 import { AbstractDBResource } from '../../../core/db/sql/AbstractDBResource'
 import { ConditionDbParser } from '../../../core/db/sql/condition/ConditionDbParser'
-import path from 'path'
 
 const scheme = yup.object().required().shape({
   id: yup.string(),
@@ -72,7 +73,6 @@ describe('Test AbstractDBResource', () => {
     protected primaryKey = 'entryId'
   }
   class Test3Resource extends AbstractDBResource<Test2> {}
-
 
   it('should', () => {
     const factory = new EntityFactory(Test, Test.cast)

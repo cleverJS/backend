@@ -18,12 +18,7 @@ export const defaults: ISettings = {
 
   http: {
     port: 8000,
-    host: '0.0.0.0',
-  },
-
-  mongodb: {
-    url: 'mongodb://localhost:27017',
-    db: 'backend',
+    host: 'localhost',
   },
 
   connection: knexConfig,

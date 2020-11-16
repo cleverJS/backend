@@ -3,13 +3,11 @@ import { Condition, TConditionOperator, IConditionItem, IConditionItemList, TCon
 import { isInstanceOf } from '../../../utils/common'
 
 interface IConditionOptions {
-  limit?: number
-  offset?: number
   sorts?: any[]
 }
 
 export class ConditionDbParser {
-  public parse(queryBuilder: Knex.QueryBuilder, condition?: Condition): void {
+  public parse(queryBuilder: Knex.QueryBuilder, condition?: Readonly<Condition>): void {
     if (!condition) {
       return
     }
@@ -25,14 +23,6 @@ export class ConditionDbParser {
       for (const sort of options.sorts) {
         queryBuilder.orderBy(sort.sort, sort.dir)
       }
-    }
-
-    if (options.offset) {
-      queryBuilder.offset(options.offset)
-    }
-
-    if (options.limit) {
-      queryBuilder.limit(options.limit)
     }
   }
 
@@ -105,6 +95,8 @@ export class ConditionDbParser {
       case TConditionOperator.IS_NOT_NULL:
         this.parseIsNotNullCondition(queryBuilder, condition, logic)
         break
+      default:
+        throw new Error('Unknown operator')
     }
   }
 
@@ -170,19 +162,10 @@ export class ConditionDbParser {
     }
   }
 
-  protected options(condition: Condition): IConditionOptions {
+  protected options(condition: Readonly<Condition>): IConditionOptions {
     const result: IConditionOptions = {}
 
     if (condition) {
-      const limit = condition.getLimit()
-      if (limit) {
-        result.limit = limit
-        const offset = condition.getOffset()
-        if (offset) {
-          result.offset = offset
-        }
-      }
-
       const sorts = condition.getSort()
 
       if (sorts.length) {

@@ -4,4 +4,4 @@ syntax: glob
 .env
 node_modules
 build
-src/configs/local.ts
+runtime

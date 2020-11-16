@@ -12,6 +12,7 @@ export enum TConditionOperator {
   IS_NULL,
   IS_NOT_NULL,
 }
+
 type TSortDirection = 'asc' | 'desc'
 export type TConditionLogic = 'and' | 'or'
 
@@ -29,22 +30,12 @@ export interface IConditionItem {
 export class Condition {
   protected conditionItemList?: IConditionItemList
   protected sort: { sort: string; dir: TSortDirection }[] = []
-  protected offsetValue?: number
-  protected limitValue?: number
 
-  constructor(conditionItemList?: IConditionItemList, offset?: number, limit?: number, sort?: string, dir?: TSortDirection) {
+  constructor(conditionItemList?: IConditionItemList, sort?: string, dir?: TSortDirection) {
     this.conditionItemList = conditionItemList
 
     if (sort && dir) {
       this.addSort(sort, dir)
-    }
-
-    if (offset) {
-      this.offset(offset)
-    }
-
-    if (limit) {
-      this.limit(limit)
     }
   }
 
@@ -62,30 +53,12 @@ export class Condition {
     this.sort = []
   }
 
-  public offset(value?: number) {
-    this.offsetValue = value
-    return this
-  }
-
-  public limit(value?: number) {
-    this.limitValue = value
-    return this
-  }
-
   public getConditionItemList() {
     return this.conditionItemList
   }
 
   public getSort() {
     return this.sort
-  }
-
-  public getOffset() {
-    return this.offsetValue
-  }
-
-  public getLimit() {
-    return this.limitValue
   }
 
   public addCondition(conditionItemList: IConditionItemList, logic: TConditionLogic = 'and') {
@@ -103,7 +76,7 @@ export class Condition {
   }
 
   public clone() {
-    const condition = new Condition(this.conditionItemList, this.offsetValue, this.limitValue)
+    const condition = new Condition(this.conditionItemList)
 
     if (this.sort.length) {
       this.sort.forEach((s) => {

@@ -13,7 +13,7 @@ export class App {
   private readonly connection: Knex
 
   public constructor(settings: ISettings) {
-    this.httpServer = new HttpServer({ port: settings.websocket.port, host: '0.0.0.0' })
+    this.httpServer = new HttpServer({ port: settings.websocket.port, host: 'localhost' })
     this.httpServer.start().catch(logger.error)
     this.wsServer = new WSServer(settings.websocket, this.httpServer.getServer().server)
     this.connection = Knex(settings.connection)

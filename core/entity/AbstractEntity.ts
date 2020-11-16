@@ -8,7 +8,8 @@ export abstract class AbstractEntity<T extends Record<string, any>> {
     const dataKeyList: string[] = Object.keys(data)
     for (let i = 0; i < dataKeyList.length; i++) {
       const key: string = dataKeyList[i]
-      if (key in this) {
+
+      if (key === 'id' || key in this) {
         properties[key] = data[key]
       }
     }

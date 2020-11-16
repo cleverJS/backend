@@ -5,6 +5,7 @@ import { Condition, TConditionOperator } from '../Condition'
 import { ConditionDbParser } from './condition/ConditionDbParser'
 import { EntityFactory } from '../../entity/EntityFactory'
 import { loggerNamespace } from '../../logger/logger'
+import { Paginator } from '../../utils/Paginator'
 
 export abstract class AbstractDBResource<T extends AbstractEntity<Record<string, any>>> extends AbstractResource<T> {
   protected readonly logger = loggerNamespace('AbstractDBResource')
@@ -25,10 +26,10 @@ export abstract class AbstractDBResource<T extends AbstractEntity<Record<string,
   }
 
   public async findOne(condition: Condition): Promise<T | null> {
-    const nextCondition = condition.clone()
-    nextCondition.offset(0)
-    nextCondition.limit(1)
-    const result = await this.findAll(nextCondition)
+    const paginator = new Paginator()
+    paginator.setItemsPerPage(1)
+
+    const result = await this.findAll(condition, paginator)
     if (result.length) {
       return result[0]
     }
@@ -36,15 +37,25 @@ export abstract class AbstractDBResource<T extends AbstractEntity<Record<string,
     return null
   }
 
-  public async findAll(condition?: Condition): Promise<T[]> {
-    const rows = await this.findAllRaw(condition)
+  public async findAll(condition?: Condition, pagination?: Paginator): Promise<T[]> {
+    const rows = await this.findAllRaw(condition, pagination)
     return this.createEntityList(rows)
   }
 
-  public async findAllRaw(condition?: Condition): Promise<any[]> {
+  public async findAllRaw(condition?: Condition, pagination?: Paginator): Promise<any[]> {
     const queryBuilder: QueryBuilder = this.connection(this.table)
     if (condition) {
       this.conditionParser.parse(queryBuilder, condition)
+    }
+
+    if (pagination) {
+      if (pagination.getLimit()) {
+        queryBuilder.limit(pagination.getLimit())
+      }
+
+      if (pagination.getOffset()) {
+        queryBuilder.offset(pagination.getOffset())
+      }
     }
 
     let rows: any[] = []
@@ -63,17 +74,11 @@ export abstract class AbstractDBResource<T extends AbstractEntity<Record<string,
     if (condition) {
       conditionClone = condition.clone()
       conditionClone.clearSort()
-      conditionClone.offset(undefined)
-      conditionClone.limit(undefined)
     }
     const queryBuilder: QueryBuilder = this.connection(this.table)
     this.conditionParser.parse(queryBuilder, conditionClone)
-    const result = await queryBuilder.count('* as count')
-    if (result) {
-      if (typeof result[0].count === 'string') {
-        return parseInt(result[0].count, 10)
-      }
-
+    const result = await queryBuilder.count<{ count: number }[]>('* as count')
+    if (result && result.length) {
       return result[0].count
     }
 
@@ -106,6 +111,7 @@ export abstract class AbstractDBResource<T extends AbstractEntity<Record<string,
       delete data[this.primaryKey]
       return data
     })
+
     return this.connection.batchInsert(this.table, rows).returning(this.primaryKey)
   }
 
@@ -124,7 +130,7 @@ export abstract class AbstractDBResource<T extends AbstractEntity<Record<string,
     return null
   }
 
-  public async update(condition: Condition, data: Record<string, any>): Promise<boolean> {
+  public async update(condition: Readonly<Condition>, data: Record<string, any>): Promise<boolean> {
     try {
       const queryBuilder: QueryBuilder = this.connection(this.table)
       this.conditionParser.parse(queryBuilder, condition)

@@ -1,6 +1,6 @@
-import { AbstractEntity } from './AbstractEntity'
 import * as yup from 'yup'
-import { EntityFactory } from './EntityFactory'
+import { AbstractEntity } from '../../core/entity/AbstractEntity'
+import { EntityFactory } from '../../core/entity/EntityFactory'
 
 interface ITest extends Object {
   title: string

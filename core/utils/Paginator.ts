@@ -16,6 +16,9 @@ export class Paginator {
   }
 
   public setCurrentPage(currentPage: number): void {
+    if (currentPage === 0) {
+      currentPage = 1
+    }
     this.currentPage = currentPage
   }
 

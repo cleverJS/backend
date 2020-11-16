@@ -11,7 +11,6 @@ const scheme = yup.object().required().shape({
 type TArticle = yup.InferType<typeof scheme>
 
 export class Article extends AbstractEntity<TArticle> implements TArticle {
-  public id: number = 0
   public title: string = ''
   public author: string = ''
   public content: string = ''

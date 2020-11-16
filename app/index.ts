@@ -1,16 +1,23 @@
+import path from 'path'
 import { App } from './App'
 import { logger } from '../core/logger/logger'
-import { TransportConsole } from '../core/logger/transport/TransportConsole'
 import { destroy } from '../core/utils/destroy'
 import { settings } from './configs'
+import { ILoggerConfig } from '../core/logger/config'
+import { TransportWinston } from '../core/logger/transport/TransportWinston'
 
-logger.setConfig({
-  debug: false,
-  info: true,
-  warn: true,
-})
-logger.addTransport(new TransportConsole())
+function initLogger() {
+  const runtimeDir = path.resolve(`${__dirname}/../runtime`)
+  logger.setConfig({
+    debug: (process.env.APP_DEBUG || 'false') === 'true',
+    info: true,
+    warn: true,
+  } as ILoggerConfig)
+  logger.addTransport(new TransportWinston(runtimeDir, true))
+}
+
+initLogger()
 const app = new App(settings)
-logger.debug('+++++ Application init ++++++')
+logger.info(`Application run in ${process.env.NODE_ENV} mode`)
 
 destroy(app.destroy(), 3000)
