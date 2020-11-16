@@ -1,16 +1,16 @@
 {
   "name": "backend",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "CleverJS backend",
   "author": "",
   "license": "MIT",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --project tsconfig.prod.json",
     "start": "ts-node -r tsconfig-paths/register -r dotenv/config  app/index.ts",
     "dev": "ts-node-dev -T -r tsconfig-paths/register -r dotenv/config  --respawn --inspect --transpileOnly app/index.ts",
     "test": "jest --detectOpenHandles",
     "test:cov": "jest --coverage",
-    "postinstall": "tsc -d && ts-node -T core/info.ts"
+    "postinstall": "tsc -d --project tsconfig.prod.json && ts-node -T core/info.ts"
   },
   "engines": {
     "node": ">=13.0.0"
