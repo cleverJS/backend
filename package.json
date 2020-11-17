@@ -41,7 +41,6 @@
     "jsonwebtoken": "^8.5.1",
     "sqlite3": "^5.0.0",
     "ts-node-dev": "^1.0.0",
-    "ts-node": "^9.0.0",
     "yup": "^0.29.3",
     "morphism": "^1.12.3",
     "jest": "^26.6.3",
@@ -70,6 +69,7 @@
     "@types/redis": "^2.8.28",
     "redis": "=3.0.2",
     "@elastic/elasticsearch": "=7.10.0",
-    "fastest-validator": "^1.8.0"
+    "fastest-validator": "^1.8.0",
+    "ts-node": "^9.0.0"
   }
 }
