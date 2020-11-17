@@ -35,6 +35,18 @@
   "devDependencies": {
     "@types/pretty-hrtime": "^1.0.0",
     "@types/jest": "^26.0.15",
+    "@types/redis": "^2.8.28",
+    "@types/yup": "^0.29.9",
+    "@types/jsonwebtoken": "^8.5.0",
+    "@types/md5": "^2.2.1",
+    "md5": "^2.3.0",
+    "jsonwebtoken": "^8.5.1",
+    "sqlite3": "^5.0.0",
+    "ts-node-dev": "^1.0.0",
+    "ts-node": "^9.0.0",
+    "fastest-validator": "^1.8.0",
+    "yup": "^0.29.3",
+    "morphism": "^1.12.3",
     "jest": "^26.6.3",
     "ts-jest": "^26.4.4",
     "prettier": "^2.1.2",
@@ -57,19 +69,7 @@
     "eslint-plugin-sonarjs": "^0.5.0"
   },
   "optionalDependencies": {
-    "@types/redis": "^2.8.28",
-    "@types/yup": "^0.29.9",
-    "@types/jsonwebtoken": "^8.5.0",
-    "@types/md5": "^2.2.1",
-    "md5": "^2.3.0",
-    "jsonwebtoken": "^8.5.1",
-    "sqlite3": "^5.0.0",
-    "ts-node-dev": "^1.0.0",
-    "ts-node": "^9.0.0",
-    "fastest-validator": "^1.8.0",
-    "yup": "^0.29.3",
     "redis": "=3.0.2",
-    "morphism": "^1.12.3",
     "@elastic/elasticsearch": "=7.10.0"
   }
 }

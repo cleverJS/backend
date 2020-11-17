@@ -128,5 +128,8 @@
         "node/no-unpublished-require": "off"
       }
     }
+  ],
+  "ignorePatterns": [
+    "**/node_modules/**/*"
   ]
 }
