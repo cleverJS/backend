@@ -2,7 +2,7 @@ import Validator, { ValidationError } from 'fastest-validator'
 import { WSRequest } from '../WSRequest'
 
 export class WSRequestValidator {
-  public validator: (object: object) => true | ValidationError[]
+  public validator: (object: Record<string, any>) => true | ValidationError[]
 
   public constructor() {
     const schema = {
