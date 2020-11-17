@@ -1,15 +1,15 @@
 {
   "name": "backend",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "CleverJS backend",
   "author": "",
   "license": "MIT",
   "scripts": {
-    "build": "tsc --project tsconfig.prod.json",
+    "build": "tsc -d -p tsconfig.prod.json",
     "start": "ts-node -r tsconfig-paths/register -r dotenv/config  app/index.ts",
     "dev": "ts-node-dev -T -r tsconfig-paths/register -r dotenv/config  --respawn --inspect --transpileOnly app/index.ts",
-    "test": "jest --detectOpenHandles",
-    "test:cov": "jest --coverage",
+    "test": "npx jest --runInBand --detectOpenHandles --colors --verbose --reporters=default",
+    "test:cov": "npx jest --runInBand --detectOpenHandles --colors --verbose --reporters=default --coverage",
     "postinstall": "tsc -d --project tsconfig.prod.json && ts-node -T core/info.ts"
   },
   "engines": {
@@ -17,30 +17,19 @@
   },
   "dependencies": {
     "@types/fs-extra": "^9.0.4",
-    "@types/jsonwebtoken": "^8.5.0",
-    "@types/md5": "^2.2.1",
-    "@types/node": "^14.14.7",
-    "@types/redis": "^2.8.28",
+    "@types/node": "^13.13.30",
     "@types/uuid": "^8.3.0",
     "@types/ws": "^7.4.0",
-    "@types/yup": "^0.29.9",
     "tsconfig-paths": "^3.9.0",
     "axios": "^0.21.0",
     "dotenv": "^8.2.0",
     "fastify": "=3.8.0",
     "fs-extra": "^9.0.1",
-    "jsonwebtoken": "^8.5.1",
     "knex": "=0.21.12",
-    "md5": "^2.3.0",
     "path": "^0.12.7",
-    "redis": "=3.0.2",
-    "@elastic/elasticsearch": "=7.10.0",
     "typescript": "=4.0.5",
     "uuid": "^8.3.1",
     "ws": "=7.4.0",
-    "yup": "^0.29.3",
-    "morphism": "^1.12.3",
-    "fastest-validator": "^1.8.0",
     "winston": "^3.3.3"
   },
   "devDependencies": {
@@ -68,8 +57,19 @@
     "eslint-plugin-sonarjs": "^0.5.0"
   },
   "optionalDependencies": {
+    "@types/redis": "^2.8.28",
+    "@types/yup": "^0.29.9",
+    "@types/jsonwebtoken": "^8.5.0",
+    "@types/md5": "^2.2.1",
+    "md5": "^2.3.0",
+    "jsonwebtoken": "^8.5.1",
     "sqlite3": "^5.0.0",
     "ts-node-dev": "^1.0.0",
-    "ts-node": "^9.0.0"
+    "ts-node": "^9.0.0",
+    "fastest-validator": "^1.8.0",
+    "yup": "^0.29.3",
+    "redis": "=3.0.2",
+    "morphism": "^1.12.3",
+    "@elastic/elasticsearch": "=7.10.0"
   }
 }

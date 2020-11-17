@@ -24,6 +24,7 @@ export class HttpServer {
       this.logger.info(`listening on ${this.address}:${this.port}`)
     } catch (err) {
       this.logger.error(err)
+      // eslint-disable-next-line no-process-exit
       process.exit(1)
     }
   }

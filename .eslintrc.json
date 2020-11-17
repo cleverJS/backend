@@ -53,6 +53,8 @@
     "@typescript-eslint/explicit-function-return-type": 0,
     "@typescript-eslint/ban-ts-ignore": 0,
     "@typescript-eslint/no-inferrable-types": 0,
+    "@typescript-eslint/no-empty-function": 0,
+    "no-use-before-define": 0,
     "no-useless-constructor": 0,
     "no-await-in-loop": "warn",
     "no-restricted-syntax": ["error", "LabeledStatement", "WithStatement"],

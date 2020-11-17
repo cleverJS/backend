@@ -1,7 +1,8 @@
-import { CacheService } from './CacheService'
-import { CacheItem } from './CacheItem'
+import { CacheAdapterInterface } from './adapters/CacheAdapterInterface'
+import { CacheAdapterNull } from './adapters/CacheAdapterNull'
+import { loggerNamespace } from '../logger/logger'
 
-export class Cache {
+export class Cache implements CacheAdapterInterface {
   public static TTL_1MIN = 60
   public static TTL_5MIN = 300
   public static TTL_10MIN = 600
@@ -10,59 +11,40 @@ export class Cache {
   public static TTL_WEEK = 604800
   public static TTL_MONTH = 2592000
 
-  protected service: CacheService
+  protected logger = loggerNamespace('Cache')
+  protected adapter: CacheAdapterInterface
 
-  public constructor(service: CacheService) {
-    this.service = service
+  public constructor(adapter?: CacheAdapterInterface) {
+    this.adapter = adapter || new CacheAdapterNull()
+    this.checkExpired().catch(this.logger.error)
   }
 
-  public async get(key: string | string[]) {
-    const item = await this.service.getCache().getItem(Cache.key(key))
-    if (item.isHit()) {
-      return item.get()
-    }
-
-    return null
+  public setAdapter(adapter: CacheAdapterInterface): void {
+    this.adapter = adapter
+    this.checkExpired().catch(this.logger.error)
   }
 
-  public async set(key: string | string[], value: any, ttl?: number, tags: string[] = []) {
-    const item = await this.service.getCache().getItem(Cache.key(key))
-    item.set(value)
-
-    if (ttl) {
-      item.expiresAt(ttl)
-    }
-
-    if (tags && item instanceof CacheItem) {
-      item.tag(tags)
-      throw new Error('Implement functionality')
-    }
-
-    this.service.getCache().save(item)
+  public get(key: string, defaultValue?: any): Promise<any | undefined> {
+    return this.adapter.get(key, defaultValue)
   }
 
-  public invalidate(key: string) {
-    return this.service.getCache().deleteItem(Cache.key(key))
+  public set(key: string, value: any, ttl?: number | null, tags?: string[]): Promise<void> {
+    return this.adapter.set(key, value, ttl || undefined, tags || undefined)
   }
 
-  public invalidateTags() {
-    throw new Error('Implement functionality')
+  public getOrSet(key: string, fn: () => Promise<any>, ttl?: number | null, tags?: string[]): Promise<any> {
+    return this.adapter.getOrSet(key, fn, ttl || undefined, tags || undefined)
   }
 
-  /**
-   * Create PSR-6 valid key
-   * @param {string | string[]} key
-   *
-   * @return {string}
-   */
-  public static key(key: string | string[]): string {
-    let tmpKey: string
-    if (Array.isArray(key)) {
-      tmpKey = JSON.stringify(key)
-    } else {
-      tmpKey = key
-    }
+  public clear(key?: string): Promise<void> {
+    return this.adapter.clear(key || undefined)
+  }
 
-    return tmpKey.replace(/[W]/, '_')
+  public clearByTag(tag: string): Promise<void> {
+    return this.adapter.clearByTag(tag)
+  }
+
+  public checkExpired(): Promise<void> {
+    return this.adapter.checkExpired()
   }
 }

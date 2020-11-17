@@ -8,7 +8,7 @@ const config = {
   connection: {
     filename: dbPath,
   },
-  useNullAsDefault: false,
+  useNullAsDefault: true,
 } as Knex.Config
 
 module.exports = {

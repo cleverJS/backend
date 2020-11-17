@@ -50,7 +50,7 @@ export abstract class AbstractService<T extends AbstractEntity<Record<string, an
     return this.deps.resource.createEntity(data)
   }
 
-  public async list(paginator: Readonly<Paginator>, condition: Readonly<Condition>): Promise<T[]> {
+  public async list(paginator: Readonly<Paginator>, condition?: Readonly<Condition>): Promise<T[]> {
     const total = paginator.getTotal()
     let totalPromise
     if (!total && !paginator.isSkipTotal()) {
@@ -68,14 +68,14 @@ export abstract class AbstractService<T extends AbstractEntity<Record<string, an
     return result
   }
 
-  public async listRaw(paginator: Readonly<Paginator>, condition: Readonly<Condition>): Promise<Record<string, any>[]> {
+  public async listRaw(paginator: Readonly<Paginator>, condition?: Readonly<Condition>): Promise<Record<string, any>[]> {
     const total = paginator.getTotal()
     let totalPromise
     if (!total && !paginator.isSkipTotal()) {
       totalPromise = this.count(condition)
     }
 
-    const resultPromise = this.findAllRaw(condition)
+    const resultPromise = this.findAllRaw(condition, paginator)
 
     const [result, totalNext] = await Promise.all([resultPromise, totalPromise])
 

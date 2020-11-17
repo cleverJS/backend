@@ -1,6 +1,6 @@
 import { Client } from '@elastic/elasticsearch'
 import { ApiResponse } from '@elastic/elasticsearch/lib/Transport'
-import { DeleteByQuery, Msearch, Update } from '@elastic/elasticsearch/api/requestParams'
+import { DeleteByQuery, Msearch, Update, Search } from '@elastic/elasticsearch/api/requestParams'
 import { loggerNamespace } from '../../logger/logger'
 
 export abstract class AbstractElasticIndex {
@@ -155,7 +155,7 @@ export abstract class AbstractElasticIndex {
     return this.client.search(params)
   }
 
-  public searchDocument(params: Record<string, any>): Promise<ApiResponse> {
+  public searchDocument(params: Search): Promise<ApiResponse> {
     params['index'] = this.getIndex()
     return this.client.search(params)
   }

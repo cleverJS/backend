@@ -25,9 +25,10 @@
     "strictNullChecks": true, // "strictFunctionTypes": true,           /* Enable strict checking of function types. */ // "strictBindCallApply": true,           /* Enable strict 'bind', 'call', and 'apply' methods on functions. */
     /* Enable strict null checks. */ // "strictPropertyInitialization": true,  /* Enable strict checking of property initialization in classes. */
     "noImplicitThis": true /* Additional Checks */, // "alwaysStrict": true,                  /* Parse in strict mode and emit "use strict" for each source file. */
-    /* Raise error on 'this' expressions with an implied 'any' type. */ "noUnusedLocals": true,
+    /* Raise error on 'this' expressions with an implied 'any' type. */
+    "noUnusedLocals": true,
     /* Report errors on unused locals. */
-    "noUnusedParameters": true,
+    "noUnusedParameters": false,
     /* Report errors on unused parameters. */
     "noImplicitReturns": true /* Module Resolution Options */, // "noFallthroughCasesInSwitch": true,    /* Report errors for fallthrough cases in switch statement. */
     /* Report error when not all code paths in function return a value. */ "moduleResolution": "node" /* Specify module resolution strategy: 'node' (Node.js) or 'classic' (TypeScript pre-1.6). */,

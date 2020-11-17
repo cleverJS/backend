@@ -5,3 +5,4 @@ syntax: glob
 node_modules
 build
 runtime
+tmp

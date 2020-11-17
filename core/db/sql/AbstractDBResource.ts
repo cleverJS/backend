@@ -112,7 +112,7 @@ export abstract class AbstractDBResource<T extends AbstractEntity<Record<string,
       return data
     })
 
-    return this.connection.batchInsert(this.table, rows).returning(this.primaryKey)
+    return this.batchInsertRaw(rows)
   }
 
   public batchInsertRaw(rows: Record<string, any>[]) {

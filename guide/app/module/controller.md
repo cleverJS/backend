@@ -11,7 +11,7 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 import { Redis } from '../../../core/db/redis/Redis'
 import { WSServer } from '../../../core/ws/WSServer'
 import { WSRequest } from '../../../core/ws/WSRequest'
-import { Cache } from '../../../core/cache/Cache'
+import { Cache } from '../../../tmp/cache/Cache'
 import { Article } from './Article'
 import { EntityFactory } from '../../../core/entity/EntityFactory'
 

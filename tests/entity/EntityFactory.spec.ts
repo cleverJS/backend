@@ -12,12 +12,14 @@ class Test extends AbstractEntity<ITest> implements ITest {
   public title = ''
   public internal = ''
 
-  public getId(): number {
-    return this.id
+  #modified: boolean = false
+
+  public setIsModified(value: boolean): void {
+    this.#modified = value
   }
 
-  public setId(id: number): void {
-    this.id = id
+  public isModified(): boolean {
+    return this.#modified
   }
 
   public static cast(data: any) {
@@ -44,6 +46,12 @@ describe('Test EntityFactory', () => {
         title: 'ComplexTitle',
       },
     })
+
+    item.setIsModified(true)
+    expect(item.isModified()).toBeTruthy()
+
+    item.setIsModified(false)
+    expect(item.isModified()).not.toBeTruthy()
 
     const data = item.getData()
 
