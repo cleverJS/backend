@@ -68,6 +68,6 @@ const entity = factory.create(data)
 However, [yup](https://github.com/jquense/yup) is optional, and it could be replaced with anything
 or being abandoned.
 
-The next step describes how Entity - Service - Resource are using together in a DB resource [abstraction](./8_abstract_db.md)
+The next step describes how Entity - Service - Resource are using together in a DB resource [abstraction](./8_abstraction.md)
 
 [back](../wizard.md)
