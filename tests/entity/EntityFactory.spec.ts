@@ -3,14 +3,22 @@ import { AbstractEntity } from '../../core/entity/AbstractEntity'
 import { EntityFactory } from '../../core/entity/EntityFactory'
 
 interface ITest extends Object {
+  id: number
   title: string
-  internal: string
+}
+
+const scheme = yup.object().required().shape({
+  id: yup.string(),
+  title: yup.string(),
+})
+
+const castTest = (data: unknown): ITest => {
+  return scheme.noUnknown().cast(data)
 }
 
 class Test extends AbstractEntity<ITest> implements ITest {
   public id = 0
   public title = ''
-  public internal = ''
 
   #modified: boolean = false
 
@@ -21,23 +29,11 @@ class Test extends AbstractEntity<ITest> implements ITest {
   public isModified(): boolean {
     return this.#modified
   }
-
-  public static cast(data: any) {
-    return yup
-      .object()
-      .required()
-      .shape({
-        id: yup.string(),
-        title: yup.string(),
-      })
-      .noUnknown()
-      .cast(data)
-  }
 }
 
 describe('Test EntityFactory', () => {
   it('should create a model', () => {
-    const factory = new EntityFactory(Test, Test.cast)
+    const factory = new EntityFactory(Test, castTest)
     const item = factory.create({
       id: '1',
       title: 'test',
@@ -58,7 +54,6 @@ describe('Test EntityFactory', () => {
     expect({
       id: '1',
       title: 'test',
-      internal: '',
     }).toEqual(data)
 
     const fields: Set<keyof ITest> = new Set(['title'])

@@ -1,13 +1,12 @@
 {
   "name": "backend",
-  "version": "1.4.2",
+  "version": "1.5.0",
   "description": "CleverJS backend",
   "author": "",
   "license": "MIT",
   "scripts": {
     "build": "tsc -d -p tsconfig.prod.json",
-    "start": "ts-node -r tsconfig-paths/register -r dotenv/config  app/index.ts",
-    "dev": "ts-node-dev -T -r tsconfig-paths/register -r dotenv/config  --respawn --inspect --transpileOnly app/index.ts",
+    "server": "ts-node -r tsconfig-paths/register -r dotenv/config  demo/index.ts",
     "test": "npx jest --runInBand --detectOpenHandles --colors --verbose --reporters=default",
     "test:cov": "npx jest --runInBand --detectOpenHandles --colors --verbose --reporters=default --coverage",
     "postinstall": "tsc -d --project tsconfig.prod.json && ts-node -T core/info.ts"
@@ -17,40 +16,46 @@
   },
   "dependencies": {
     "@types/fs-extra": "^9.0.4",
-    "@types/node": "^13.13.30",
+    "@types/node": "^14.14.10",
     "@types/uuid": "^8.3.0",
     "@types/ws": "^7.4.0",
     "tsconfig-paths": "^3.9.0",
-    "axios": "^0.21.0",
     "dotenv": "^8.2.0",
     "fastify": "=3.8.0",
     "fs-extra": "^9.0.1",
     "knex": "=0.21.12",
     "path": "^0.12.7",
-    "typescript": "=4.0.5",
+    "typescript": "=4.1.2",
     "uuid": "^8.3.1",
     "ws": "=7.4.0",
-    "winston": "^3.3.3"
+    "fastest-validator": "^1.9.0"
   },
   "devDependencies": {
+    "@types/jest": "^26.0.15",
+    "@types/redis": "^2.8.28",
     "@types/pretty-hrtime": "^1.0.0",
     "@types/yup": "^0.29.9",
     "@types/jsonwebtoken": "^8.5.0",
     "@types/md5": "^2.2.1",
+    "axios": "=0.21.0",
+    "redis": "=3.0.2",
+    "fastify-cors": "^5.0.0",
+    "@elastic/elasticsearch": "=7.10.0",
+    "winston": "^3.3.3",
     "md5": "^2.3.0",
     "jsonwebtoken": "^8.5.1",
     "sqlite3": "^5.0.0",
-    "ts-node-dev": "^1.0.0",
-    "yup": "^0.29.3",
+    "yup": "^0.31.0",
     "morphism": "^1.12.3",
+    "ts-node": "latest",
     "jest": "^26.6.3",
     "ts-jest": "^26.4.4",
-    "prettier": "^2.1.2",
+    "prettier": "^2.2.0",
     "ts-loader": "^8.0.11",
     "pretty-hrtime": "^1.0.3",
-    "@typescript-eslint/eslint-plugin": "^4.7.0",
-    "@typescript-eslint/parser": "^4.7.0",
-    "eslint": "^7.13.0",
+    "@typescript-eslint/eslint-plugin": "^4.8.2",
+    "@typescript-eslint/parser": "^4.8.2",
+    "eslint": "^7.14.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-config-prettier": "^6.15.0",
     "eslint-plugin-eslint-comments": "^3.2.0",
@@ -64,12 +69,24 @@
     "eslint-plugin-security": "^1.4.0",
     "eslint-plugin-sonarjs": "^0.5.0"
   },
-  "optionalDependencies": {
-    "@types/jest": "^26.0.15",
-    "@types/redis": "^2.8.28",
+  "peerDependencies": {
+    "axios": "=0.21.0",
     "redis": "=3.0.2",
     "@elastic/elasticsearch": "=7.10.0",
-    "fastest-validator": "^1.8.0",
-    "ts-node": "^9.0.0"
+    "winston": "^3.3.3"
+  },
+  "peerDependenciesMeta": {
+    "axios": {
+      "optional": true
+    },
+    "redis": {
+      "optional": true
+    },
+    "@elastic/elasticsearch": {
+      "optional": true
+    },
+    "winston": {
+      "optional": true
+    }
   }
 }

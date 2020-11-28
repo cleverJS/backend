@@ -5,7 +5,7 @@ import { LogLevel, TransportInterface } from './TransportInterface'
 export class TransportWinston implements TransportInterface {
   protected readonly logger: winston.Logger
 
-  public constructor(logDir: string, enableConsoleLog: boolean = false) {
+  public constructor(logDir: string) {
     if (!fs.existsSync(logDir)) {
       fs.mkdirpSync(logDir)
     }
@@ -37,21 +37,13 @@ export class TransportWinston implements TransportInterface {
           maxFiles: 5,
           format: format.combine(format.timestamp(), format.prettyPrint(), logFormat),
         }),
-      ],
-      exitOnError: false, // do not exit on handled exceptions
-    })
-
-    //
-    // If we're not in production then log to the `console` with the format:
-    //
-    if (process.env.NODE_ENV !== 'production' || enableConsoleLog) {
-      this.logger.add(
         new winston.transports.Console({
           handleExceptions: true,
           format: format.combine(format.timestamp(), format.prettyPrint(), format.colorize(), logFormat),
-        })
-      )
-    }
+        }),
+      ],
+      exitOnError: false, // do not exit on handled exceptions
+    })
   }
 
   /**

@@ -1,9 +1,10 @@
 # About
+[back](../README.md)
 
 Core for development in [Domain Driven Design](https://en.wikipedia.org/wiki/Domain-driven_design) (DDD) terms.
 Contains the following functional:
 
-### Modules (plugins) - Entity + Service + Factory + Resource
+## Modules (plugins) - Entity + Service + Factory + Resource
 
 [Entity](../core/entity/AbstractEntity.ts) - An object that is not defined by its attributes,
 but rather by a thread of continuity and its [identity](https://en.wikipedia.org/wiki/Identity_(object-oriented_programming)).
@@ -20,7 +21,7 @@ alternative implementations may be easily interchanged.
 should delegate to a specialized Repository object such that alternative storage implementations
 may be easily interchanged.
 
-# Database
+## Database
 ### SQL Condition
 [Condition](../core/db/Condition.ts) SQL builder. Cover simple query cases:
 
@@ -33,21 +34,18 @@ may be easily interchanged.
 - between 
 - like 
 - in
+- is null
+- is not null
 
-order, limit, offset
-
-[(example)](../core/db/Condition.spec.ts)  
+[realization](../core/db/Condition.spec.ts)  
 
 ## Handle with SQL
 ### Abstract SQL Resource
-[AbstractDBResource](../core/db/sql/AbstractDBResource.ts) contains common methods for operation
+[AbstractDBResource](../core/db/sql/AbstractDBResource.ts) contains common methods for operate
 with SQL databases (Postgres, MSSQL, MySQL, MariaDB, SQLite3, Oracle).
 
-## Handle with No SQL
-### Abstract Mongo Resource
-[AbstractMongoResource](../core/db/mongo/AbstractMongoResource.ts) contains common methods for 
-operation with Mongo.
-
-# Built-in servers
+## Built-in servers
 
 For handles incoming connection there are [Web Socket Server](../core/ws/WSServer.ts) and [HTTP Server](../core/http/HttpServer.ts) 
+
+[back](../README.md)

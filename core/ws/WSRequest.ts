@@ -1,8 +1,7 @@
 export interface IWSRequestHeader {
-  uuid?: string
+  uuid: string
   service: string
   action: string
-  token?: string
 }
 
 export interface IWSRequest {
@@ -11,7 +10,7 @@ export interface IWSRequest {
 }
 
 export class WSRequest implements IWSRequest {
-  public readonly header: IWSRequestHeader = { service: '', action: '' }
+  public readonly header: IWSRequestHeader = { uuid: '', service: '', action: '' }
   public readonly payload: Record<string, any> = {}
 
   /**
@@ -20,5 +19,9 @@ export class WSRequest implements IWSRequest {
   public constructor(requestObj: IWSRequest) {
     this.header = requestObj.header
     this.payload = requestObj.payload
+  }
+
+  public static requestStructure(): string {
+    return '{ header: { uuid: string; service: string; action: string }, payload: Record<string, any> }'
   }
 }

@@ -13,7 +13,7 @@ export enum TConditionOperator {
   IS_NOT_NULL,
 }
 
-type TSortDirection = 'asc' | 'desc'
+export type TSortDirection = 'asc' | 'desc'
 export type TConditionLogic = 'and' | 'or'
 
 export interface IConditionItemList {
@@ -24,7 +24,7 @@ export interface IConditionItemList {
 export interface IConditionItem {
   operator: TConditionOperator
   field: string
-  value: string | number | string[] | number[]
+  value?: string | number | string[] | number[]
 }
 
 export class Condition {

@@ -1,9 +1,9 @@
 import WebSocket from 'ws'
 import { v4 as uuidV4 } from 'uuid'
 import { EventEmitter } from 'events'
-import { Server } from 'http'
+import { Server, IncomingMessage } from 'http'
 import { IWSRequest, WSRequest } from './WSRequest'
-import { WSResponse } from './WSResponse'
+import { EWSResponseType, WSResponse } from './WSResponse'
 import { loggerNamespace } from '../logger/logger'
 import { IWSConfig } from './config'
 import { WSRequestValidator } from './validator/WSRequestValidator'
@@ -18,6 +18,8 @@ export interface IConnection<T extends Record<string, any>> {
   id: string
   client: WebSocket
   keepAlive?: NodeJS.Timeout
+  isAlive: boolean
+  remoteAddress?: string
   state: T
 }
 
@@ -36,7 +38,7 @@ export class WSServer {
   protected readonly logger = loggerNamespace('WSServer')
   protected readonly config: IWSConfig
   protected readonly connections: Map<string, IConnection<Record<string, any>>> = new Map()
-  protected readonly keepAliveTimeout: number | null
+  protected readonly keepAliveTimeout: number
   protected readonly handlers: IHandlers = {
     [EVENT_REQUEST]: new Map(),
   }
@@ -71,17 +73,21 @@ export class WSServer {
     if (connection) {
       const { client } = connection
 
-      if (client.readyState === WebSocket.OPEN) {
-        const result = await response
-        if (result) {
-          client.send(result.toString())
+      try {
+        if (client.readyState === WebSocket.OPEN) {
+          const result = await response
+          if (result) {
+            client.send(result.toString())
+          }
+        } else if ([WebSocket.CLOSED, WebSocket.CLOSING].includes(client.readyState)) {
+          this.logger.warn('Force closing')
+          client.terminate()
+        } else {
+          this.logger.error(new Error(`Connection is not open: '${client.readyState}'`))
+          client.terminate()
         }
-      } else if ([WebSocket.CLOSED, WebSocket.CLOSING].includes(client.readyState)) {
-        this.logger.warn('Force closing')
-        this.handleClose(connection)
-        client.terminate()
-      } else {
-        this.logger.error(new Error(`Connection is not open: '${client.readyState}'`))
+      } catch (e) {
+        this.logger.error(e)
       }
     }
   }
@@ -89,34 +95,40 @@ export class WSServer {
   /**
    */
   public getConnections(): IConnection<any>[] {
-    return [...this.connections.values()]
+    return Array.from(this.connections.values())
   }
 
   /**
    */
-  public getConnection(id: string): IConnection<any> {
-    const connection = this.connections.get(id)
-    if (!connection) {
-      throw new Error('Connection was not found')
+  public getConnection(id: string): IConnection<any> | undefined {
+    return this.connections.get(id)
+  }
+
+  public terminateConnection(id: string): boolean {
+    const connection = this.getConnection(id)
+
+    if (connection) {
+      connection.client.terminate()
+      this.connections.delete(id)
+      return true
     }
-    return connection
+
+    return false
   }
 
   /**
    */
   public destroy(): void {
     if (this.ws) {
-      this.logger.info('server destroy')
+      this.logger.info('Server terminated')
       this.ws.close()
     }
   }
 
   public broadcast(cb: (connection: IConnection<any>) => Promise<WSResponse | null>): void {
-    const connectionArray = Array.from(this.connections.values())
-    for (let i = 0; i < connectionArray.length; i++) {
-      const conn = connectionArray[i]
-      if (conn.client.readyState === WebSocket.OPEN) {
-        this.send(conn, cb(conn)).catch(this.logger.error)
+    for (const toConnection of this.connections.values()) {
+      if (toConnection.client.readyState === WebSocket.OPEN) {
+        this.send(toConnection, cb(toConnection)).catch(this.logger.error)
       }
     }
   }
@@ -135,49 +147,28 @@ export class WSServer {
     return (): EventEmitter => this.bus.removeListener(EVENT_DISCONNECT, handler)
   }
 
-  protected init(server?: Server): void {
-    const { port, path } = this.config
-    if (server) {
-      this.ws = new WebSocket.Server({ server, path })
-    } else {
-      this.ws = new WebSocket.Server({ path, port })
-    }
-
-    this.logger.info(`Websocket Server started on 0.0.0.0:${port}${path}`)
-    this.ws.on('connection', (client: WebSocket) => {
-      const id = uuidV4()
-      const state: Record<string, any> = {}
-      const connection: IConnection<any> = { id, client, state }
-      this.connections.set(id, connection)
-      this.logger.debug('connected: ', id)
-      this.handleMessage(connection)
-      this.handleKeepAlive(connection)
-      this.handleClose(connection)
-      this.handleError(connection)
-      this.bus.emit(EVENT_CONNECT, id)
-    })
-  }
-
   /**
    * @param connection
    */
   protected handleMessage(connection: IConnection<any>): void {
     const { client, id } = connection
-    client.on('message', (message: string) => {
+    client.on('message', async (message: string) => {
       let requestObject: IWSRequest
 
       try {
         requestObject = JSON.parse(message)
       } catch (e) {
-        this.logger.error('request parse error:', e)
+        this.logger.error('Request parse error:', e)
         return
       }
 
-      if (typeof requestObject !== 'object') {
-        this.logger.error('request type error:', requestObject)
-        this.sendError(requestObject, connection, 'HttpClient must be a serialized object').catch(this.logger.error)
+      if (!this.validatorRequest.validate(requestObject)) {
+        this.logger.error(requestObject)
+        // We cannot do anything
         return
       }
+
+      const { uuid } = requestObject.header
 
       try {
         const request = new WSRequest(requestObject)
@@ -185,12 +176,12 @@ export class WSServer {
         const key = `${request.header.service}:${request.header.action}`
         const handler = this.handlers[this.eventRequestCode].get(key)
         if (handler) {
-          const response = WSResponse.fromRequest(requestObject, handler.handler(request, connection))
+          const response = WSResponse.create(handler.handler(request, connection), EWSResponseType.response, uuid)
           this.send(connection, response).catch(this.logger.error)
         } else {
           const messageError = `Handler does not exist ${key}`
           this.logger.error(messageError)
-          this.sendError(requestObject, connection, messageError).catch(this.logger.error)
+          this.sendError(connection, messageError, uuid).catch(this.logger.error)
         }
       } catch (e) {
         let errMessage
@@ -200,28 +191,31 @@ export class WSServer {
           errMessage = e.message || MESSAGE_SYSTEM_ERROR
         }
         this.logger.error(e)
-        this.sendError(requestObject, connection, errMessage).catch(this.logger.error)
+        this.sendError(connection, errMessage, uuid).catch(this.logger.error)
       }
     })
   }
 
-  protected async sendError(requestObject: IWSRequest, connection: IConnection<any>, message: string): Promise<void> {
-    const errorResponse = await WSResponse.fromRequest(requestObject, Promise.resolve({}), 'error')
-    errorResponse.error = message
-    return this.send(connection, Promise.resolve(errorResponse))
+  protected async sendError(connection: IConnection<any>, message: string, requestUUID: string): Promise<void> {
+    const response = await WSResponse.create(Promise.resolve({}), EWSResponseType.response, requestUUID)
+    response.error = message
+    return this.send(connection, Promise.resolve(response))
   }
 
   /**
-   * @param connection
+   * Ping a client connection and terminate in case of unavailable.
+   *
+   * @param {IConnection<any>} connection
    */
   protected handleKeepAlive(connection: IConnection<any>): void {
     if (this.keepAliveTimeout) {
       connection.keepAlive = setInterval(() => {
-        if (connection.client.readyState === WebSocket.OPEN) {
-          connection.client.ping()
-        } else {
-          this.logger.debug('Try to WebSocket client ping but connection not ready.')
+        if (!connection.isAlive) {
+          connection.client.terminate()
         }
+
+        connection.isAlive = false
+        connection.client.ping()
       }, this.keepAliveTimeout)
     }
   }
@@ -236,16 +230,46 @@ export class WSServer {
       if (keepAlive) {
         clearInterval(keepAlive)
       }
-      const state = this.connections.get(id)?.state
+      const state = this.connections.get(id)?.state || {}
       this.bus.emit(EVENT_DISCONNECT, state)
       this.connections.delete(id)
-      this.logger.debug('disconnected: ', id)
+      this.logger.debug('Disconnected: ', id)
     })
   }
 
   protected handleError({ id, client }: IConnection<any>): void {
     client.on('error', (err: Error) => {
       this.logger.error(`Connection ${id}: `, err)
+    })
+  }
+
+  protected init(server?: Server): void {
+    const { port, path } = this.config
+    if (server) {
+      this.ws = new WebSocket.Server({ server, path })
+      this.logger.info(`Websocket Server started on ws://0.0.0.0:${port}${path}`)
+    } else {
+      this.ws = new WebSocket.Server({ path, port, noServer: true })
+    }
+
+    this.ws.on('connection', (client: WebSocket, request: IncomingMessage) => {
+      const id = uuidV4()
+      const state: Record<string, any> = {}
+      const connection: IConnection<any> = { id, client, state, isAlive: true, remoteAddress: request.socket.remoteAddress }
+      this.connections.set(id, connection)
+      this.handleMessage(connection)
+      this.handleClose(connection)
+      this.handleKeepAlive(connection)
+      this.handleError(connection)
+      this.bus.emit(EVENT_CONNECT, id)
+      client.on('pong', () => {
+        this.logger.debug('pong')
+        connection.isAlive = true
+      })
+    })
+
+    this.ws.on('close', () => {
+      this.connections.clear()
     })
   }
 }

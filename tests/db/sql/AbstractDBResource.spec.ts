@@ -8,18 +8,31 @@ import { EntityFactory } from '../../../core/entity/EntityFactory'
 import { AbstractDBResource } from '../../../core/db/sql/AbstractDBResource'
 import { ConditionDbParser } from '../../../core/db/sql/condition/ConditionDbParser'
 
+interface TTest {
+  id: string
+  title: string
+}
+
 const scheme = yup.object().required().shape({
   id: yup.string(),
   title: yup.string(),
 })
 
-type TTest = yup.InferType<typeof scheme>
+const castTest = (data: unknown): TTest => {
+  return scheme.noUnknown().cast(data)
+}
 
 const scheme2 = yup.object().required().shape({
   title: yup.string(),
 })
 
-type TTest2 = yup.InferType<typeof scheme2>
+interface TTest2 {
+  title: string
+}
+
+const castTest2 = (data: unknown): TTest2 => {
+  return scheme2.noUnknown().cast(data)
+}
 
 describe('Test AbstractDBResource', () => {
   const dbPath = path.resolve(`${__dirname}/db.sqlite`)
@@ -37,35 +50,12 @@ describe('Test AbstractDBResource', () => {
   })
 
   class Test extends AbstractEntity<TTest> implements TTest {
-    public id = 0
+    public id = '0'
     public title = ''
-
-    public static cast(data: any) {
-      return yup
-        .object()
-        .required()
-        .shape({
-          id: yup.string(),
-          title: yup.string(),
-        })
-        .noUnknown()
-        .cast(data)
-    }
   }
 
   class Test2 extends AbstractEntity<TTest> implements TTest2 {
     public title = ''
-
-    public static cast(data: any) {
-      return yup
-        .object()
-        .required()
-        .shape({
-          title: yup.string(),
-        })
-        .noUnknown()
-        .cast(data)
-    }
   }
 
   class TestResource extends AbstractDBResource<Test> {}
@@ -75,7 +65,7 @@ describe('Test AbstractDBResource', () => {
   class Test3Resource extends AbstractDBResource<Test2> {}
 
   it('should', () => {
-    const factory = new EntityFactory(Test, Test.cast)
+    const factory = new EntityFactory(Test, castTest)
     const item = factory.create({
       id: '1',
       title: 'test',
@@ -118,7 +108,7 @@ describe('Test AbstractDBResource', () => {
       title: 'test',
     }).toEqual(dataDB2)
 
-    const factory2 = new EntityFactory(Test2, Test2.cast)
+    const factory2 = new EntityFactory(Test2, castTest2)
     const item2 = factory.create({
       title: 'test',
     })

@@ -1,7 +1,5 @@
-# How to start as Library
+# ReadMe
 
-1. [About](guide/about.md)
-2. [Lifecycle](guide/lifecycle.md)
-3. [New Application](guide/app.md)
-4. [Examples](guide/examples.md)
-5. [Additional](guide/additional.md)
+1. [Wizard guide](/guide/wizard.md) - step by step guide
+3. [Lifecycle](guide/lifecycle.md)
+5. [Demo](./demo)

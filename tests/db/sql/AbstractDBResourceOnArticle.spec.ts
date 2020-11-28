@@ -8,6 +8,7 @@ import { Article } from '../../app/modules/article/Article'
 import * as connections from '../../../knexfile'
 import { Condition, TConditionOperator } from '../../../core/db/Condition'
 import { Paginator } from '../../../core/utils/Paginator'
+import { castArticle } from '../../app/modules/article/helper'
 
 const knexConfig = (connections as any)[process.env.NODE_ENV || 'development'] as Knex.Config
 const connectionRecord = knexConfig.connection as Knex.Sqlite3ConnectionConfig
@@ -29,7 +30,7 @@ describe('Test AbstractDBResource and AbstractService', () => {
   }
 
   const connection = Knex(knexConfig)
-  const resource = new ArticleResource(connection, new ConditionDbParser(), new EntityFactory(Article, Article.cast))
+  const resource = new ArticleResource(connection, new ConditionDbParser(), new EntityFactory(Article, castArticle))
   const service = new ArticleService({
     resource,
   })

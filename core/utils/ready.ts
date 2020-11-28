@@ -5,7 +5,7 @@ export class Ready {
   constructor() {
     this.promise = new Promise((resolve) => {
       this.resolve = () => {
-        resolve()
+        resolve(true)
         this.resolved = true
       }
     })

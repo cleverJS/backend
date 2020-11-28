@@ -13,7 +13,7 @@ function initLogger() {
     info: true,
     warn: true,
   } as ILoggerConfig)
-  logger.addTransport(new TransportWinston(runtimeDir, true))
+  logger.addTransport(new TransportWinston(runtimeDir))
 }
 
 initLogger()

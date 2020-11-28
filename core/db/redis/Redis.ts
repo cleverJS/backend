@@ -14,7 +14,7 @@ export class Redis {
     this.handle()
   }
 
-  public get(key: string): Promise<string> {
+  public get(key: string): Promise<string | undefined> {
     return new Promise((resolve, reject) =>
       this.client.get(key, (err: Error | null, result: string | null) => {
         if (!err) {
@@ -69,7 +69,7 @@ export class Redis {
     )
   }
 
-  public destroy() {
+  public destroy(): void {
     this.client.quit(() => {
       logger.info('Redis connection closed')
     })

@@ -1,13 +1,13 @@
-import { IWSRequest } from './WSRequest'
-
-const types = ['response', 'event', 'error'] as ['response', 'event', 'error']
-type ResponseType = typeof types[number]
+export enum EWSResponseType {
+  response = 'response',
+  event = 'event',
+  error = 'error',
+}
 
 export interface IWSResponseHeader {
+  type: EWSResponseType
   uuid?: string
-  service: string
-  action: string
-  type: ResponseType
+  name?: string
 }
 
 export interface IWSResponse {
@@ -25,7 +25,7 @@ export class WSResponse implements IWSResponse {
    * @param payload
    */
   public constructor(header?: IWSResponseHeader, payload?: Record<string, any>) {
-    this.header = header || { service: '', action: '', type: 'response' }
+    this.header = header || { uuid: '0', type: EWSResponseType.response }
     this.payload = payload || {}
   }
 
@@ -45,15 +45,17 @@ export class WSResponse implements IWSResponse {
   }
 
   /**
-   * @param request
+   * @param uuid
    * @param payload
    * @param type
    */
-  public static async fromRequest(request: IWSRequest, payload: Promise<Record<string, any>>, type: ResponseType = 'response'): Promise<WSResponse> {
+  public static async create(
+    payload: Promise<Record<string, any>>,
+    type: EWSResponseType = EWSResponseType.event,
+    uuid?: string
+  ): Promise<WSResponse> {
     const response = new WSResponse()
-    response.header.uuid = request.header.uuid
-    response.header.service = request.header.service
-    response.header.action = request.header.action
+    response.header.uuid = uuid
     response.header.type = type
     response.payload = await payload
     return response

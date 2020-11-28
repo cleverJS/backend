@@ -4,13 +4,13 @@ import os from 'os'
 import { v4 as uuidV4 } from 'uuid'
 import md5 from 'md5'
 import { Duplex } from 'stream'
-import { IAbstractDependenciesList } from '../../../core/AbstractService'
+import { IDependencies } from '../../../core/AbstractService'
 import { AbstractResource } from '../../../core/db/AbstractResource'
 import { logger } from '../../../core/logger/logger'
 import { HttpClient } from '../../../core/http/client/HttpClient'
 import { File } from './File'
 
-interface IDependenciesList extends IAbstractDependenciesList<File> {
+interface IDependenciesList extends IDependencies<File> {
   resource: AbstractResource<File>
   httpClient: HttpClient
 }

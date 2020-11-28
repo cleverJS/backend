@@ -1,28 +1,28 @@
 import { AbstractResource } from './db/AbstractResource'
-import { AbstractEntity } from './entity/AbstractEntity'
+import { IEntity } from './entity/AbstractEntity'
 import { Condition } from './db/Condition'
 import { Paginator } from './utils/Paginator'
 
-export interface IAbstractDependenciesList<T extends AbstractEntity<Record<string, any>>> {
-  resource: AbstractResource<T>
+export interface IDependencies<E extends IEntity> {
+  resource: AbstractResource<E>
 }
 
-export abstract class AbstractService<T extends AbstractEntity<Record<string, any>>> {
-  protected deps: IAbstractDependenciesList<T>
+export abstract class AbstractService<E extends IEntity> {
+  protected deps: IDependencies<E>
 
-  public constructor(deps: IAbstractDependenciesList<T>) {
+  public constructor(deps: IDependencies<E>) {
     this.deps = deps
   }
 
-  public findById(id: string | number): Promise<T | null> {
+  public findById(id: string | number): Promise<E | null> {
     return this.deps.resource.findById(id)
   }
 
-  public findOne(condition: Readonly<Condition>): Promise<T | null> {
+  public findOne(condition: Readonly<Condition>): Promise<E | null> {
     return this.deps.resource.findOne(condition)
   }
 
-  public findAll(condition?: Readonly<Condition>, paginator?: Readonly<Paginator>): Promise<T[]> {
+  public findAll(condition?: Readonly<Condition>, paginator?: Readonly<Paginator>): Promise<E[]> {
     return this.deps.resource.findAll(condition, paginator)
   }
 
@@ -42,15 +42,15 @@ export abstract class AbstractService<T extends AbstractEntity<Record<string, an
     return this.deps.resource.deleteAll(condition)
   }
 
-  public save(item: T): Promise<boolean> {
+  public save(item: E): Promise<boolean> {
     return this.deps.resource.save(item)
   }
 
-  public createEntity(data: Partial<T>): T {
+  public createEntity(data: Partial<E>): E {
     return this.deps.resource.createEntity(data)
   }
 
-  public async list(paginator: Readonly<Paginator>, condition?: Readonly<Condition>): Promise<T[]> {
+  public async list(paginator: Readonly<Paginator>, condition?: Readonly<Condition>): Promise<E[]> {
     const total = paginator.getTotal()
     let totalPromise
     if (!total && !paginator.isSkipTotal()) {

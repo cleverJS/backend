@@ -9,14 +9,14 @@ with some intersection entities
 
 In simple case module has the following structure:
 
-- modules/article/[Article.ts](../../app/modules/article/Article.ts) - Entity
+- modules/article/[Article.ts](../../demo/modules/article/Article.ts) - Entity
 
-- modules/article/[resource](../../app/modules/article/resource)/* - Classes for working (CRUD) with resource (MSSQL, Mongo, FileSystem)
+- modules/article/[resource](../../demo/modules/article/resource)/* - Classes for working (CRUD) with resource (MSSQL, Mongo, FileSystem)
 
-- modules/article/[ArticleController.ts](../../app/modules/article/ArticleController.ts) - Article controller for handling request/response. 
+- modules/article/[ArticleController.ts](../../demo/controllers/ArticleController.ts) - Article controller for handling request/response. 
 Uses for handle data, validation, transfer to appropriate Service and response back
 
-- modules/article/[ArticleService.ts](../../app/modules/article/ArticleService.ts) - Service responsible for operation does not conceptually belong to
+- modules/article/[ArticleService.ts](../../demo/modules/article/ArticleService.ts) - Service responsible for operation does not conceptually belong to
 any object
 
 - modules/article/config.ts - Interface with any correspond settings

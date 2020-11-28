@@ -62,9 +62,10 @@
       //      ]
     }
   },
-  "exclude": ["node_modules", "build", "core/**/*.spec.ts", "app/**/*", "tmp", "tests/**/*.spec.ts", "knexfile.ts"],
+  "exclude": ["node_modules", "build", "core/**/*.spec.ts",
+    "demo/**/*", "tmp", "tests/**/*.spec.ts", "knexfile.ts"],
   "include": ["core/**/*"],
-  "compileOnSave": true,
+  "compileOnSave": false,
   "pretty": true,
   "charset": "utf8"
 }

@@ -1,7 +1,7 @@
 import { AbstractDBResource } from '../../../../core/db/sql/AbstractDBResource'
 import { File } from '../File'
 
-export class FileResourceSql extends AbstractDBResource<File> {
+export class FileResource extends AbstractDBResource<File> {
   protected table = 'file'
 
   public static scheme = {
@@ -17,7 +17,7 @@ export class FileResourceSql extends AbstractDBResource<File> {
     updatedAt: 'updatedAt',
   }
 
-  public map(data: Record<string, any>): typeof FileResourceSql.scheme {
+  public map(data: Record<string, any>): typeof FileResource.scheme {
     return {
       id: data.id,
       code: data.code,

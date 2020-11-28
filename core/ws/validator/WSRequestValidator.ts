@@ -26,12 +26,13 @@ export class WSRequestValidator {
     this.validator = validator.compile(schema)
   }
 
-  public validate(request: WSRequest) {
+  /**
+   *
+   * @param {WSRequest} request
+   * @throws Error
+   */
+  public validate(request: WSRequest): boolean {
     const result = this.validator(request)
-    if (result !== true) {
-      throw new Error(JSON.stringify(result))
-    }
-
-    return true
+    return result === true
   }
 }

@@ -4,12 +4,13 @@ Add dependencies to package.json
 ```json
 {
   "dependencies": {
-    "cleverJS": "github:cleverJS/backend#1.0.6"
+    "cleverJS": "github:cleverJS/backend#1.4.3"
   }
 }
 ```
 
-Add path and include to tsconfig.json
+Add a path and include to tsconfig.json
+
 ```json
 {
     "paths": {
@@ -25,11 +26,11 @@ create PM2 ecosystem.config.js
 module.exports = {
   apps : [{
     name: 'backendJS',
-    script: 'node_modules/.bin/ts-node',
-    args: '-T -r tsconfig-paths/register ./app/index.ts',
-    instances: 'max',
+    script: './app/index.ts',
+    node_args: '-r tsconfig-paths/register -r dotenv/config',
+    interpreter: './node_modules/.bin/ts-node',
     autorestart: true,
-    watch: ['app', 'node_modules'],
+    watch: false,
     max_memory_restart: '1G',
     env: {
       NODE_ENV: 'development'

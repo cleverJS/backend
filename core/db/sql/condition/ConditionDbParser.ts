@@ -1,12 +1,16 @@
 import Knex from 'knex'
 import { Condition, TConditionOperator, IConditionItem, IConditionItemList, TConditionLogic } from '../../Condition'
 import { isInstanceOf } from '../../../utils/common'
+import { loggerNamespace } from '../../../logger/logger'
+import { ErrorCondition } from '../../errors/ErrorCondition'
 
 interface IConditionOptions {
   sorts?: any[]
 }
 
 export class ConditionDbParser {
+  protected readonly logger = loggerNamespace('ConditionDbParser')
+
   public parse(queryBuilder: Knex.QueryBuilder, condition?: Readonly<Condition>): void {
     if (!condition) {
       return
@@ -112,6 +116,10 @@ export class ConditionDbParser {
 
   protected parseLikeCondition(queryBuilder: Knex.QueryBuilder, condition: IConditionItem, logic: TConditionLogic): void {
     const { value, field } = condition
+    if (!value) {
+      throw new ErrorCondition(`${condition.operator} cannot have NULL value`)
+    }
+
     if (logic === 'and') {
       queryBuilder.andWhere(field, 'like', value)
     } else {
@@ -121,6 +129,10 @@ export class ConditionDbParser {
 
   protected parseNotLikeCondition(queryBuilder: Knex.QueryBuilder, condition: IConditionItem, logic: TConditionLogic): void {
     const { value, field } = condition
+    if (!value) {
+      throw new ErrorCondition(`${condition.operator} cannot have NULL value`)
+    }
+
     if (logic === 'and') {
       queryBuilder.andWhere(field, 'not like', value)
     } else {
@@ -139,10 +151,16 @@ export class ConditionDbParser {
   }
 
   protected parseSimpleCondition(queryBuilder: Knex.QueryBuilder, exr: string, condition: IConditionItem, logic: TConditionLogic): void {
+    const { value, field } = condition
+
+    if (!value) {
+      throw new ErrorCondition(`${condition.operator} cannot have NULL value`)
+    }
+
     if (logic === 'and') {
-      queryBuilder.andWhere(condition.field, exr, condition.value)
+      queryBuilder.andWhere(field, exr, value)
     } else {
-      queryBuilder.orWhere(condition.field, exr, condition.value)
+      queryBuilder.orWhere(field, exr, value)
     }
   }
 

@@ -1,6 +1,10 @@
-import { logger } from '../logger/logger'
+export interface IEntity {
+  id?: number | string | null
+  setData(data: any): void
+  getData(): any
+}
 
-export abstract class AbstractEntity<T extends Record<string, any>> {
+export abstract class AbstractEntity<T extends Record<string, any>> implements IEntity {
   public id?: number | string | null
 
   public setData(data: T): void {
@@ -26,14 +30,5 @@ export abstract class AbstractEntity<T extends Record<string, any>> {
     }
 
     return data
-  }
-
-  /**
-   * @throws TypeError
-   * @param data
-   */
-  public static cast(data: Record<string, any>) {
-    logger.error('Should be override for casting data', data)
-    throw new Error('Should be override')
   }
 }

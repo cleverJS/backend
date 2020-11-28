@@ -1,17 +1,25 @@
 import { AbstractEntity } from './AbstractEntity'
 
-export class EntityFactory<T extends AbstractEntity<Record<string, any>>> {
-  protected EntityClass: new () => T
-  public readonly cast: (data: Record<string, any>) => Record<string, any>
+export interface IEntityFactory {
+  create(data: unknown): any
+}
 
-  public constructor(EntityClass: new () => T, cast: (data: Record<string, any>) => Record<string, any>) {
+export class EntityFactory<T extends Record<string, any>, E extends AbstractEntity<T>> implements IEntityFactory {
+  protected EntityClass: new () => E
+  protected readonly cast?: (data: unknown) => T
+
+  public constructor(EntityClass: new () => E, cast?: (data: unknown) => T) {
     this.EntityClass = EntityClass
     this.cast = cast
   }
 
-  public create(data: Record<string, any>): T {
+  public create(data: unknown): E {
     const item = new this.EntityClass()
-    item.setData(this.cast(data))
+    if (this.cast) {
+      data = this.cast(data)
+    }
+
+    item.setData(data as T)
     return item
   }
 }

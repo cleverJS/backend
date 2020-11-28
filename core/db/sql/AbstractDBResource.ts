@@ -1,31 +1,31 @@
 import Knex, { QueryBuilder } from 'knex'
-import { AbstractEntity } from '../../entity/AbstractEntity'
+import { IEntity } from '../../entity/AbstractEntity'
 import { AbstractResource } from '../AbstractResource'
 import { Condition, TConditionOperator } from '../Condition'
 import { ConditionDbParser } from './condition/ConditionDbParser'
-import { EntityFactory } from '../../entity/EntityFactory'
+import { IEntityFactory } from '../../entity/EntityFactory'
 import { loggerNamespace } from '../../logger/logger'
 import { Paginator } from '../../utils/Paginator'
 
-export abstract class AbstractDBResource<T extends AbstractEntity<Record<string, any>>> extends AbstractResource<T> {
+export abstract class AbstractDBResource<E extends IEntity> extends AbstractResource<E> {
   protected readonly logger = loggerNamespace('AbstractDBResource')
   protected readonly connection: Knex
   protected readonly conditionParser: ConditionDbParser
   protected primaryKey = 'id'
   protected table: string = ''
 
-  public constructor(connection: Knex, conditionParser: ConditionDbParser, entityFactory: EntityFactory<T>) {
+  public constructor(connection: Knex, conditionParser: ConditionDbParser, entityFactory: IEntityFactory) {
     super(entityFactory)
     this.connection = connection
     this.conditionParser = conditionParser
   }
 
-  public findById(id: string | number): Promise<T | null> {
+  public findById(id: string | number): Promise<E | null> {
     const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: this.primaryKey, value: id }] })
     return this.findOne(condition)
   }
 
-  public async findOne(condition: Condition): Promise<T | null> {
+  public async findOne(condition: Condition): Promise<E | null> {
     const paginator = new Paginator()
     paginator.setItemsPerPage(1)
 
@@ -37,7 +37,7 @@ export abstract class AbstractDBResource<T extends AbstractEntity<Record<string,
     return null
   }
 
-  public async findAll(condition?: Condition, pagination?: Paginator): Promise<T[]> {
+  public async findAll(condition?: Condition, pagination?: Paginator): Promise<E[]> {
     const rows = await this.findAllRaw(condition, pagination)
     return this.createEntityList(rows)
   }
@@ -85,7 +85,7 @@ export abstract class AbstractDBResource<T extends AbstractEntity<Record<string,
     return 0
   }
 
-  public async save(item: T) {
+  public async save(item: E) {
     try {
       const data = this.mapToDB(item)
       if (data) {
@@ -105,23 +105,23 @@ export abstract class AbstractDBResource<T extends AbstractEntity<Record<string,
     return true
   }
 
-  public batchInsert(items: T[]) {
+  public async batchInsert(items: E[]): Promise<void> {
     const rows = items.map((i) => {
       const data = this.mapToDB(i)
       delete data[this.primaryKey]
       return data
     })
 
-    return this.batchInsertRaw(rows)
+    await this.batchInsertRaw(rows)
   }
 
-  public batchInsertRaw(rows: Record<string, any>[]) {
-    return this.connection.batchInsert(this.table, rows).returning(this.primaryKey)
+  public async batchInsertRaw(rows: Record<string, any>[]): Promise<void> {
+    await this.connection.batchInsert(this.table, rows)
   }
 
   public async insert(data: Record<string, any>): Promise<any | null> {
     const queryBuilder: QueryBuilder = this.connection(this.table)
-    const result = await queryBuilder.insert(data).returning(this.primaryKey)
+    const result = await queryBuilder.insert(data)
     if (result && result.length > 0) {
       const [identificator] = result
       return identificator
@@ -169,8 +169,8 @@ export abstract class AbstractDBResource<T extends AbstractEntity<Record<string,
     return response > 0
   }
 
-  public createEntity(data: any) {
-    return this.entityFactory.create(data)
+  public createEntity(data: unknown): E {
+    return this.entityFactory.create(data) as E
   }
 
   public createEntityList(rows: any[]) {
@@ -197,7 +197,7 @@ export abstract class AbstractDBResource<T extends AbstractEntity<Record<string,
     return data
   }
 
-  public mapToDB(item: T): any {
+  public mapToDB(item: E): any {
     const { id, ...data } = item.getData()
     return data
   }
