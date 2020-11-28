@@ -7,9 +7,9 @@ Create your <b>business logic</b> in Service classes. For example, we will creat
 - Get author list.
 - Replace string ```{{author}}``` in a text.
 
-1. Create module ```app/modules/Article```
+1. Create module ```app/modules/article```
 
-2. Create service ```app/modules/Article/ArticleService.ts```
+2. Create service ```app/modules/article/ArticleService.ts```
 
 ```ts
 export class ArticleService {
