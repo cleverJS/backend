@@ -1,6 +1,6 @@
 # HTTP endpoint (Controller)
 
-[back](../use_cases.md)
+[back](../wizard.md)
 
 For creation HTTP endpoint we need HTTP server to be added and started in application.
 
@@ -147,5 +147,5 @@ If your choice is [Fastify](https://github.com/fastify/fastify) then it will be 
     
 The next step is to operate with [Database](./6_database.md)
     
-[back](../use_cases.md)
+[back](../wizard.md)
 

@@ -1,6 +1,6 @@
 Abstraction (AbstractDBResource, AbstractService, Condition)
 
-[back](../use_cases.md)
+[back](../wizard.md)
 
 Mostly, a lot of queries are simple when operating with a database and could be covered
 with the following methods with some elementary conditions in parameters:

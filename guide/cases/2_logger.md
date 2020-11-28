@@ -1,6 +1,6 @@
 # Logger
 
-[back](../use_cases.md)
+[back](../wizard.md)
 
 Core has [logger](../../core/logger/logger.ts) interface which is allows to use any logger that you want or built-in realizations.
 
@@ -86,4 +86,4 @@ export class SomeClass {
 }
 ```
 
-[back](../use_cases.md)
+[back](../wizard.md)

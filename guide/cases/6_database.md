@@ -1,6 +1,6 @@
 # Database
 
-[back](../use_cases.md)
+[back](../wizard.md)
 
 Obviously we need to store persistent data somewhere. MySQL, Postgres, MSSQL, Oracle, SQLite are good place to go.
 
@@ -182,4 +182,4 @@ export class App {
 
 The next step is [Entity](./7_entity.md) creation.
 
-[back](../use_cases.md)
+[back](../wizard.md)

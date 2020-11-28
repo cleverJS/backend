@@ -1,6 +1,6 @@
 # Create application
 
-[back](../use_cases.md)
+[back](../wizard.md)
 
 1. Recommended structure
 
@@ -66,4 +66,4 @@
 
 8. Start application ```npm run server```
 
-[back](../use_cases.md)
+[back](../wizard.md)

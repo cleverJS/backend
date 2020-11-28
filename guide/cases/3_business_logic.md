@@ -1,6 +1,6 @@
 # Business logic (Service)
 
-[back](../use_cases.md)
+[back](../wizard.md)
 
 Create your <b>business logic</b> in Service classes. For example, we will create logic which should
 
@@ -26,4 +26,4 @@ export class ArticleService {
 The next step is to call this logic from frontend application. For this we need to create server endpoints
 which could handle this calls. We have two options [HTTP](./4_http_endpoint.md) or [Websocket](./5_ws_endpoint.md).
 
-[back](../use_cases.md)
+[back](../wizard.md)

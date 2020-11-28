@@ -1,6 +1,6 @@
 # Websocket endpoint (Controller)
 
-[back](../use_cases.md)
+[back](../wizard.md)
 
 For creation websocket endpoint we need Websocket server to be added and started in application.
 
@@ -177,5 +177,5 @@ You may have a look at our frontend ws client [WSClient.ts](../../tests/app/lib/
     
 The next step is to operate with [Database](./6_database.md)
     
-[back](../use_cases.md)
+[back](../wizard.md)
 
