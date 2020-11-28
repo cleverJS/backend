@@ -53,13 +53,15 @@ export const castArticle = (data: unknown): TArticle => {
 ```
 
 ```ts
+import { castArticle } from './helper'
+
 const data = {
   'title': 'The Fundamentals of Mathematical Analysis I',
   'author': 'G. M. Fikhtengolts',
   'field': 'test',
 }
 
-const factory = new EntityFactory(Article, ArticleValidator.cast)
+const factory = new EntityFactory(Article, castArticle)
 const entity = factory.create(data)
 ```
 
