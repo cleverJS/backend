@@ -15,8 +15,4 @@ export class ArticleService extends AbstractService<Article> {
   public replaceAuthor(text: string, author: string): string {
     return text.replace('{{author}}', author)
   }
-
-  public async fetchList() {
-    return this.findAll()
-  }
 }

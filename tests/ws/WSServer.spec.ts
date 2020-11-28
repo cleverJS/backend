@@ -18,7 +18,7 @@ describe('Test WSServer', () => {
 
   beforeAll(async () => {
     function initLogger() {
-      const runtimeDir = path.resolve(`${__dirname}/../runtime`)
+      const runtimeDir = path.resolve(`${__dirname}/../../runtime/tests`)
       logger.setConfig({
         debug: true,
         info: true,
@@ -30,7 +30,7 @@ describe('Test WSServer', () => {
     initLogger()
 
     httpServer = new HttpServer({ port: 8000, host: 'localhost' })
-    wsServer = new WSServer({ port: 8000, keepalive: 1000, path: '/ws' }, httpServer.getServer().server)
+    wsServer = new WSServer({ port: 8000, keepalive: 60 * 1000, path: '/ws' }, httpServer.getServer().server)
     wsServer.onRequest('article', 'test', async (request: WSRequest, connection: IConnection<any>) => {
       return {
         status: 'success',
@@ -64,10 +64,10 @@ describe('Test WSServer', () => {
     expect(response.message).toEqual('Handler does not exist article:_test')
     wsClient.disconnect()
   })
-
-  test('should keepalive', async () => {
-    const wsClient = new WSClient(WS_URL, false)
-    await sleep(10000)
-    wsClient.disconnect()
-  })
+  //
+  // test('should keepalive', async () => {
+  //   const wsClient = new WSClient(WS_URL, false)
+  //   await sleep(10000)
+  //   wsClient.disconnect()
+  // })
 })

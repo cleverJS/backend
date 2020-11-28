@@ -1,14 +1,14 @@
 import Knex from 'knex'
 import fs from 'fs-extra'
-import { ArticleService } from '../../app/modules/article/ArticleService'
-import { ArticleResource } from '../../app/modules/article/resource/ArticleResource'
-import { ConditionDbParser } from '../../../core/db/sql/condition/ConditionDbParser'
-import { EntityFactory } from '../../../core/entity/EntityFactory'
-import { Article } from '../../app/modules/article/Article'
-import * as connections from '../../../knexfile'
-import { Condition, TConditionOperator } from '../../../core/db/Condition'
-import { Paginator } from '../../../core/utils/Paginator'
-import { castArticle } from '../../app/modules/article/helper'
+import * as connections from '../../../../knexfile'
+import { ConditionDbParser } from '../../../../core/db/sql/condition/ConditionDbParser'
+import { EntityFactory } from '../../../../core/entity/EntityFactory'
+import { Condition, TConditionOperator } from '../../../../core/db/Condition'
+import { Paginator } from '../../../../core/utils/Paginator'
+import { ArticleResource } from '../../../../demo/modules/article/resource/ArticleResource'
+import { Article } from '../../../../demo/modules/article/Article'
+import { ArticleService } from '../../../../demo/modules/article/ArticleService'
+import { castArticle } from '../../../../demo/modules/article/helper'
 
 const knexConfig = (connections as any)[process.env.NODE_ENV || 'development'] as Knex.Config
 const connectionRecord = knexConfig.connection as Knex.Sqlite3ConnectionConfig
@@ -42,6 +42,8 @@ describe('Test AbstractDBResource and AbstractService', () => {
       t.increments('id').unsigned().primary()
       t.string('title', 255)
       t.string('author', 255)
+      t.string('content', 255)
+      t.boolean('isPublished').defaultTo(false)
     })
   })
 
@@ -200,6 +202,23 @@ describe('Test AbstractDBResource and AbstractService', () => {
   })
 
   test('should listRaw', async () => {
+    const expectRaw = [
+      {
+        author: 'G. M. Fikhtengolts',
+        content: '',
+        id: 1,
+        isPublished: 0,
+        title: 'The Fundamentals of Mathematical Analysis I',
+      },
+      {
+        author: 'G. M. Fikhtengolts',
+        content: '',
+        id: 2,
+        isPublished: 0,
+        title: 'The Fundamentals of Mathematical Analysis II',
+      },
+    ]
+
     const item1 = service.createEntity(payload1)
     const item2 = service.createEntity(payload2)
     const item3 = service.createEntity(payload3)
@@ -209,12 +228,20 @@ describe('Test AbstractDBResource and AbstractService', () => {
     paginator.setItemsPerPage(2)
 
     let dbItems = await service.listRaw(paginator)
-    expect(dbItems).toEqual([item1, item2])
+    expect(dbItems).toEqual(expectRaw)
     expect(paginator.getTotal()).toEqual(3)
 
     paginator.nextPage()
 
     dbItems = await service.listRaw(paginator)
-    expect(dbItems).toEqual([item3])
+    expect(dbItems).toEqual([
+      {
+        author: 'G. M. Fikhtengolts',
+        content: '',
+        id: 3,
+        isPublished: 0,
+        title: 'The Fundamentals of Mathematical Analysis III',
+      },
+    ])
   })
 })

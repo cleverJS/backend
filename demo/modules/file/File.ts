@@ -1,23 +1,17 @@
-import * as yup from 'yup'
 import { AbstractEntity } from '../../../core/entity/AbstractEntity'
 
-const scheme = yup
-  .object()
-  .required()
-  .shape({
-    id: yup.number(),
-    code: yup.string().nullable(),
-    name: yup.string(),
-    mime: yup.string().nullable(),
-    baseDir: yup.string(),
-    url: yup.string(),
-    sort: yup.number().default(100),
-    data: yup.object(),
-    createdAt: yup.string(),
-    updatedAt: yup.string(),
-  })
-
-type TFile = yup.InferType<typeof scheme>
+export type TFile = {
+  id: number
+  code: string | null
+  name: string
+  mime: string | null
+  baseDir: string
+  url: string
+  sort: number
+  data: Record<string, any>
+  createdAt: Date | null
+  updatedAt: Date | null
+}
 
 export class File extends AbstractEntity<TFile> implements TFile {
   public id = 0
@@ -28,14 +22,10 @@ export class File extends AbstractEntity<TFile> implements TFile {
   public url = ''
   public sort = 100
   public data = {}
-  public createdAt = ''
-  public updatedAt = ''
+  public createdAt = null
+  public updatedAt = null
 
-  public getFilePath() {
+  public getFilePath(): string {
     return `${this.baseDir}${this.url}`
-  }
-
-  public static cast(data: Record<string, any>): TFile {
-    return scheme.noUnknown().cast(data)
   }
 }

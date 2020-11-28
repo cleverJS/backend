@@ -1,34 +1,22 @@
 import { AbstractDBResource } from '../../../../core/db/sql/AbstractDBResource'
-import { File } from '../File'
+import { File, TFile } from '../File'
 
 export class FileResource extends AbstractDBResource<File> {
   protected table = 'file'
 
-  public static scheme = {
-    id: 'id',
-    code: 'code',
-    name: 'name',
-    mime: 'mime',
-    baseDir: 'baseDir',
-    url: 'url',
-    sort: 'sort',
-    data: 'data',
-    createdAt: 'createdAt',
-    updatedAt: 'updatedAt',
+  mapToDB(item: File): any {
+    const { data, ...dataDB } = super.mapToDB(item)
+    return {
+      ...dataDB,
+      data: JSON.stringify(data),
+    }
   }
 
-  public map(data: Record<string, any>): typeof FileResource.scheme {
+  map(data: Record<string, any>): TFile {
+    const { data: fileData, ...dataDB } = super.map(data)
     return {
-      id: data.id,
-      code: data.code,
-      name: data.name,
-      mime: data.mime,
-      baseDir: data.baseDir,
-      url: data.url,
-      sort: data.sort,
-      data: data.data,
-      createdAt: data.createdAt,
-      updatedAt: data.updatedAt,
+      ...dataDB,
+      data: JSON.parse(fileData),
     }
   }
 }

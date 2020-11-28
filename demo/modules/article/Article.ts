@@ -9,9 +9,9 @@ export type TArticle = {
 }
 
 export class Article extends AbstractEntity<TArticle> implements TArticle {
-  public id: number = 0
-  public title: string = ''
-  public author: string = ''
-  public content: string = ''
-  public isPublished: boolean = false
+  public id = 0
+  public title = ''
+  public author = ''
+  public content = ''
+  public isPublished = false
 }

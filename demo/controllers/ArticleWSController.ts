@@ -50,13 +50,8 @@ export class ArticleWSController {
   }
 
   public actionFetchList = async (request: WSRequest, connection: IConnection<any>) => {
-    const result = this.deps.articleService.fetchList()
-
     return {
       success: true,
-      data: {
-        result,
-      },
     }
   }
 
