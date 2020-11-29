@@ -33,6 +33,10 @@ export class HttpServer {
     return this.server
   }
 
+  public getInstance(): Server {
+    return this.server.server
+  }
+
   public async destroy(): Promise<void> {
     this.logger.info('destroy')
     const server = await this.getServer()

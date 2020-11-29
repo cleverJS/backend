@@ -12,12 +12,17 @@ For working with Databases we prefer [Knex](https://github.com/knex/knex) packag
 
 Of course, you may use any favorite DB client directly, but then you will not be able to use core abstraction for working with a DB.
 
+Knex config initialization [variants](http://knexjs.org/#Installation-client) for different DBes.
+
+In example we will use SQLite
+
 1. Create `./knexfile.ts`
 
    ```ts
    import Knex from 'knex'
    import path from 'path'
-
+ 
+   // Path where SQLite db file is  
    const dbPath = path.resolve(`${__dirname}/runtime/db.sqlite`)
 
    const config = {
@@ -27,7 +32,8 @@ Of course, you may use any favorite DB client directly, but then you will not be
      },
      useNullAsDefault: false,
    } as Knex.Config
-
+ 
+   // Config for different environments   
    module.exports = {
      test: config,
      development: config,
@@ -41,6 +47,7 @@ Of course, you may use any favorite DB client directly, but then you will not be
    import Knex from 'knex'
    import * as connections from '../knexfile'
 
+   // Get connection config for environment    
    const knexConfig = (connections as any)[
      process.env.NODE_ENV || 'development'
    ] as Knex.Config
@@ -116,6 +123,7 @@ import { ArticleResource } from './app/modules/article/resource/ArticleResource'
 import { ArticleWSController } from './controllers/ArticleWSController'
 import { ArticleHTTPController } from './controllers/ArticleHTTPController'
 
+// Get connection config for environment
 const knexConfig = (connections as any)[
   process.env.NODE_ENV || 'development'
 ] as Knex.Config

@@ -2,6 +2,7 @@ import { FastifyRequest } from 'fastify'
 import { loggerNamespace } from '../../core/logger/logger'
 import { HttpServer } from '../../core/http/HttpServer'
 import { ArticleService } from '../modules/article/ArticleService'
+import { Paginator } from '../../core/utils/Paginator'
 
 interface IDependencies {
   http: HttpServer
@@ -31,9 +32,30 @@ export class ArticleHTTPController {
   }
 
   protected actionAuthorList = async (request: FastifyRequest) => {
-    const { itemsPerPage } = request.query as IAuthorQueryRequest
+    const { page, itemsPerPage } = request.query as IAuthorQueryRequest
 
-    const result = this.deps.articleService.getAuthorList(itemsPerPage)
+    const paginator = new Paginator()
+    paginator.setItemsPerPage(itemsPerPage)
+    paginator.setCurrentPage(page)
+
+    const result = await this.deps.articleService.fetchAuthorList(paginator)
+
+    return {
+      success: true,
+      data: {
+        result,
+      },
+    }
+  }
+
+  protected actionArticleList = async (request: FastifyRequest) => {
+    const { page, itemsPerPage } = request.query as IAuthorQueryRequest
+
+    const paginator = new Paginator()
+    paginator.setItemsPerPage(itemsPerPage)
+    paginator.setCurrentPage(page)
+
+    const result = await this.deps.articleService.list(paginator)
 
     return {
       success: true,
@@ -47,6 +69,7 @@ export class ArticleHTTPController {
     const instance = this.deps.http.getServer()
     instance.post('/api/article/replace', this.actionReplace)
     instance.get('/api/article/authors', this.actionAuthorList)
+    instance.get('/api/article/list', this.actionArticleList)
   }
 }
 

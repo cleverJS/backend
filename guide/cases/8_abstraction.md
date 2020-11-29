@@ -204,8 +204,8 @@ export class ArticleService extends AbstractService<Article> {
 
 ## AbstractDBResource
 
-In the same time ArticleResource service should be extended with AbstractDBResource, where we need to specify DB table and primary key
-if it is not 'id'
+In the same time ArticleResource service should be extended with AbstractDBResource, and we need to specify DB table and primary key
+if it is not 'id' in inherited fields `table` and `primaryKey`
 
 ```ts
 import { AbstractDBResource } from 'cleverJS/core/db/sql/AbstractDBResource'
@@ -302,3 +302,5 @@ export class App {
   }
 }
 ```
+
+[back](../wizard.md)

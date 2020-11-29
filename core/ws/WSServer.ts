@@ -33,7 +33,7 @@ interface IHandlers {
 }
 
 export class WSServer {
-  protected ws: WebSocket.Server | null = null
+  public ws: WebSocket.Server
   protected bus: EventEmitter
   protected readonly logger = loggerNamespace('WSServer')
   protected readonly config: IWSConfig
@@ -50,7 +50,7 @@ export class WSServer {
     this.bus = new EventEmitter()
     this.config = config
     this.keepAliveTimeout = config.keepalive || KEEP_ALIVE_DEFAULT
-    this.init(server)
+    this.ws = this.init(server)
   }
 
   /**
@@ -243,16 +243,17 @@ export class WSServer {
     })
   }
 
-  protected init(server?: Server): void {
+  protected init(server?: Server): WebSocket.Server {
     const { port, path } = this.config
+    let ws: WebSocket.Server
     if (server) {
-      this.ws = new WebSocket.Server({ server, path })
+      ws = new WebSocket.Server({ server, path })
       this.logger.info(`Websocket Server started on ws://0.0.0.0:${port}${path}`)
     } else {
-      this.ws = new WebSocket.Server({ path, port, noServer: true })
+      ws = new WebSocket.Server({ path, port, noServer: true })
     }
 
-    this.ws.on('connection', (client: WebSocket, request: IncomingMessage) => {
+    ws.on('connection', (client: WebSocket, request: IncomingMessage) => {
       const id = uuidV4()
       const state: Record<string, any> = {}
       const connection: IConnection<any> = { id, client, state, isAlive: true, remoteAddress: request.socket.remoteAddress }
@@ -268,8 +269,10 @@ export class WSServer {
       })
     })
 
-    this.ws.on('close', () => {
+    ws.on('close', () => {
       this.connections.clear()
     })
+
+    return ws
   }
 }

@@ -1,6 +1,7 @@
 import { AbstractService } from '../../../core/AbstractService'
 import { Condition, TConditionOperator } from '../../../core/db/Condition'
 import { Article } from './Article'
+import { Paginator } from '../../../core/utils/Paginator'
 
 export class ArticleService extends AbstractService<Article> {
   public findByAuthor(author: string): Promise<Article | null> {
@@ -8,8 +9,9 @@ export class ArticleService extends AbstractService<Article> {
     return this.deps.resource.findOne(condition)
   }
 
-  public getAuthorList(itemsPerPage: number): string[] {
-    return ['G. M. Fikhtengolts', 'L. Euler', 'J. L. Lagrange'].slice(0, itemsPerPage)
+  public async fetchAuthorList(paginator: Readonly<Paginator>): Promise<string[]> {
+    const items = await this.findAll(undefined, paginator)
+    return items.map((i) => i.author)
   }
 
   public replaceAuthor(text: string, author: string): string {

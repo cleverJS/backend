@@ -11,14 +11,16 @@ import { loggerNamespace } from '../core/logger/logger'
 export class App {
   protected readonly logger = loggerNamespace('App')
   protected readonly httpServer: HttpServer
-  protected readonly wsServer: WSServer
   protected readonly connection: Knex
+  protected readonly wsServer: WSServer
 
   public constructor(settings: ISettings) {
     this.httpServer = new HttpServer({ port: settings.websocket.port, host: 'localhost' })
     this.registerFastifyPlugins()
     this.httpServer.start().catch(this.logger.error)
-    this.wsServer = new WSServer(settings.websocket, this.httpServer.getServer().server)
+    const server = this.httpServer.getInstance()
+    this.wsServer = new WSServer(settings.websocket, server)
+
     this.connection = Knex(settings.connection)
 
     const resourceContainer = new ResourceContainer(this.connection)

@@ -2,6 +2,7 @@ import { IConnection, WSServer } from '../../core/ws/WSServer'
 import { WSRequest } from '../../core/ws/WSRequest'
 import { loggerNamespace } from '../../core/logger/logger'
 import { ArticleService } from '../modules/article/ArticleService'
+import { Paginator } from '../../core/utils/Paginator'
 
 interface IConnectionState {
   token: string
@@ -37,9 +38,13 @@ export class ArticleWSController {
   }
 
   public actionAuthorList = async (request: WSRequest, connection: IAppConnection) => {
-    const { itemsPerPage } = request.payload
+    const { page = 1, itemsPerPage } = request.payload
 
-    const result = this.deps.articleService.getAuthorList(itemsPerPage)
+    const paginator = new Paginator()
+    paginator.setItemsPerPage(itemsPerPage)
+    paginator.setCurrentPage(page)
+
+    const result = await this.deps.articleService.fetchAuthorList(paginator)
 
     return {
       success: true,
@@ -50,8 +55,19 @@ export class ArticleWSController {
   }
 
   public actionFetchList = async (request: WSRequest, connection: IConnection<any>) => {
+    const { page = 1, itemsPerPage } = request.payload
+
+    const paginator = new Paginator()
+    paginator.setItemsPerPage(itemsPerPage)
+    paginator.setCurrentPage(page)
+
+    const result = await this.deps.articleService.list(paginator)
+
     return {
       success: true,
+      data: {
+        result,
+      },
     }
   }
 
@@ -61,3 +77,4 @@ export class ArticleWSController {
     this.deps.wsServer.onRequest('article', 'fetch-list', this.actionFetchList)
   }
 }
+

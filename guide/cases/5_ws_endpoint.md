@@ -173,6 +173,36 @@ As a built-in Websocket server we use [websockets/ws](https://github.com/websock
     ws.send(messageAuthorList)
     ```
 
+7. Pay attention on request object
+
+    ```ts
+    interface IRequestHeader {
+      uuid: string
+      service: string
+      action: string
+    }
+    
+    interface TRequest {
+      header: IRequestHeader
+      payload: Record<string, any>
+    }
+    ```
+
+7. Pay attention on response object   
+
+    ```ts
+    interface IResponseHeader {
+      uuid: string
+      type: ResponseType
+    }
+    
+    interface TResponse {
+      header: IResponseHeader
+      payload: TResponsePayload
+      error?: string
+    }
+    ```   
+
 You may have a look at our frontend ws client [WSClient.ts](../../tests/app/lib/WSClient.ts)
     
 The next step is to operate with [Database](./6_database.md)
