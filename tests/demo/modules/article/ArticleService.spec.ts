@@ -31,9 +31,7 @@ describe('Test AbstractDBResource and AbstractService', () => {
 
   const connection = Knex(knexConfig)
   const resource = new ArticleResource(connection, new ConditionDbParser(), new EntityFactory(Article, castArticle))
-  const service = new ArticleService({
-    resource,
-  })
+  const service = new ArticleService(resource)
 
   beforeAll(async () => {
     fs.removeSync(connectionRecord.filename)

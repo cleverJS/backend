@@ -4,25 +4,22 @@ import os from 'os'
 import { v4 as uuidV4 } from 'uuid'
 import md5 from 'md5'
 import { Duplex } from 'stream'
-import { IDependencies } from '../../../core/AbstractService'
 import { logger } from '../../../core/logger/logger'
 import { HttpClient } from '../../../core/http/client/HttpClient'
 import { File } from './File'
-
-interface IDependenciesList extends IDependencies<File> {
-  httpClient: HttpClient
-}
+import { FileResource } from './resource/FileResource'
 
 export class FileService {
-  protected deps: IDependenciesList
+  protected httpClient: HttpClient
+  protected resource: FileResource
   protected baseDir: string
   protected baseUrl: string = '/usr'
   protected tmpDir: string = ''
 
-  public constructor(baseDir: string, deps: IDependenciesList) {
-    this.deps = deps
+  public constructor(baseDir: string, resource: FileResource, httpClient: HttpClient) {
+    this.httpClient = httpClient
+    this.resource = resource
     this.baseDir = baseDir
-    this.deps = deps
 
     if (!fs.existsSync(baseDir)) {
       fs.mkdirpSync(baseDir)
@@ -85,7 +82,7 @@ export class FileService {
 
     let item
     try {
-      item = this.deps.resource.createEntity({
+      item = this.resource.createEntity({
         code,
         mime,
         url,
@@ -94,7 +91,7 @@ export class FileService {
         name: fileName,
         baseDir: this.baseDir,
       })
-      await this.deps.resource.save(item)
+      await this.resource.save(item)
     } catch (e) {
       logger.error(e)
     }
@@ -103,9 +100,9 @@ export class FileService {
   }
 
   public async delete(id: number) {
-    const item = await this.deps.resource.findById(id)
+    const item = await this.resource.findById(id)
     if (item) {
-      await Promise.all([this.deleteFile(item), this.deps.resource.delete(id)])
+      await Promise.all([this.deleteFile(item), this.resource.delete(id)])
     }
   }
 
@@ -127,7 +124,7 @@ export class FileService {
 
   protected copyFileToDestination(source: string, destination: string) {
     if (source.substr(0, 4).toLocaleLowerCase() === 'http') {
-      return this.deps.httpClient.download(source, destination)
+      return this.httpClient.download(source, destination)
     }
 
     return fs.copyFile(source, destination).catch(logger.error)

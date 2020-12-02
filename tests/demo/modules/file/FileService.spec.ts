@@ -19,10 +19,7 @@ describe('Test FileService', () => {
 
   const connection = Knex(knexConfig)
   const resource = new FileResource(connection, new ConditionDbParser(), new EntityFactory(File, castFile))
-  const service = new FileService(settings.runtimeDir, {
-    resource,
-    httpClient: new HttpClient(),
-  })
+  const service = new FileService(settings.runtimeDir, resource, new HttpClient())
 
   beforeAll(async () => {
     fs.removeSync(`${settings.runtimeDir}/usr`)

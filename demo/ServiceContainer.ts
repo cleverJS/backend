@@ -5,8 +5,7 @@ export class ServiceContainer {
   public readonly articleService: ArticleService
 
   public constructor(resources: ResourceContainer) {
-    this.articleService = new ArticleService({
-      resource: resources.articleResource,
-    })
+    const { articleResource } = resources
+    this.articleService = new ArticleService(articleResource)
   }
 }

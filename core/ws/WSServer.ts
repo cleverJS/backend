@@ -164,7 +164,7 @@ export class WSServer {
 
       if (!this.validatorRequest.validate(requestObject)) {
         this.logger.error(requestObject)
-        // We cannot do anything
+        // TODO: We cannot do anything ?
         return
       }
 

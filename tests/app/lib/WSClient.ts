@@ -188,7 +188,7 @@ export class WSClient {
         const request = this.requests[uuid]
         const returnError = request && request.returnError
 
-        if (error && !returnError && request) {
+        if (error && !returnError) {
           const { header } = request
           this.logger.error('error', {
             request: { header, payload: request.payload },
