@@ -45,19 +45,24 @@ export class WSResponse implements IWSResponse {
   }
 
   /**
+   * @param payload
+   */
+  public static createEventResponse(payload: Record<string, any>): WSResponse {
+    const response = new WSResponse()
+    response.header.type = EWSResponseType.event
+    response.payload = payload
+    return response
+  }
+
+  /**
    * @param uuid
    * @param payload
-   * @param type
    */
-  public static async create(
-    payload: Promise<Record<string, any>>,
-    type: EWSResponseType = EWSResponseType.event,
-    uuid?: string
-  ): Promise<WSResponse> {
+  public static create(uuid: string, payload: Record<string, any>): WSResponse {
     const response = new WSResponse()
     response.header.uuid = uuid
-    response.header.type = type
-    response.payload = await payload
+    response.header.type = EWSResponseType.response
+    response.payload = payload
     return response
   }
 }

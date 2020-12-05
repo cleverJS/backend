@@ -18,7 +18,7 @@ export class ArticleHTTPController {
     this.init()
   }
 
-  protected actionReplace = async (request: FastifyRequest) => {
+  protected actionReplace = async (request: FastifyRequest): Promise<Record<string, any>> => {
     const { text, author } = request.body as IReplaceBodyRequest
 
     const result = this.deps.articleService.replaceAuthor(text, author)
@@ -31,7 +31,7 @@ export class ArticleHTTPController {
     }
   }
 
-  protected actionAuthorList = async (request: FastifyRequest) => {
+  protected actionAuthorList = async (request: FastifyRequest): Promise<Record<string, any>> => {
     const { page, itemsPerPage } = request.query as IAuthorQueryRequest
 
     const paginator = new Paginator()
@@ -48,7 +48,7 @@ export class ArticleHTTPController {
     }
   }
 
-  protected actionArticleList = async (request: FastifyRequest) => {
+  protected actionArticleList = async (request: FastifyRequest): Promise<Record<string, any>> => {
     const { page, itemsPerPage } = request.query as IAuthorQueryRequest
 
     const paginator = new Paginator()

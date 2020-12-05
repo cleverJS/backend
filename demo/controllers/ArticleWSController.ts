@@ -8,7 +8,9 @@ interface IConnectionState {
   token: string
 }
 
-interface IAppConnection extends IConnection<IConnectionState> {}
+interface IAppConnection extends IConnection {
+  state: IConnectionState
+}
 
 interface IDependencies {
   wsServer: WSServer
@@ -24,7 +26,7 @@ export class ArticleWSController {
     this.init()
   }
 
-  public actionReplace = async (request: WSRequest, connection: IAppConnection) => {
+  public actionReplace = async (request: WSRequest, connection: IAppConnection): Promise<Record<string, any>> => {
     const { text, author } = request.payload
 
     const result = this.deps.articleService.replaceAuthor(text, author)
@@ -37,7 +39,7 @@ export class ArticleWSController {
     }
   }
 
-  public actionAuthorList = async (request: WSRequest, connection: IAppConnection) => {
+  public actionAuthorList = async (request: WSRequest, connection: IAppConnection): Promise<Record<string, any>> => {
     const { page = 1, itemsPerPage } = request.payload
 
     const paginator = new Paginator()
@@ -54,7 +56,7 @@ export class ArticleWSController {
     }
   }
 
-  public actionFetchList = async (request: WSRequest, connection: IConnection<any>) => {
+  public actionFetchList = async (request: WSRequest, connection: IAppConnection): Promise<Record<string, any>> => {
     const { page = 1, itemsPerPage } = request.payload
 
     const paginator = new Paginator()
@@ -77,4 +79,3 @@ export class ArticleWSController {
     this.deps.wsServer.onRequest('article', 'fetch-list', this.actionFetchList)
   }
 }
-
