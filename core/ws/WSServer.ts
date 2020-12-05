@@ -109,10 +109,16 @@ export class WSServer {
     }
   }
 
-  public broadcast(cb: (connection: IConnection) => WSResponse): void {
+  public broadcast(cb: (connection: IConnection) => Promise<WSResponse | null>): void {
     for (const toConnection of this.connections.values()) {
       if (toConnection.client.readyState === WebSocket.OPEN) {
-        this.send(toConnection, cb(toConnection)).catch(this.logger.error)
+        cb(toConnection)
+          .then((response) => {
+            if (response) {
+              this.send(toConnection, response).catch(this.logger.error)
+            }
+          })
+          .catch(this.logger.error)
       }
     }
   }
