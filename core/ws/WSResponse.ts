@@ -45,10 +45,12 @@ export class WSResponse implements IWSResponse {
   }
 
   /**
+   * @param name
    * @param payload
    */
-  public static createEventResponse(payload: Record<string, any>): WSResponse {
+  public static createEventResponse(name: string, payload: Record<string, any>): WSResponse {
     const response = new WSResponse()
+    response.header.name = name
     response.header.type = EWSResponseType.event
     response.payload = payload
     return response
