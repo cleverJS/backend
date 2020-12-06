@@ -187,7 +187,7 @@ export class WSServer {
     })
   }
 
-  protected async sendError(connection: IConnection, message: string, requestUUID: string): Promise<void> {
+  protected async sendError(connection: IConnection, message: string, requestUUID: string | number): Promise<void> {
     const response = await WSResponse.create(requestUUID, {})
     response.error = message
     return this.send(connection, response)

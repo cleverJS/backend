@@ -6,7 +6,7 @@ export enum EWSResponseType {
 
 export interface IWSResponseHeader {
   type: EWSResponseType
-  uuid?: string
+  uuid?: string | number
   name?: string
 }
 
@@ -60,7 +60,7 @@ export class WSResponse implements IWSResponse {
    * @param uuid
    * @param payload
    */
-  public static create(uuid: string, payload: Record<string, any>): WSResponse {
+  public static create(uuid: string | number, payload: Record<string, any>): WSResponse {
     const response = new WSResponse()
     response.header.uuid = uuid
     response.header.type = EWSResponseType.response

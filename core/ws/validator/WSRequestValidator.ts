@@ -10,7 +10,7 @@ export class WSRequestValidator {
         type: 'object',
         strict: true,
         props: {
-          uuid: { type: 'string' },
+          uuid: [{ type: 'string' }, { type: 'number', positive: true, integer: true, min: 1, max: 4294967295 }],
           service: { type: 'string' },
           action: { type: 'string' },
         },

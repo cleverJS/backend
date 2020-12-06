@@ -1,5 +1,5 @@
 export interface IWSRequestHeader {
-  uuid: string
+  uuid: string | number
   service: string
   action: string
 }
@@ -22,6 +22,6 @@ export class WSRequest implements IWSRequest {
   }
 
   public static requestStructure(): string {
-    return '{ header: { uuid: string; service: string; action: string }, payload: Record<string, any> }'
+    return '{ header: { uuid: string | number; service: string; action: string }, payload: Record<string, any> }'
   }
 }
