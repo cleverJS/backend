@@ -18,6 +18,11 @@ function initLogger() {
 
 initLogger()
 const app = new App(settings)
-logger.info(`Application run in ${process.env.NODE_ENV} mode`)
+app
+  .run()
+  .then(() => {
+    logger.info(`Application run in ${process.env.NODE_ENV} mode`)
+  })
+  .catch(logger.error)
 
-destroy(app.destroy(), 3000)
+destroy(app.destroy(), 30_000)

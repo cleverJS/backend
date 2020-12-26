@@ -17,7 +17,6 @@ export class App {
   public constructor(settings: ISettings) {
     this.httpServer = new HttpServer({ port: settings.websocket.port, host: 'localhost' })
     this.registerFastifyPlugins()
-    this.httpServer.start().catch(this.logger.error)
     const server = this.httpServer.getInstance()
     this.wsServer = new WSServer(settings.websocket, server)
 
@@ -28,9 +27,22 @@ export class App {
     new RouteContainer(serviceContainer, this.wsServer, this.httpServer)
   }
 
+  public async run(): Promise<void> {
+    await this.httpServer.start()
+  }
+
   // This will be called on process finish and terminate http server
   public destroy() {
-    return [() => this.wsServer.destroy(), () => this.connection.destroy(), () => this.httpServer.destroy()]
+    return async (): Promise<void> => {
+      await this.wsServer.destroy()
+      await this.httpServer.destroy()
+      await new Promise((resolve) => {
+        this.connection.destroy(() => {
+          resolve(true)
+        })
+        this.logger.info('DB connections closed')
+      })
+    }
   }
 
   protected registerFastifyPlugins(): void {

@@ -1,6 +1,6 @@
 import { Client } from '@elastic/elasticsearch'
 import { ApiResponse } from '@elastic/elasticsearch/lib/Transport'
-import { DeleteByQuery, Msearch, Update, Search } from '@elastic/elasticsearch/api/requestParams'
+import { UpdateByQuery, DeleteByQuery, Msearch, Update, Search } from '@elastic/elasticsearch/api/requestParams'
 import { loggerNamespace } from '../../logger/logger'
 
 export abstract class AbstractElasticIndex {
@@ -63,16 +63,15 @@ export abstract class AbstractElasticIndex {
     return 0
   }
 
-  public async clearDocuments(body: Record<string, any>) {
+  public async deleteDocumentsByQuery(query: DeleteByQuery) {
     const deleteQuery: DeleteByQuery = {
-      body,
-      wait_for_completion: false,
+      ...query,
       index: this.getIndex(),
     }
 
     const response = await this.client.deleteByQuery(deleteQuery)
 
-    return response && response.statusCode === 200
+    return response && response.statusCode === 200 && response.body.deleted > 0
   }
 
   public async deleteDocument(id: string) {
@@ -92,6 +91,17 @@ export abstract class AbstractElasticIndex {
     })
 
     this.logger.debug(response)
+  }
+
+  public async updateDocumentByQuery(query: UpdateByQuery) {
+    const updateQuery: UpdateByQuery = {
+      ...query,
+      index: this.getIndex(),
+    }
+
+    const response = await this.client.updateByQuery(updateQuery)
+
+    return response
   }
 
   public async updateDocument(id: string, body: Record<string, any>) {

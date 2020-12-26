@@ -102,10 +102,14 @@ export class WSServer {
 
   /**
    */
-  public destroy(): void {
+  public async destroy(): Promise<void> {
     if (this.ws) {
-      this.logger.info('Server terminated')
-      this.ws.close()
+      await new Promise((resolve) => {
+        this.ws.close(() => {
+          resolve(true)
+        })
+      })
+      this.logger.info('closed')
     }
   }
 
@@ -113,7 +117,7 @@ export class WSServer {
     for (const toConnection of this.connections.values()) {
       if (toConnection.client.readyState === WebSocket.OPEN) {
         cb(toConnection)
-          .then((response) => {
+          .then(async (response) => {
             if (response) {
               this.send(toConnection, response).catch(this.logger.error)
             }

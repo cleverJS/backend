@@ -7,7 +7,6 @@ import { EntityFactory } from '../../../../core/entity/EntityFactory'
 import { File } from '../../../../demo/modules/file/File'
 import { castFile } from '../../../../demo/modules/file/helper'
 import { FileService } from '../../../../demo/modules/file/FileService'
-import { HttpClient } from '../../../../core/http/client/HttpClient'
 import { settings } from '../../../../demo/configs'
 
 describe('Test FileService', () => {
@@ -19,7 +18,7 @@ describe('Test FileService', () => {
 
   const connection = Knex(knexConfig)
   const resource = new FileResource(connection, new ConditionDbParser(), new EntityFactory(File, castFile))
-  const service = new FileService(settings.runtimeDir, resource, new HttpClient())
+  const service = new FileService(settings.runtimeDir, resource)
 
   beforeAll(async () => {
     fs.removeSync(`${settings.runtimeDir}/usr`)

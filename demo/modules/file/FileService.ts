@@ -1,23 +1,23 @@
+import http, { IncomingMessage } from 'http'
+import https from 'https'
 import fs from 'fs-extra'
+import { pipeline, Duplex } from 'stream'
 import path from 'path'
 import os from 'os'
 import { v4 as uuidV4 } from 'uuid'
 import md5 from 'md5'
-import { Duplex } from 'stream'
-import { logger } from '../../../core/logger/logger'
-import { HttpClient } from '../../../core/http/client/HttpClient'
+import { logger, loggerNamespace } from '../../../core/logger/logger'
 import { File } from './File'
 import { FileResource } from './resource/FileResource'
 
 export class FileService {
-  protected httpClient: HttpClient
+  protected readonly logger = loggerNamespace('FileService')
   protected resource: FileResource
   protected baseDir: string
   protected baseUrl: string = '/usr'
   protected tmpDir: string = ''
 
-  public constructor(baseDir: string, resource: FileResource, httpClient: HttpClient) {
-    this.httpClient = httpClient
+  public constructor(baseDir: string, resource: FileResource) {
     this.resource = resource
     this.baseDir = baseDir
 
@@ -35,8 +35,8 @@ export class FileService {
     sort: number = 100,
     data: Record<string, any> = {},
     parseBase64: boolean = true
-  ) {
-    let item
+  ): Promise<File | null> {
+    let item = null
     const tmpContent = parseBase64 ? this.parseBase64Data(content) : { mime, content: Buffer.from(content) }
     if (tmpContent) {
       item = this.createFileFromStream(FileService.bufferToStream(tmpContent.content), newFileName, tmpContent.mime, code, sort, data)
@@ -45,20 +45,24 @@ export class FileService {
     return item
   }
 
-  public createFileFromStream(
+  public async createFileFromStream(
     stream: Duplex,
     newFileName: string,
     mime: string | null = null,
     code: string | null = null,
     sort: number = 100,
     data: Record<string, any> = {}
-  ): Promise<File | null | undefined> {
+  ): Promise<File | null> {
     const tmpFile = path.normalize(`${this.tmpDir}${path.sep}${uuidV4()}`)
     const writeStream = fs.createWriteStream(tmpFile, { encoding: 'utf-8' })
-    stream.pipe(writeStream)
+    pipeline(stream, writeStream, (err) => {
+      if (err) {
+        this.logger.error(err)
+      }
+    })
+
     return new Promise((resolve) => {
       writeStream.on('close', () => {
-        stream.destroy()
         const item = this.createFileFromPath(tmpFile, newFileName, mime, code, sort, data)
         resolve(item)
       })
@@ -72,7 +76,7 @@ export class FileService {
     code: string | null = null,
     sort: number = 100,
     data: Record<string, any> = {}
-  ) {
+  ): Promise<File | null> {
     const realFileName = newFileName || this.getFilenameFromPath(pathOrUrl)
     const fileName = `${Date.now()}_${realFileName}`
     const urlPath = await this.createUrlPath(this.baseDir, code, fileName)
@@ -93,20 +97,20 @@ export class FileService {
       })
       await this.resource.save(item)
     } catch (e) {
-      logger.error(e)
+      this.logger.error(e)
     }
 
     return item || null
   }
 
-  public async delete(id: number) {
+  public async delete(id: number): Promise<void> {
     const item = await this.resource.findById(id)
     if (item) {
       await Promise.all([this.deleteFile(item), this.resource.delete(id)])
     }
   }
 
-  public static bufferToStream(buffer: Buffer) {
+  public static bufferToStream(buffer: Buffer): Duplex {
     const stream = new Duplex()
     stream.push(buffer)
     stream.push(null)
@@ -114,23 +118,24 @@ export class FileService {
     stream.on('error', (error: Error) => {
       logger.error(error)
     })
+
     return stream
   }
 
-  protected async deleteFile(item: File) {
+  protected async deleteFile(item: File): Promise<void> {
     const dir = item.baseDir + item.url
     await fs.remove(dir)
   }
 
   protected copyFileToDestination(source: string, destination: string) {
     if (source.substr(0, 4).toLocaleLowerCase() === 'http') {
-      return this.httpClient.download(source, destination)
+      return this.urlDownload(source, destination)
     }
 
-    return fs.copyFile(source, destination).catch(logger.error)
+    return fs.copyFile(source, destination)
   }
 
-  protected async createUrlPath(baseDir: string, code: string | null, fileName: string) {
+  protected async createUrlPath(baseDir: string, code: string | null, fileName: string): Promise<string> {
     const subDir = md5(code + fileName).substr(0, 4)
     const fileUrl = this.baseUrl + path.sep + subDir
     const filePath = baseDir + fileUrl
@@ -138,7 +143,7 @@ export class FileService {
     return fileUrl
   }
 
-  protected getFilenameFromPath(pathOrUrl: string) {
+  protected getFilenameFromPath(pathOrUrl: string): string {
     return path.basename(pathOrUrl)
   }
 
@@ -155,5 +160,43 @@ export class FileService {
     }
 
     return null
+  }
+
+  protected async urlDownload(url: string, destination: string) {
+    const writer = fs.createWriteStream(destination, { encoding: 'utf-8' })
+
+    let response: IncomingMessage
+    if (url.substr(0, 5) === 'https') {
+      response = await this.httpsGet(url)
+    } else {
+      response = await this.httpGet(url)
+    }
+
+    pipeline(response, writer, (err) => {
+      if (err) {
+        this.logger.error(err)
+      }
+    })
+
+    return new Promise((resolve, reject) => {
+      writer.on('finish', resolve)
+      writer.on('error', reject)
+    })
+  }
+
+  protected async httpGet(url: string): Promise<IncomingMessage> {
+    return new Promise((resolve, reject) =>
+      http.get(url, (res) => {
+        resolve(res)
+      })
+    )
+  }
+
+  protected async httpsGet(url: string): Promise<IncomingMessage> {
+    return new Promise((resolve, reject) =>
+      https.get(url, (res) => {
+        resolve(res)
+      })
+    )
   }
 }

@@ -1,6 +1,6 @@
 import { logger } from '../logger/logger'
 
-export const destroy = (destroyers: any[], timeout = 3000) => {
+export const destroy = (destroyer: any, timeout = 15_000) => {
   let isDestroying = false
 
   function run(signal: string) {
@@ -13,7 +13,7 @@ export const destroy = (destroyers: any[], timeout = 3000) => {
           // eslint-disable-next-line no-process-exit
           process.exit(1)
         }, timeout)
-        await Promise.all(destroyers.map((d) => d()))
+        await destroyer()
         logger.info('Destroy app successful')
         // eslint-disable-next-line no-process-exit
         process.exit(0)

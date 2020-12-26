@@ -9,7 +9,7 @@ export class CacheAdapterRuntime implements CacheAdapterInterface {
   protected readonly tagKeys: Map<string, Set<string>> = new Map()
   protected readonly ttls: Map<string, number> = new Map()
 
-  public async get(key: string, defaultValue?: any): Promise<any | undefined> {
+  public async get(key: string, defaultValue?: unknown): Promise<unknown | undefined> {
     await this.checkExpiredByKey(key)
     const cache = this.caches.get(key)
     let result
@@ -29,7 +29,7 @@ export class CacheAdapterRuntime implements CacheAdapterInterface {
    * @param ttl - in seconds
    * @param tags
    */
-  public set(key: string, value: any, ttl: number | null = Cache.TTL_1MIN, tags?: string[]): Promise<void> {
+  public set(key: string, value: unknown, ttl: number | null = Cache.TTL_1MIN, tags?: string[]): Promise<void> {
     this.caches.set(key, value)
 
     if (ttl) {
@@ -54,7 +54,7 @@ export class CacheAdapterRuntime implements CacheAdapterInterface {
    * @param ttl - in seconds
    * @param tags
    */
-  public async getOrSet(key: string, fn: () => Promise<any>, ttl?: number | null, tags?: string[]): Promise<any> {
+  public async getOrSet(key: string, fn: () => Promise<any>, ttl?: number | null, tags?: string[]): Promise<unknown> {
     let result = await this.get(key)
     if (result === undefined) {
       result = await fn()
@@ -125,7 +125,7 @@ export class CacheAdapterRuntime implements CacheAdapterInterface {
     })
   }
 
-  protected clearKeyFromTagMap(key: string) {
+  protected clearKeyFromTagMap(key: string): void {
     const tagSet = this.keyTags.get(key)
     if (tagSet) {
       const tagArray = Array.from(tagSet)
@@ -143,7 +143,7 @@ export class CacheAdapterRuntime implements CacheAdapterInterface {
     }
   }
 
-  protected addValue(key: string, value: string, map: Map<string, Set<string>>) {
+  protected addValue(key: string, value: string, map: Map<string, Set<string>>): void {
     let set = map.get(key)
     if (!set) {
       set = new Set<string>()

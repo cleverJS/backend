@@ -2,7 +2,7 @@ import * as yup from 'yup'
 import { TArticle } from './Article'
 
 const scheme = yup.object().required().shape({
-  id: yup.number(),
+  id: yup.number().defined(),
   title: yup.string(),
   author: yup.string(),
   content: yup.string(),
