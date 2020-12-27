@@ -15,10 +15,10 @@ simplify common development's things:
 
 **NOTE:**  There is no restriction.
 
- With this tool you are free to write your code as you wish.
+ With this tool, you are free to write your code as you wish.
 
 - You may use the tool partial.
 - You may replace suggested Http/WebSocket servers with any.
 - You may use your lovely logger.  
-- You may use your own project structure.
+- You may use your project structure.
 - You may override everything in your way. 

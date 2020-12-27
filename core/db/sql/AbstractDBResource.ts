@@ -121,7 +121,13 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
 
   public async insert(data: Record<string, any>): Promise<any | null> {
     const queryBuilder: QueryBuilder = this.connection(this.table)
-    const result = await queryBuilder.insert(data)
+    let result
+    if (['pg', 'mssql', 'oracle'].includes(this.connection.client.config.client)) {
+      result = await queryBuilder.insert(data).returning(this.primaryKey)
+    } else {
+      result = await queryBuilder.insert(data)
+    }
+
     if (result && result.length > 0) {
       const [identificator] = result
       return identificator
