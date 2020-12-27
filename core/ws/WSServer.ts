@@ -228,7 +228,13 @@ export class WSServer {
       if (keepAlive) {
         clearInterval(keepAlive)
       }
-      const state = this.connections.get(id)?.state || {}
+
+      const connection = this.connections.get(id)
+
+      let state = {}
+      if (connection && connection.state) {
+        state = connection.state
+      }
       this.bus.emit(EVENT_DISCONNECT, state)
       this.connections.delete(id)
       if (CORE_DEBUG) {
