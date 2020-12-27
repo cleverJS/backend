@@ -1,5 +1,5 @@
 import Knex from 'knex'
-import { Condition, TConditionOperator, IConditionItem, IConditionItemList, TConditionLogic } from '../../Condition'
+import { Condition, TConditionOperator, IConditionItem, IConditionItemList, TConditionLogic, conditionOperatorNames } from '../../Condition'
 import { isInstanceOf } from '../../../utils/common'
 import { loggerNamespace } from '../../../logger/logger'
 import { ErrorCondition } from '../../errors/ErrorCondition'
@@ -116,8 +116,8 @@ export class ConditionDbParser {
 
   protected parseLikeCondition(queryBuilder: Knex.QueryBuilder, condition: IConditionItem, logic: TConditionLogic): void {
     const { value, field } = condition
-    if (!value) {
-      throw new ErrorCondition(`${condition.operator} cannot have NULL value`)
+    if (value === undefined || value === null || value === '') {
+      throw new ErrorCondition(`${conditionOperatorNames[condition.operator]} cannot have NULL, undefined or empty value`)
     }
 
     if (logic === 'and') {
@@ -129,8 +129,8 @@ export class ConditionDbParser {
 
   protected parseNotLikeCondition(queryBuilder: Knex.QueryBuilder, condition: IConditionItem, logic: TConditionLogic): void {
     const { value, field } = condition
-    if (!value) {
-      throw new ErrorCondition(`${condition.operator} cannot have NULL value`)
+    if (value === undefined || value === null || value === '') {
+      throw new ErrorCondition(`${conditionOperatorNames[condition.operator]} cannot have NULL, undefined or empty value`)
     }
 
     if (logic === 'and') {
@@ -153,8 +153,8 @@ export class ConditionDbParser {
   protected parseSimpleCondition(queryBuilder: Knex.QueryBuilder, exr: string, condition: IConditionItem, logic: TConditionLogic): void {
     const { value, field } = condition
 
-    if (!value) {
-      throw new ErrorCondition(`${condition.operator} cannot have NULL value`)
+    if (value === undefined || value === null) {
+      throw new ErrorCondition(`${conditionOperatorNames[condition.operator]} cannot have NULL or undefined value`)
     }
 
     if (logic === 'and') {
