@@ -27,7 +27,9 @@ If your choice is [Fastify](https://github.com/fastify/fastify) then it will be 
     
       // This will be called on process finish and terminate http server
       public destroy() {
-        return [() => this.httpServer.destroy()]
+        return async (): Promise<void> => {
+          await this.httpServer.destroy()
+        }
       }
     }
     ```

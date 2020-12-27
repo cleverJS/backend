@@ -34,4 +34,12 @@ export const defaults: ISettings = {
     port: 6379,
     db: 0,
   },
+
+  security: {
+    jwtToken: {
+      privateKey: path.join(__dirname, './keys/default/rs256.key'),
+      publicKey: path.join(__dirname, './keys/default/rs256.pub.key'),
+      algorithm: 'RS256',
+    },
+  },
 }

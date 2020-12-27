@@ -57,7 +57,7 @@ export abstract class AbstractElasticIndex {
       const response = await this.client.count(params || { index: this.getIndex() })
       return response.body.count
     } catch (e) {
-      this.logger.debug(e)
+      this.logger.error(e)
     }
 
     return 0
@@ -80,7 +80,7 @@ export abstract class AbstractElasticIndex {
       index: this.getIndex(),
     })
 
-    return response && response.statusCode === 200
+    return response && response.statusCode === 200 && response.body.deleted > 0
   }
 
   public async indexDocument(id: string, body: Record<string, any>) {
@@ -90,7 +90,7 @@ export abstract class AbstractElasticIndex {
       index: this.getIndex(),
     })
 
-    this.logger.debug(response)
+    return response && response.statusCode === 200
   }
 
   public async updateDocumentByQuery(query: UpdateByQuery) {
@@ -101,7 +101,7 @@ export abstract class AbstractElasticIndex {
 
     const response = await this.client.updateByQuery(updateQuery)
 
-    return response
+    return response && response.statusCode === 200 && response.body.updated > 0
   }
 
   public async updateDocument(id: string, body: Record<string, any>) {
@@ -113,7 +113,7 @@ export abstract class AbstractElasticIndex {
     }
     const response = await this.client.update(params)
 
-    this.logger.debug(response)
+    return response && response.statusCode === 200 && response.body.updated > 0
   }
 
   public async bulkIndexDocument(dataset: Record<string, any>[]) {

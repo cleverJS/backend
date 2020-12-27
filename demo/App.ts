@@ -1,5 +1,7 @@
 import Knex from 'knex'
 import cors from 'fastify-cors'
+import { EventEmitter } from 'events'
+import TypedEmitter from 'typed-emitter'
 import { WSServer } from '../core/ws/WSServer'
 import { ISettings } from './configs/SettingsInterface'
 import { ResourceContainer } from './ResourceContainer'
@@ -7,12 +9,14 @@ import { ServiceContainer } from './ServiceContainer'
 import { RouteContainer } from './RouteContainer'
 import { HttpServer } from '../core/http/HttpServer'
 import { loggerNamespace } from '../core/logger/logger'
+import { AppEvents } from './types/Events'
 
 export class App {
   protected readonly logger = loggerNamespace('App')
   protected readonly httpServer: HttpServer
   protected readonly connection: Knex
   protected readonly wsServer: WSServer
+  protected readonly appEventBus: TypedEmitter<AppEvents> = new EventEmitter()
 
   public constructor(settings: ISettings) {
     this.httpServer = new HttpServer({ port: settings.websocket.port, host: 'localhost' })
@@ -23,7 +27,7 @@ export class App {
     this.connection = Knex(settings.connection)
 
     const resourceContainer = new ResourceContainer(this.connection)
-    const serviceContainer = new ServiceContainer(resourceContainer)
+    const serviceContainer = new ServiceContainer(resourceContainer, this.appEventBus)
     new RouteContainer(serviceContainer, this.wsServer, this.httpServer)
   }
 

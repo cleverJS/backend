@@ -178,9 +178,10 @@ With the help of Condition and AbstractService we could extend ArticleService an
 import { AbstractService } from 'cleverJS/core/AbstractService'
 import { Condition, TConditionOperator } from 'cleverJS/core/db/Condition'
 import { Article } from './Article'
+import { ArticleResource } from './resource/ArticleResource'
 
 // Article service is extended with AbstractService
-export class ArticleService extends AbstractService<Article> {
+export class ArticleService extends AbstractService<Article, ArticleResource> {
   // This method use condition and inherited findAll
   public async findByAuthor(author: string): Promise<Article | null> {
     const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: 'author', value: author }] })
@@ -245,7 +246,7 @@ export class App {
   public constructor() {
     const websocketOptions = {
       port: 8080,
-      keepalive: 60 * 1000, // Check that connection is alive every 60 seconds
+      keepalive: 50 * 1000, // Check that connection is alive every 50 seconds
       path: '/ws',
     }
 
@@ -285,7 +286,16 @@ export class App {
 
   // This will be called on process finish and terminate ws/http server and DB connection
   public destroy() {
-    return [() => this.wsServer.destroy(), () => this.httpServer.destroy(), , () => this.connection.destroy()]
+    return async (): Promise<void> => {
+      await this.wsServer.destroy()
+      await this.httpServer.destroy()
+      await new Promise((resolve) => {
+        this.connection.destroy(() => {
+          resolve(true)
+        })
+        this.logger.info('DB connections closed')
+      })
+    }
   }
 
   protected registerFastifyPlugins(): void {

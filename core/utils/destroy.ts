@@ -1,6 +1,6 @@
 import { logger } from '../logger/logger'
 
-export const destroy = (destroyer: any, timeout = 15_000) => {
+export const destroy = (destroyer: () => Promise<void>, timeout = 15_000): void => {
   let isDestroying = false
 
   function run(signal: string) {

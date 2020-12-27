@@ -34,7 +34,10 @@ As a built-in Websocket server we use [websockets/ws](https://github.com/websock
     
       // This will be called on process finish and terminate ws and http server
       public destroy() {
-        return [() => this.wsServer.destroy(), () => this.httpServer.destroy()]
+        return async (): Promise<void> => {
+          await this.wsServer.destroy()
+          await this.httpServer.destroy()
+        }
       }
     }
     ```
@@ -63,7 +66,7 @@ As a built-in Websocket server we use [websockets/ws](https://github.com/websock
         this.init()
       }
     
-      public actionReplace = async (request: WSRequest, connection: IConnection<any>) => {
+      public actionReplace = async (request: WSRequest, connection: IConnection) => {
         const { text, author } = request.payload
     
         const result = this.deps.articleService.replaceAuthor(text, author)
@@ -76,7 +79,7 @@ As a built-in Websocket server we use [websockets/ws](https://github.com/websock
         }
       }
     
-      public actionAuthorList = async (request: WSRequest, connection: IConnection<any>) => {
+      public actionAuthorList = async (request: WSRequest, connection: IConnection) => {
         const { limit } = request.payload
     
         const result = this.deps.articleService.getAuthorList(limit)
@@ -129,12 +132,15 @@ As a built-in Websocket server we use [websockets/ws](https://github.com/websock
     
       // This will be called on process finish and terminate ws and http server
       public destroy() {
-        return [() => this.wsServer.destroy(), () => this.httpServer.destroy()]
+        return async (): Promise<void> => {
+          await this.wsServer.destroy()
+          await this.httpServer.destroy()
+        }
       }
     }
     ```
 
-6. Frontend could access enpoints now.
+6. Frontend could access endpoints now.
 
     Example
     

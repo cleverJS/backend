@@ -1,6 +1,5 @@
 import { CacheAdapterInterface } from './CacheAdapterInterface'
 import { loggerNamespace } from '../../logger/logger'
-import { Cache } from '../Cache'
 
 export class CacheAdapterRuntime implements CacheAdapterInterface {
   protected readonly logger = loggerNamespace('CacheAdapterRuntime')
@@ -29,7 +28,7 @@ export class CacheAdapterRuntime implements CacheAdapterInterface {
    * @param ttl - in seconds
    * @param tags
    */
-  public set(key: string, value: unknown, ttl: number | null = Cache.TTL_1MIN, tags?: string[]): Promise<void> {
+  public set(key: string, value: unknown, ttl?: number | null, tags?: string[]): Promise<void> {
     this.caches.set(key, value)
 
     if (ttl) {
@@ -101,7 +100,7 @@ export class CacheAdapterRuntime implements CacheAdapterInterface {
       const now = new Date().getTime()
       const clearPromise = []
       for (const [key, ttl] of this.ttls) {
-        if (!ttl || ttl < now) {
+        if (ttl && ttl < now) {
           clearPromise.push(this.clear(key))
         }
       }
@@ -117,7 +116,7 @@ export class CacheAdapterRuntime implements CacheAdapterInterface {
         now = new Date().getTime()
       }
       const ttl = this.ttls.get(key)
-      if (!ttl || ttl < now) {
+      if (ttl && ttl < now) {
         this.clear(key).catch(this.logger.error)
       }
 

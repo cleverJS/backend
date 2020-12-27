@@ -1,4 +1,14 @@
-import { AbstractDBResource } from '../../../../core/db/sql/AbstractDBResource'
+# Complicated DB query
+
+[back](../../wizard.md)
+
+If you need to execute a complicated request on DB, you may do it in Resource class
+with the help of [Knex](https://github.com/knex/knex) package, or your own.
+
+Example:
+
+```ts
+import { AbstractDBResource } from 'cleverJS/core/db/sql/AbstractDBResource'
 import { Article } from '../Article'
 
 export class ArticleResource extends AbstractDBResource<Article> {
@@ -24,3 +34,8 @@ export class ArticleResource extends AbstractDBResource<Article> {
     return this.connection.raw(query)
   }
 }
+```
+
+Read [Knex](http://knexjs.org) documentation to get more about requests.
+
+[back](../../wizard.md)

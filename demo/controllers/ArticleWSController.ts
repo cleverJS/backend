@@ -1,16 +1,10 @@
-import { IConnection, WSServer } from '../../core/ws/WSServer'
+import { WSServer } from '../../core/ws/WSServer'
 import { WSRequest } from '../../core/ws/WSRequest'
 import { loggerNamespace } from '../../core/logger/logger'
 import { ArticleService } from '../modules/article/ArticleService'
 import { Paginator } from '../../core/utils/Paginator'
-
-interface IConnectionState {
-  token: string
-}
-
-interface IAppConnection extends IConnection {
-  state: IConnectionState
-}
+import { WSResponse } from '../../core/ws/WSResponse'
+import { IAppConnection } from '../types/WSConnection'
 
 interface IDependencies {
   wsServer: WSServer
@@ -24,6 +18,7 @@ export class ArticleWSController {
   public constructor(deps: IDependencies) {
     this.deps = deps
     this.init()
+    this.onEvents()
   }
 
   public actionReplace = async (request: WSRequest, connection: IAppConnection): Promise<Record<string, any>> => {
@@ -73,7 +68,31 @@ export class ArticleWSController {
     }
   }
 
+  public actionSubscribe = async (request: WSRequest, connection: IAppConnection): Promise<Record<string, any>> => {
+    connection.state.subscriptions.article = true
+
+    return {
+      success: true,
+    }
+  }
+
+  protected onEvents(): void {
+    this.deps.articleService.eventEmitter.on('new', (item) => {
+      this.deps.wsServer.broadcast((connection: IAppConnection) => {
+        return new Promise((resolve) => {
+          let result = null
+          if (connection.state.subscriptions.article) {
+            result = WSResponse.createEventResponse('article:new', { data: item })
+          }
+
+          resolve(result)
+        })
+      })
+    })
+  }
+
   protected init(): void {
+    this.deps.wsServer.onRequest('article', 'subscribe', this.actionSubscribe)
     this.deps.wsServer.onRequest('article', 'replace', this.actionReplace)
     this.deps.wsServer.onRequest('article', 'authors', this.actionAuthorList)
     this.deps.wsServer.onRequest('article', 'fetch-list', this.actionFetchList)

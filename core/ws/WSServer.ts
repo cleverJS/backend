@@ -7,6 +7,7 @@ import { WSResponse } from './WSResponse'
 import { loggerNamespace } from '../logger/logger'
 import { IWSConfig } from './config'
 import { WSRequestValidator } from './validator/WSRequestValidator'
+import { CORE_DEBUG } from '../utils/common'
 
 const KEEP_ALIVE_DEFAULT = 1000 * 60
 const EVENT_CONNECT = 'connect'
@@ -64,10 +65,10 @@ export class WSServer {
         if (client.readyState === WebSocket.OPEN) {
           client.send(response.toString())
         } else if ([WebSocket.CLOSED, WebSocket.CLOSING].includes(client.readyState)) {
-          this.logger.warn('Force closing')
+          this.logger.warn('force closing')
           client.terminate()
         } else {
-          this.logger.error(new Error(`Connection is not open: '${client.readyState}'`))
+          this.logger.error(new Error(`connection is not open: '${client.readyState}'`))
           client.terminate()
         }
       } catch (e) {
@@ -166,7 +167,9 @@ export class WSServer {
 
       try {
         const request = new WSRequest(requestObject)
-        this.logger.debug(`request from ${id}:`, request)
+        if (CORE_DEBUG) {
+          this.logger.debug(`request from ${id}:`, request)
+        }
         const key = `${request.header.service}:${request.header.action}`
         const handler = this.handlers.get(key)
         if (handler) {
@@ -228,13 +231,15 @@ export class WSServer {
       const state = this.connections.get(id)?.state || {}
       this.bus.emit(EVENT_DISCONNECT, state)
       this.connections.delete(id)
-      this.logger.debug('Disconnected: ', id)
+      if (CORE_DEBUG) {
+        this.logger.debug('disconnected: ', id)
+      }
     })
   }
 
   protected handleError({ id, client }: IConnection): void {
     client.on('error', (err: Error) => {
-      this.logger.error(`Connection ${id}: `, err)
+      this.logger.error(`connection ${id}: `, err)
     })
   }
 
@@ -243,10 +248,11 @@ export class WSServer {
     let ws: WebSocket.Server
     if (server) {
       ws = new WebSocket.Server({ server, path })
-      this.logger.info(`Started on ws://0.0.0.0:${port}${path}`)
     } else {
       ws = new WebSocket.Server({ path, port, noServer: true })
     }
+
+    this.logger.info(`started on ws://0.0.0.0:${port}${path}`)
 
     ws.on('connection', (client: WebSocket, request: IncomingMessage) => {
       const id = uuidV4()
@@ -259,7 +265,6 @@ export class WSServer {
       this.handleError(connection)
       this.bus.emit(EVENT_CONNECT, id)
       client.on('pong', () => {
-        this.logger.debug('pong')
         connection.isAlive = true
       })
     })

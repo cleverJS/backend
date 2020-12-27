@@ -15,23 +15,18 @@ Here you will find step by step guide how to create application and meet with co
 8. [Abstraction (AbstractDBResource, AbstractService, Condition)](./cases/8_abstraction.md)    
 9. [Pagination](./cases/9_pagination.md)
 
-## Advanced  - TODO
-1. [Cache](./cases)
-2. [Extend Service dependencies](./cases) 
-3. [Complicated DB query](./cases) 
-4. [When DB structure is different then Model](./cases)
-5. [Websocket](./cases) 
-    - [State](./cases)
-    - [Broadcast](./cases) 
-    - [Events](./cases) 
-6. [ElasticSearch](./cases) 
-7. [Redis](./cases) 
-8. [Authorization module](./cases)     
-    - [Security](./cases)     
-    - [Token](./cases)     
-    - [Registration](./cases)     
-    - [Authorization](./cases)     
-    - [Forgot/Reset password](./cases)     
+## Advanced
+1. [Complicated DB query](./cases/advanced/1_complicated_DB_query.md) 
+2. [Websocket](./cases/advanced/2_websocket.md)
+3. [Cache](./cases/advanced/3_cache.md)
+4. [ElasticSearch](./cases/advanced) - TODO
+5. [Redis](./cases/advanced) - TODO
+6. [Authorization module](./cases/advanced) - TODO  
+    - [Security](./cases/advanced)
+    - [Token](./cases/advanced)     
+    - [Registration](./cases/advanced)     
+    - [Authorization](./cases/advanced)     
+    - [Forgot/Reset password](./cases/advanced)     
 
 [back](../README.md)
 

@@ -16,7 +16,6 @@ export class Cache implements CacheAdapterInterface {
 
   public constructor(adapter?: CacheAdapterInterface) {
     this.adapter = adapter || new CacheAdapterNull()
-    this.checkExpired().catch(this.logger.error)
   }
 
   public setAdapter(adapter: CacheAdapterInterface): void {

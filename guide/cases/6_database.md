@@ -9,12 +9,13 @@ For working with Databases we prefer [Knex](https://github.com/knex/knex) packag
 - Convenient QueryBuilder
 - Support main DBes
 - Connection Pool inside
+- Typescript support
 
 Of course, you may use any favorite DB client directly, but then you will not be able to use core abstraction for working with a DB.
 
 Knex config initialization [variants](http://knexjs.org/#Installation-client) for different DBes.
 
-In example we will use SQLite
+In this example we will use SQLite
 
 1. Create `./knexfile.ts`
 
@@ -61,7 +62,14 @@ In example we will use SQLite
 
      // This will be called on process finish and DB connection
      public destroy() {
-       return [() => this.connection.destroy()]
+        return async (): Promise<void> => {
+          await new Promise((resolve) => {
+            this.connection.destroy(() => {
+              resolve(true)
+            })
+            this.logger.info('DB connections closed')
+          })
+        }
      }
    }
    ```
@@ -170,7 +178,16 @@ export class App {
 
   // This will be called on process finish and terminate ws/http server and DB connection
   public destroy() {
-    return [() => this.wsServer.destroy(), () => this.httpServer.destroy(), , () => this.connection.destroy()]
+    return async (): Promise<void> => {
+      await this.wsServer.destroy()
+      await this.httpServer.destroy()
+      await new Promise((resolve) => {
+        this.connection.destroy(() => {
+          resolve(true)
+        })
+        this.logger.info('DB connections closed')
+      })
+    }
   }
 
   protected registerFastifyPlugins(): void {
