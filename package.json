@@ -1,6 +1,6 @@
 {
   "name": "backend",
-  "version": "1.5.8",
+  "version": "1.5.11",
   "description": "CleverJS backend",
   "author": "",
   "license": "MIT",
@@ -9,12 +9,12 @@
     "url": "git+https://github.com/cleverJS/backend"
   },
   "scripts": {
-    "build": "rm -rf ./build/* && tsc -d -p tsconfig.prod.json",
+    "build": "tsc -d -p tsconfig.prod.json",
     "server-dev": "ts-node -r tsconfig-paths/register -r dotenv/config  demo/index.ts",
     "server": "ts-node -T -r tsconfig-paths/register -r dotenv/config  demo/index.ts",
     "test": "npx jest --runInBand --detectOpenHandles --colors --verbose --reporters=default",
     "test:cov": "npx jest --runInBand --detectOpenHandles --colors --verbose --reporters=default --coverage",
-    "postinstall": "rm -rf ./build/* && tsc -d --project tsconfig.prod.json && ts-node -T core/info.ts"
+    "postinstall": "tsc -d --project tsconfig.prod.json && ts-node -T core/info.ts"
   },
   "engines": {
     "node": ">=13.0.0"
