@@ -93,6 +93,9 @@ export class ConditionDbParser {
       case TConditionOperator.IN:
         this.parseInCondition(queryBuilder, condition, logic)
         break
+      case TConditionOperator.NOT_IN:
+        this.parseNotInCondition(queryBuilder, condition, logic)
+        break
       case TConditionOperator.IS_NULL:
         this.parseNullCondition(queryBuilder, condition, logic)
         break
@@ -110,6 +113,16 @@ export class ConditionDbParser {
         queryBuilder.whereIn(condition.field, condition.value)
       } else {
         queryBuilder.orWhereIn(condition.field, condition.value)
+      }
+    }
+  }
+
+  protected parseNotInCondition(queryBuilder: Knex.QueryBuilder, condition: IConditionItem, logic: TConditionLogic): void {
+    if (Array.isArray(condition.value)) {
+      if (logic === 'and') {
+        queryBuilder.whereNotIn(condition.field, condition.value)
+      } else {
+        queryBuilder.orWhereNotIn(condition.field, condition.value)
       }
     }
   }

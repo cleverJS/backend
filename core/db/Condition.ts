@@ -9,6 +9,7 @@ export enum TConditionOperator {
   LIKE,
   NOT_LIKE,
   IN,
+  NOT_IN,
   IS_NULL,
   IS_NOT_NULL,
 }
@@ -24,8 +25,9 @@ export const conditionOperatorNames = {
   7: 'LIKE',
   8: 'NOT_LIKE',
   9: 'IN',
-  10: 'IS_NULL',
-  11: 'IS_NOT_NULL',
+  10: 'NOT_IN',
+  11: 'IS_NULL',
+  12: 'IS_NOT_NULL',
 }
 
 export type TSortDirection = 'asc' | 'desc'
