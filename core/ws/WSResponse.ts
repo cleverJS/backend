@@ -8,6 +8,8 @@ export interface IWSResponseHeader {
   type: EWSResponseType
   uuid?: string | number
   name?: string
+  service?: string
+  action?: string
 }
 
 export interface IWSResponse {
@@ -59,12 +61,21 @@ export class WSResponse implements IWSResponse {
   /**
    * @param uuid
    * @param payload
+   * @param service
+   * @param action
    */
-  public static create(uuid: string | number, payload: Record<string, any>): WSResponse {
+  public static create(uuid: string | number, payload: Record<string, any>, service?: string, action?: string): WSResponse {
     const response = new WSResponse()
     response.header.uuid = uuid
     response.header.type = EWSResponseType.response
     response.payload = payload
+    if (service) {
+      response.header.service = service
+    }
+
+    if (action) {
+      response.header.action = action
+    }
     return response
   }
 }

@@ -42,4 +42,12 @@ export const defaults: ISettings = {
       algorithm: 'RS256',
     },
   },
+
+  elastic: {
+    node: process.env.ELASTIC_HOST || '',
+    auth: {
+      username: process.env.ELASTIC_USER || '',
+      password: process.env.ELASTIC_PASSWORD || '',
+    },
+  },
 }

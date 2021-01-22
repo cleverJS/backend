@@ -1,4 +1,5 @@
 import Knex from 'knex'
+import { ClientOptions } from '@elastic/elasticsearch'
 import { IHttpServerConfig } from '../../core/http/config'
 import { IWSConfig } from '../../core/ws/config'
 import { IRedisConfig } from '../../core/db/redis/config'
@@ -16,4 +17,5 @@ export interface ISettings {
   websocket: IWSConfig
   redis: IRedisConfig
   connection: Knex.Config
+  elastic: ClientOptions
 }

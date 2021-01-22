@@ -3,6 +3,10 @@ import { ApiResponse } from '@elastic/elasticsearch/lib/Transport'
 import { UpdateByQuery, DeleteByQuery, Msearch, Update, Search } from '@elastic/elasticsearch/api/requestParams'
 import { loggerNamespace } from '../../logger/logger'
 
+export interface IndexData {
+  id: string | null
+}
+
 export abstract class AbstractElasticIndex {
   protected readonly logger = loggerNamespace('AbstractElasticIndex')
   protected readonly client: Client
@@ -63,6 +67,28 @@ export abstract class AbstractElasticIndex {
     return 0
   }
 
+  public async save<T extends IndexData>(item: T): Promise<string | null> {
+    const { id } = item
+    let dbItem = null
+    if (id) {
+      dbItem = await this.fetchById<T>(id)
+    }
+
+    let result = null
+    const { id: skipId, ...data } = item
+    if (dbItem && dbItem.id) {
+      const resultUpdate = await this.updateDocument(dbItem.id, data)
+
+      if (resultUpdate) {
+        result = dbItem.id
+      }
+    } else {
+      result = this.indexDocument(data)
+    }
+
+    return result
+  }
+
   public async deleteDocumentsByQuery(query: DeleteByQuery) {
     const deleteQuery: DeleteByQuery = {
       ...query,
@@ -83,14 +109,23 @@ export abstract class AbstractElasticIndex {
     return response && response.statusCode === 200 && response.body.deleted > 0
   }
 
-  public async indexDocument(id: string, body: Record<string, any>) {
+  /**
+   *
+   * @param body
+   * @return {Promise<string|null>} id
+   */
+  public async indexDocument(body: Record<string, any>): Promise<string | null> {
     const response = await this.client.index({
-      id,
       body,
       index: this.getIndex(),
     })
 
-    return response && response.statusCode === 200
+    let id = null
+    if (response && response.statusCode === 201) {
+      id = response.body._id
+    }
+
+    return id
   }
 
   public async updateDocumentByQuery(query: UpdateByQuery) {
@@ -104,10 +139,12 @@ export abstract class AbstractElasticIndex {
     return response && response.statusCode === 200 && response.body.updated > 0
   }
 
-  public async updateDocument(id: string, body: Record<string, any>) {
+  public async updateDocument(id: string, data: Record<string, any>) {
     const params: Update = {
       id,
-      body,
+      body: {
+        doc: data,
+      },
       refresh: true,
       index: this.getIndex(),
     }
@@ -116,9 +153,15 @@ export abstract class AbstractElasticIndex {
     return response && response.statusCode === 200 && response.body.updated > 0
   }
 
-  public async bulkIndexDocument(dataset: Record<string, any>[]) {
-    const body = dataset.flatMap((doc) => [{ index: { _index: this.getIndex() } }, doc]) as any
+  /**
+   *
+   * @param dataset
+   * @return {Promise<string[]>} ids
+   */
+  public async bulkIndexDocument(dataset: Record<string, any>[]): Promise<string[]> {
+    const result = []
 
+    const body = dataset.flatMap((doc) => [{ index: { _index: this.getIndex() } }, doc]) as any
     try {
       const { body: bulkResponse } = await this.client.bulk({
         body,
@@ -146,9 +189,17 @@ export abstract class AbstractElasticIndex {
         })
         this.logger.error(erroredDocuments)
       }
+
+      if (bulkResponse.items && bulkResponse.items.length) {
+        for (const item of bulkResponse.items) {
+          result.push(item.index['_id'])
+        }
+      }
     } catch (e) {
       this.logger.error(e)
     }
+
+    return result
   }
 
   public searchDocumentById(id: string): Promise<ApiResponse> {
@@ -168,6 +219,25 @@ export abstract class AbstractElasticIndex {
   public searchDocument(params: Search): Promise<ApiResponse> {
     params['index'] = this.getIndex()
     return this.client.search(params)
+  }
+
+  public async fetchById<T extends IndexData>(id: string): Promise<T | null> {
+    const params = {
+      id,
+      index: this.getIndex(),
+    }
+
+    const { body } = await this.client.get(params)
+
+    let result = null
+    if (body && body['_id'] && body['_source']) {
+      result = {
+        id,
+        ...body['_source'],
+      }
+    }
+
+    return result
   }
 
   public async *searchDocumentBulk(params: Record<string, any>) {

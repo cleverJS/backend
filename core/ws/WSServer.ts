@@ -174,7 +174,7 @@ export class WSServer {
         const handler = this.handlers.get(key)
         if (handler) {
           const payload = await handler(request, connection)
-          const response = WSResponse.create(uuid, payload)
+          const response = WSResponse.create(uuid, payload, request.header?.service, request.header?.action)
           this.send(connection, response).catch(this.logger.error)
         } else {
           const messageError = `Handler does not exist ${key}`
