@@ -83,7 +83,7 @@ export abstract class AbstractElasticIndex {
         result = dbItem.id
       }
     } else {
-      result = this.indexDocument(data)
+      result = await this.indexDocument(data)
     }
 
     return result
@@ -93,6 +93,7 @@ export abstract class AbstractElasticIndex {
     const deleteQuery: DeleteByQuery = {
       ...query,
       index: this.getIndex(),
+      refresh: true,
     }
 
     const response = await this.client.deleteByQuery(deleteQuery)
@@ -104,6 +105,7 @@ export abstract class AbstractElasticIndex {
     const response = await this.client.delete({
       id,
       index: this.getIndex(),
+      refresh: true,
     })
 
     return response && response.statusCode === 200 && response.body.deleted > 0
@@ -118,6 +120,7 @@ export abstract class AbstractElasticIndex {
     const response = await this.client.index({
       body,
       index: this.getIndex(),
+      refresh: true,
     })
 
     let id = null
@@ -132,6 +135,7 @@ export abstract class AbstractElasticIndex {
     const updateQuery: UpdateByQuery = {
       ...query,
       index: this.getIndex(),
+      refresh: true,
     }
 
     const response = await this.client.updateByQuery(updateQuery)
