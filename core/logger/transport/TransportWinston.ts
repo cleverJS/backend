@@ -14,7 +14,7 @@ export class TransportWinston implements TransportInterface {
       return `${info.timestamp} ${info.level}: ${info.message}`
     })
 
-    const appDebug = (process.env.APP_DEBUG || 'false') === ' true'
+    const appDebug = (process.env.APP_DEBUG || 'false') === 'true'
 
     this.logger = winston.createLogger({
       level: process.env.NODE_ENV === 'production' && !appDebug ? 'info' : 'debug',

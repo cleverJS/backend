@@ -17,6 +17,7 @@ function initLogger() {
 }
 
 initLogger()
+logger.debug('enabled')
 const app = new App(settings)
 app
   .run()
