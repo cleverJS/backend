@@ -7,7 +7,7 @@ export interface IEntity {
 export abstract class AbstractEntity<T extends Record<string, any>> implements IEntity {
   public id?: number | string | null
 
-  public setData(data: T): void {
+  public setData(data: Partial<T>): void {
     const properties: any = []
     const dataKeyList: string[] = Object.keys(data)
     for (let i = 0; i < dataKeyList.length; i++) {

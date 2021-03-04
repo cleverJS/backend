@@ -55,10 +55,22 @@ describe('Test EntityFactory', () => {
       id: '1',
       title: 'test',
     }).toEqual(data)
+  })
 
-    const fields: Set<keyof ITest> = new Set(['title'])
-    for (const field of fields) {
-      data[field]
-    }
+  it('Test Entity set partial data', () => {
+    const factory = new EntityFactory(Test, castTest)
+    const item = factory.create({
+      id: '1',
+      title: 'test',
+    })
+
+    item.setData({
+      title: 'test2',
+    })
+
+    expect({
+      id: '1',
+      title: 'test2',
+    }).toEqual(item)
   })
 })
