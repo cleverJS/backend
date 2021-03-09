@@ -29,6 +29,8 @@ export abstract class AbstractElasticIndex {
         const response = await this.client.indices.create(indexParams)
         return response && response.statusCode === 200 && response.body['acknowledged']
       }
+
+      this.logger.error(JSON.stringify(responseExists))
     } catch (e) {
       this.logger.error(e)
       throw e
@@ -90,25 +92,49 @@ export abstract class AbstractElasticIndex {
   }
 
   public async deleteDocumentsByQuery(query: DeleteByQuery) {
+    let deleted = false
     const deleteQuery: DeleteByQuery = {
       ...query,
       index: this.getIndex(),
       refresh: true,
     }
 
-    const response = await this.client.deleteByQuery(deleteQuery)
+    try {
+      const response = await this.client.deleteByQuery(deleteQuery)
 
-    return response && response.statusCode === 200 && response.body.deleted > 0
+      if (response && response.statusCode !== 200) {
+        this.logger.error(deleteQuery, JSON.stringify(response))
+      }
+
+      deleted = response && response.statusCode === 200 && response.body.deleted > 0
+    } catch (e) {
+      this.logger.error(deleteQuery)
+    }
+
+    return deleted
   }
 
   public async deleteDocument(id: string) {
-    const response = await this.client.delete({
+    let deleted = false
+    const params = {
       id,
       index: this.getIndex(),
       refresh: true,
-    })
+    }
 
-    return response && response.statusCode === 200 && response.body.deleted > 0
+    try {
+      const response = await this.client.delete(params)
+
+      if (response && response.statusCode !== 200) {
+        this.logger.error(params, JSON.stringify(response))
+      }
+
+      deleted = response && response.statusCode === 200 && response.body.deleted > 0
+    } catch (e) {
+      this.logger.error(params)
+    }
+
+    return deleted
   }
 
   /**
@@ -117,33 +143,56 @@ export abstract class AbstractElasticIndex {
    * @return {Promise<string|null>} id
    */
   public async indexDocument(body: Record<string, any>): Promise<string | null> {
-    const response = await this.client.index({
+    const params = {
       body,
       index: this.getIndex(),
       refresh: true,
-    })
+    }
 
     let id = null
-    if (response && response.statusCode === 201) {
-      id = response.body._id
+    try {
+      const response = await this.client.index(params)
+
+      if (response && response.statusCode !== 201) {
+        this.logger.error(params, JSON.stringify(response))
+      }
+
+      if (response && response.statusCode === 201) {
+        id = response.body._id
+      }
+    } catch (e) {
+      this.logger.error(params)
     }
 
     return id
   }
 
   public async updateDocumentByQuery(query: UpdateByQuery) {
-    const updateQuery: UpdateByQuery = {
+    let updated = false
+    const params: UpdateByQuery = {
       ...query,
       index: this.getIndex(),
       refresh: true,
     }
 
-    const response = await this.client.updateByQuery(updateQuery)
+    try {
+      const response = await this.client.updateByQuery(params)
 
-    return response && response.statusCode === 200 && response.body.updated > 0
+      if (response && response.statusCode !== 200) {
+        this.logger.error(params, JSON.stringify(response))
+      }
+
+      updated = response && response.statusCode === 200 && response.body.updated > 0
+    } catch (e) {
+      this.logger.error(params)
+    }
+
+    return updated
   }
 
   public async updateDocument(id: string, data: Record<string, any>) {
+    let updated = false
+
     const params: Update = {
       id,
       body: {
@@ -152,9 +201,20 @@ export abstract class AbstractElasticIndex {
       refresh: true,
       index: this.getIndex(),
     }
-    const response = await this.client.update(params)
 
-    return response && response.statusCode === 200 && response.body.updated > 0
+    try {
+      const response = await this.client.update(params)
+
+      if (response && response.statusCode !== 200) {
+        this.logger.error(params, JSON.stringify(response))
+      }
+
+      updated = response && response.statusCode === 200 && response.body.updated > 0
+    } catch (e) {
+      this.logger.error(params)
+    }
+
+    return updated
   }
 
   /**
