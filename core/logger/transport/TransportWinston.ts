@@ -53,29 +53,36 @@ export class TransportWinston implements TransportInterface {
    * @param msg
    */
   public log(level: LogLevel, ...msg: any[]): void {
-    const message = msg.reduce((prev, current, index) => {
-      let space = ' '
-      let carryover = '\n'
-      if (index === 0) {
-        space = ''
-        carryover = ''
-      }
+    try {
+      const message = msg.reduce((prev, current, index) => {
+        let space = ' '
+        let carryover = '\n'
+        if (index === 0) {
+          space = ''
+          carryover = ''
+        }
 
-      let messageNext = prev
-      if (['string', 'number', 'boolean'].includes(typeof current)) {
-        messageNext += `${space}${current}`
-      } else if (current instanceof Error) {
-        messageNext += `${carryover}${current.stack}`
-      } else {
-        messageNext += `${carryover}${JSON.stringify(current, null, 4)}\n`
-      }
+        let messageNext = prev
+        if (['string', 'number', 'boolean'].includes(typeof current)) {
+          messageNext += `${space}${current}`
+        } else if (current instanceof Error) {
+          const { stack, ...other } = current
+          messageNext += `${carryover}${JSON.stringify(other)}\n`
+          messageNext += `${carryover}[Stack trace]: ${stack}`
+        } else {
+          messageNext += `${carryover}${JSON.stringify(current, null, 4)}\n`
+        }
 
-      return messageNext
-    }, '')
+        return messageNext
+      }, '')
 
-    this.logger.log({
-      level,
-      message,
-    })
+      this.logger.log({
+        level,
+        message,
+      })
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error(e)
+    }
   }
 }

@@ -1,6 +1,6 @@
 import { Client } from '@elastic/elasticsearch'
 import { ApiResponse } from '@elastic/elasticsearch/lib/Transport'
-import { UpdateByQuery, DeleteByQuery, Msearch, Update, Search } from '@elastic/elasticsearch/api/requestParams'
+import { UpdateByQuery, DeleteByQuery, Msearch, Update, Search, Count, Delete, Index, Bulk } from '@elastic/elasticsearch/api/requestParams'
 import { loggerNamespace } from '../../logger/logger'
 
 export interface IndexData {
@@ -30,9 +30,9 @@ export abstract class AbstractElasticIndex {
         return response && response.statusCode === 200 && response.body['acknowledged']
       }
 
-      this.logger.error(JSON.stringify(responseExists))
+      this.logger.error('create index', JSON.stringify(responseExists))
     } catch (e) {
-      this.logger.error(e)
+      this.logger.error('create index', e)
       throw e
     }
 
@@ -47,29 +47,30 @@ export abstract class AbstractElasticIndex {
         return responseDelete && responseDelete.statusCode === 200 && responseDelete.body['acknowledged']
       }
     } catch (e) {
-      this.logger.error(e)
+      this.logger.error('delete index', e)
       throw e
     }
 
     return false
   }
 
-  public async count(params?: Record<string, any>) {
-    if (params) {
-      params['index'] = this.getIndex()
+  public async count(params?: Omit<Count, 'index'>) {
+    const nextParams: Count = {
+      ...params,
+      index: this.getIndex(),
     }
 
     try {
-      const response = await this.client.count(params || { index: this.getIndex() })
+      const response = await this.client.count(nextParams)
       return response.body.count
     } catch (e) {
-      this.logger.error(e)
+      this.logger.error('count', e)
     }
 
     return 0
   }
 
-  public async save<T extends IndexData>(item: T): Promise<string | null> {
+  public async save<T extends IndexData>(item: T, refresh?: 'wait_for' | boolean): Promise<string | null> {
     const { id } = item
     let dbItem = null
     if (id) {
@@ -79,158 +80,102 @@ export abstract class AbstractElasticIndex {
     let result = null
     const { id: skipId, ...data } = item
     if (dbItem && dbItem.id) {
-      const resultUpdate = await this.updateDocument(dbItem.id, data)
+      const resultUpdate = await this.updateDocument(dbItem.id, data, { refresh })
 
       if (resultUpdate) {
         result = dbItem.id
       }
     } else {
-      result = await this.indexDocument(data)
+      const params: Omit<Index, 'index'> = {
+        refresh,
+        body: data,
+      }
+
+      try {
+        const response = await this.indexDocument(params)
+
+        if (response && response.statusCode !== 201) {
+          this.logger.error('save', params, JSON.stringify(response))
+        }
+
+        if (response && response.statusCode === 201) {
+          result = response.body._id
+        }
+      } catch (e) {
+        this.logger.error('save', params)
+      }
     }
 
     return result
   }
 
-  public async deleteDocumentsByQuery(query: DeleteByQuery) {
-    let deleted = false
-    const deleteQuery: DeleteByQuery = {
-      ...query,
+  public async deleteDocumentsByQuery(params: Omit<DeleteByQuery, 'index'>) {
+    const nextParams: DeleteByQuery = {
+      ...params,
       index: this.getIndex(),
-      refresh: true,
     }
 
-    try {
-      const response = await this.client.deleteByQuery(deleteQuery)
-
-      if (response && response.statusCode !== 200) {
-        this.logger.error(deleteQuery, JSON.stringify(response))
-      }
-
-      deleted = response && response.statusCode === 200 && response.body.deleted > 0
-    } catch (e) {
-      this.logger.error(deleteQuery)
-    }
-
-    return deleted
+    return this.client.deleteByQuery(nextParams)
   }
 
-  public async deleteDocument(id: string) {
-    let deleted = false
-    const params = {
+  public async deleteDocument(id: string, params?: Omit<Delete, 'index' | 'id'>) {
+    const nextParams: Delete = {
+      ...params,
       id,
       index: this.getIndex(),
-      refresh: true,
     }
 
-    try {
-      const response = await this.client.delete(params)
-
-      if (response && response.statusCode !== 200) {
-        this.logger.error(params, JSON.stringify(response))
-      }
-
-      deleted = response && response.statusCode === 200 && response.body.deleted > 0
-    } catch (e) {
-      this.logger.error(params)
-    }
-
-    return deleted
+    return this.client.delete(nextParams)
   }
 
-  /**
-   *
-   * @param body
-   * @return {Promise<string|null>} id
-   */
-  public async indexDocument(body: Record<string, any>): Promise<string | null> {
-    const params = {
-      body,
+  public async indexDocument(params: Omit<Index, 'index'>) {
+    const nextParams: Index = {
+      ...params,
       index: this.getIndex(),
-      refresh: true,
     }
 
-    let id = null
-    try {
-      const response = await this.client.index(params)
-
-      if (response && response.statusCode !== 201) {
-        this.logger.error(params, JSON.stringify(response))
-      }
-
-      if (response && response.statusCode === 201) {
-        id = response.body._id
-      }
-    } catch (e) {
-      this.logger.error(params)
-    }
-
-    return id
+    return this.client.index(nextParams)
   }
 
-  public async updateDocumentByQuery(query: UpdateByQuery) {
-    let updated = false
-    const params: UpdateByQuery = {
-      ...query,
+  public async updateDocumentByQuery(params: Omit<UpdateByQuery, 'index'>) {
+    const nextParams: UpdateByQuery = {
+      ...params,
       index: this.getIndex(),
-      refresh: true,
     }
 
-    try {
-      const response = await this.client.updateByQuery(params)
-
-      if (response && response.statusCode !== 200) {
-        this.logger.error(params, JSON.stringify(response))
-      }
-
-      updated = response && response.statusCode === 200 && response.body.updated > 0
-    } catch (e) {
-      this.logger.error(params)
-    }
-
-    return updated
+    return this.client.updateByQuery(nextParams)
   }
 
-  public async updateDocument(id: string, data: Record<string, any>) {
-    let updated = false
-
-    const params: Update = {
+  public async updateDocument(id: string, document: Record<string, any>, params?: Omit<Update, 'index' | 'id' | 'body'>) {
+    const nextParams: Update = {
+      ...params,
       id,
+      index: this.getIndex(),
       body: {
-        doc: data,
+        doc: document,
       },
-      refresh: true,
-      index: this.getIndex(),
     }
 
-    try {
-      const response = await this.client.update(params)
-
-      if (response && response.statusCode !== 200) {
-        this.logger.error(params, JSON.stringify(response))
-      }
-
-      updated = response && response.statusCode === 200 && response.body.updated > 0
-    } catch (e) {
-      this.logger.error(params)
-    }
-
-    return updated
+    return this.client.update(nextParams)
   }
 
   /**
    *
    * @param dataset
+   * @param params
    * @return {Promise<string[]>} ids
    */
-  public async bulkIndexDocument(dataset: Record<string, any>[]): Promise<string[]> {
+  public async bulkIndexDocument(dataset: Record<string, any>[], params?: Omit<Bulk, 'body'>): Promise<string[]> {
     const result = []
 
     const body = dataset.flatMap((doc) => [{ index: { _index: this.getIndex() } }, doc]) as any
     try {
-      const { body: bulkResponse } = await this.client.bulk({
+      const nextParams: Bulk = {
+        ...params,
         body,
-        refresh: true,
-      })
+      }
+
+      const { body: bulkResponse } = await this.client.bulk(nextParams)
 
       if (bulkResponse.errors) {
         const erroredDocuments: any[] = []
@@ -266,7 +211,7 @@ export abstract class AbstractElasticIndex {
     return result
   }
 
-  public searchDocumentById(id: string): Promise<ApiResponse> {
+  public async searchDocumentById(id: string) {
     const params = {
       index: this.getIndex(),
       body: {
@@ -280,9 +225,13 @@ export abstract class AbstractElasticIndex {
     return this.client.search(params)
   }
 
-  public searchDocument(params: Search): Promise<ApiResponse> {
-    params['index'] = this.getIndex()
-    return this.client.search(params)
+  public async searchDocument(params: Omit<Search, 'index'>) {
+    const nextParams: Search = {
+      ...params,
+      index: this.getIndex(),
+    }
+
+    return this.client.search(nextParams)
   }
 
   public async fetchById<T extends IndexData>(id: string): Promise<T | null> {
@@ -291,14 +240,18 @@ export abstract class AbstractElasticIndex {
       index: this.getIndex(),
     }
 
-    const { body } = await this.client.get(params)
-
     let result = null
-    if (body && body['_id'] && body['_source']) {
-      result = {
-        id,
-        ...body['_source'],
+    try {
+      const { body } = await this.client.get(params, { ignore: [404] })
+
+      if (body && body['_id'] && body['_source']) {
+        result = {
+          id,
+          ...body['_source'],
+        }
       }
+    } catch (e) {
+      this.logger.error('fetchById', JSON.stringify(e), params)
     }
 
     return result
