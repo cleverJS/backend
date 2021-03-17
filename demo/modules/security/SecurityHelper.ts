@@ -1,10 +1,10 @@
 import * as argon2 from 'argon2'
 import jwt, { VerifyErrors, VerifyOptions } from 'jsonwebtoken'
-import fs from 'fs-extra'
 import crypto from 'crypto'
 import { v4 as uuidV4 } from 'uuid'
 import { logger } from '../../../core/logger/logger'
 import { settings } from '../../configs'
+import * as fs from "fs";
 
 export interface ITokenInterface {
   data: {

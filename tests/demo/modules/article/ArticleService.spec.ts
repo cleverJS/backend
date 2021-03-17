@@ -1,5 +1,4 @@
-import Knex from 'knex'
-import fs from 'fs-extra'
+import { Knex, knex } from 'knex'
 import * as connections from '../../../../knexfile'
 import { ConditionDbParser } from '../../../../core/db/sql/condition/ConditionDbParser'
 import { EntityFactory } from '../../../../core/entity/EntityFactory'
@@ -9,6 +8,7 @@ import { ArticleResource } from '../../../../demo/modules/article/resource/Artic
 import { Article } from '../../../../demo/modules/article/Article'
 import { ArticleService } from '../../../../demo/modules/article/ArticleService'
 import { castArticle } from '../../../../demo/modules/article/helper'
+import { FSWrapper } from '../../../../core/utils/fsWrapper'
 
 const knexConfig = (connections as any)[process.env.NODE_ENV || 'development'] as Knex.Config
 const connectionRecord = knexConfig.connection as Knex.Sqlite3ConnectionConfig
@@ -29,13 +29,13 @@ describe('Test AbstractDBResource and AbstractService', () => {
     author: 'G. M. Fikhtengolts',
   }
 
-  const connection = Knex(knexConfig)
+  const connection = knex(knexConfig)
   const resource = new ArticleResource(connection, new ConditionDbParser(), new EntityFactory(Article, castArticle))
   const service = new ArticleService(resource)
 
   beforeAll(async () => {
-    fs.removeSync(connectionRecord.filename)
-    fs.createFileSync(connectionRecord.filename)
+    FSWrapper.removeSync(connectionRecord.filename)
+    FSWrapper.createFileSync(connectionRecord.filename)
     await connection.schema.createTable('article', (t) => {
       t.increments('id').unsigned().primary()
       t.string('title', 255)
@@ -50,7 +50,7 @@ describe('Test AbstractDBResource and AbstractService', () => {
   })
 
   afterAll(() => {
-    fs.removeSync(connectionRecord.filename)
+    FSWrapper.removeSync(connectionRecord.filename)
   })
 
   test('should insert item', async () => {

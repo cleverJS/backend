@@ -5,11 +5,13 @@ import { EntityFactory } from '../../core/entity/EntityFactory'
 interface ITest extends Object {
   id: number
   title: string
+  active: boolean
 }
 
 const scheme = yup.object().required().shape({
   id: yup.string(),
   title: yup.string(),
+  active: yup.boolean(),
 })
 
 const castTest = (data: unknown): ITest => {
@@ -19,6 +21,7 @@ const castTest = (data: unknown): ITest => {
 class Test extends AbstractEntity<ITest> implements ITest {
   public id = 0
   public title = ''
+  public active = false
 
   #modified: boolean = false
 
@@ -37,6 +40,7 @@ describe('Test EntityFactory', () => {
     const item = factory.create({
       id: '1',
       title: 'test',
+      active: 1,
       something: 'strange',
       complex: {
         title: 'ComplexTitle',
@@ -54,6 +58,7 @@ describe('Test EntityFactory', () => {
     expect({
       id: '1',
       title: 'test',
+      active: true,
     }).toEqual(data)
   })
 
@@ -64,13 +69,20 @@ describe('Test EntityFactory', () => {
       title: 'test',
     })
 
+    expect(item).toEqual({
+      id: '1',
+      title: 'test',
+      active: false,
+    })
+
     item.setData({
       title: 'test2',
     })
 
-    expect({
+    expect(item).toEqual({
       id: '1',
       title: 'test2',
-    }).toEqual(item)
+      active: false,
+    })
   })
 })

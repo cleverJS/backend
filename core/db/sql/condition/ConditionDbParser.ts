@@ -1,4 +1,4 @@
-import Knex from 'knex'
+import { Knex } from 'knex'
 import { Condition, TConditionOperator, IConditionItem, IConditionItemList, TConditionLogic, conditionOperatorNames } from '../../Condition'
 import { isInstanceOf } from '../../../utils/common'
 import { loggerNamespace } from '../../../logger/logger'

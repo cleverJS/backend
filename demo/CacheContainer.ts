@@ -1,3 +1,4 @@
+import * as process from 'process'
 import { Cache } from '../core/cache/Cache'
 import { CacheAdapterRuntime } from '../core/cache/adapters/CacheAdapterRuntime'
 import { logger } from '../core/logger/logger'
@@ -8,7 +9,7 @@ class CacheContainer {
   constructor() {
     setInterval(() => {
       this.cacheRuntime.checkExpired().catch(logger.error)
-    }, 60000)
+    }, parseInt(process.env.CACHE_CLEAR_INTERVAL || '1000', 10))
   }
 }
 

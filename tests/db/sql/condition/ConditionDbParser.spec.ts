@@ -1,4 +1,4 @@
-import Knex from 'knex'
+import { knex } from 'knex'
 import { ConditionDbParser } from '../../../../core/db/sql/condition/ConditionDbParser'
 import { Condition, TConditionOperator } from '../../../../core/db/Condition'
 
@@ -75,7 +75,7 @@ describe('Test Conditions', () => {
 
   it('should create a mysql or condition', () => {
     const parser = new ConditionDbParser()
-    const connection = Knex({
+    const connection = knex({
       client: 'mysql',
     })
 
@@ -102,7 +102,7 @@ describe('Test Conditions', () => {
 
   it('should add or condition after creation', () => {
     const parser = new ConditionDbParser()
-    const connection = Knex({
+    const connection = knex({
       client: 'mysql',
     })
 
@@ -125,7 +125,7 @@ describe('Test Conditions', () => {
 
   it('should add and condition after creation', () => {
     const parser = new ConditionDbParser()
-    const connection = Knex({
+    const connection = knex({
       client: 'mysql',
     })
 
@@ -143,9 +143,9 @@ describe('Test Conditions', () => {
     expect(qb.toQuery()).toEqual('select * from `test` where ((`a` = 1 or `b` = 2) and (`c` = 1))')
   })
 
-  it('should add and condition after creation', () => {
+  it('should add and condition after creation 2', () => {
     const parser = new ConditionDbParser()
-    const connection = Knex({
+    const connection = knex({
       client: 'mysql',
     })
 
@@ -172,7 +172,7 @@ describe('Test Conditions', () => {
 
   it('should add like', () => {
     const parser = new ConditionDbParser()
-    const connection = Knex({
+    const connection = knex({
       client: 'mysql',
     })
 

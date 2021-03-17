@@ -80,7 +80,7 @@ export abstract class AbstractElasticIndex {
     let result = null
     const { id: skipId, ...data } = item
     if (dbItem && dbItem.id) {
-      const resultUpdate = await this.updateDocument(dbItem.id, data, { refresh })
+      const resultUpdate = await this.updateDocument(dbItem.id, data, { refresh, retry_on_conflict: 6 })
 
       if (resultUpdate) {
         result = dbItem.id

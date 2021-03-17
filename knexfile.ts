@@ -1,4 +1,4 @@
-import Knex from 'knex'
+import { Knex } from 'knex'
 import path from 'path'
 
 const dbPath = path.resolve(`${__dirname}/runtime/db.sqlite`)
@@ -8,7 +8,7 @@ const config = {
   connection: {
     filename: dbPath,
   },
-  useNullAsDefault: false,
+  useNullAsDefault: true,
 } as Knex.Config
 
 module.exports = {

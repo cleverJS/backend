@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig, Canceler, CancelToken, Method } from 'axios'
-import * as fs from 'fs-extra'
+import * as fs from 'fs'
 import { RequestCancel } from './RequestCancel'
 import { logger } from '../../logger/logger'
 

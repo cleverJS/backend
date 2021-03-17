@@ -1,12 +1,12 @@
 // eslint-disable-next-line max-classes-per-file
 import * as yup from 'yup'
 import path from 'path'
-import Knex from 'knex'
-import fs from 'fs-extra'
+import { knex } from 'knex'
 import { AbstractEntity } from '../../../core/entity/AbstractEntity'
 import { EntityFactory } from '../../../core/entity/EntityFactory'
 import { AbstractDBResource } from '../../../core/db/sql/AbstractDBResource'
 import { ConditionDbParser } from '../../../core/db/sql/condition/ConditionDbParser'
+import { FSWrapper } from '../../../core/utils/fsWrapper'
 
 interface TTest {
   id: string
@@ -38,15 +38,15 @@ describe('Test AbstractDBResource', () => {
   const dbPath = path.resolve(`${__dirname}/db.sqlite`)
 
   beforeEach(() => {
-    fs.createFileSync(dbPath)
+    FSWrapper.createFileSync(dbPath)
   })
 
   afterEach(() => {
-    fs.removeSync(dbPath)
+    FSWrapper.removeSync(dbPath)
   })
 
   afterAll(() => {
-    fs.removeSync(dbPath)
+    FSWrapper.removeSync(dbPath)
   })
 
   class Test extends AbstractEntity<TTest> implements TTest {
@@ -71,11 +71,12 @@ describe('Test AbstractDBResource', () => {
       title: 'test',
     })
 
-    const connection = Knex({
+    const connection = knex({
       client: 'sqlite3',
       connection: {
         filename: dbPath,
       },
+      useNullAsDefault: true,
     })
 
     const resource = new TestResource(connection, new ConditionDbParser(), factory)

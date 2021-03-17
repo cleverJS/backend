@@ -8,7 +8,7 @@ export class WSRequestValidator {
     const schema = {
       header: {
         type: 'object',
-        strict: true,
+        strict: 'remove',
         props: {
           uuid: [{ type: 'string' }, { type: 'number', positive: true, integer: true, min: 1, max: 4294967295 }],
           service: { type: 'string' },

@@ -1,14 +1,15 @@
 import http, { IncomingMessage } from 'http'
 import https from 'https'
-import fs from 'fs-extra'
 import { pipeline, Duplex } from 'stream'
 import path from 'path'
 import os from 'os'
 import { v4 as uuidV4 } from 'uuid'
 import md5 from 'md5'
+import * as fs from 'fs'
 import { logger, loggerNamespace } from '../../../core/logger/logger'
 import { File } from './File'
 import { FileResource } from './resource/FileResource'
+import { FSWrapper } from '../../../core/utils/fsWrapper'
 
 export class FileService {
   protected readonly logger = loggerNamespace('FileService')
@@ -22,7 +23,7 @@ export class FileService {
     this.baseDir = baseDir
 
     if (!fs.existsSync(baseDir)) {
-      fs.mkdirpSync(baseDir)
+      FSWrapper.mkdirpSync(baseDir)
     }
     this.tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cleverjs-files'))
   }
@@ -124,22 +125,22 @@ export class FileService {
 
   protected async deleteFile(item: File): Promise<void> {
     const dir = item.baseDir + item.url
-    await fs.remove(dir)
+    await FSWrapper.remove(dir)
   }
 
-  protected copyFileToDestination(source: string, destination: string) {
+  protected async copyFileToDestination(source: string, destination: string) {
     if (source.substr(0, 4).toLocaleLowerCase() === 'http') {
       return this.urlDownload(source, destination)
     }
 
-    return fs.copyFile(source, destination)
+    return FSWrapper.copyFile(source, destination)
   }
 
   protected async createUrlPath(baseDir: string, code: string | null, fileName: string): Promise<string> {
     const subDir = md5(code + fileName).substr(0, 4)
     const fileUrl = this.baseUrl + path.sep + subDir
     const filePath = baseDir + fileUrl
-    await fs.mkdirp(filePath)
+    await FSWrapper.mkdirp(filePath)
     return fileUrl
   }
 

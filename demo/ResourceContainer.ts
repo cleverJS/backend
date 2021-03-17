@@ -1,4 +1,4 @@
-import Knex from 'knex'
+import { Knex } from 'knex'
 import { EntityFactory } from '../core/entity/EntityFactory'
 import { ArticleResource } from './modules/article/resource/ArticleResource'
 import { ConditionDbParser } from '../core/db/sql/condition/ConditionDbParser'

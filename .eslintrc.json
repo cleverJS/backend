@@ -37,11 +37,7 @@
     "plugin:@typescript-eslint/recommended",
     // Disable rules from packages above that could interfere with prettier
     "prettier",
-    // Add extra exclusions for plugins used
-    "prettier/@typescript-eslint",
-    // Turn on prettier rules
     "plugin:prettier/recommended",
-    // Add security rules last to make sure they are not overridden
     "plugin:security/recommended"
   ],
   "rules": {

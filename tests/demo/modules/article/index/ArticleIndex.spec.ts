@@ -34,7 +34,11 @@ describe('Test ArticleIndex', () => {
   })
 
   test('should index item', async () => {
-    const id = await index.indexDocument(payload1)
+    const document = await index.indexDocument({
+      body: payload1,
+    })
+    expect(document).not.toBeNull()
+    const id = document.body['_id']
     expect(id).not.toBeNull()
 
     if (id) {
@@ -54,7 +58,11 @@ describe('Test ArticleIndex', () => {
   })
 
   test('should update item partially', async () => {
-    const id = await index.indexDocument(payload1)
+    const document = await index.indexDocument({
+      body: payload1,
+    })
+    expect(document).not.toBeNull()
+    const id = document.body['_id']
     expect(id).not.toBeNull()
 
     if (id) {
@@ -73,7 +81,12 @@ describe('Test ArticleIndex', () => {
   })
 
   test('should save item', async () => {
-    const id = await index.indexDocument(payload1)
+    const document = await index.indexDocument({
+      body: payload1,
+    })
+
+    expect(document).not.toBeNull()
+    const id = document.body['_id']
     expect(id).not.toBeNull()
 
     if (id) {

@@ -1,4 +1,4 @@
-import Knex from 'knex'
+import { Knex, knex } from 'knex'
 import cors from 'fastify-cors'
 import { EventEmitter } from 'events'
 import TypedEmitter from 'typed-emitter'
@@ -24,7 +24,7 @@ export class App {
     const server = this.httpServer.getInstance()
     this.wsServer = new WSServer(settings.websocket, server)
 
-    this.connection = Knex(settings.connection)
+    this.connection = knex(settings.connection)
 
     const resourceContainer = new ResourceContainer(this.connection)
     const serviceContainer = new ServiceContainer(resourceContainer, this.appEventBus)

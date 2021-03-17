@@ -1,5 +1,5 @@
-import Knex from 'knex'
-import fs from 'fs-extra'
+import { Knex, knex } from 'knex'
+import * as fs from 'fs'
 import * as connections from '../../../../knexfile'
 import { FileResource } from '../../../../demo/modules/file/resource/FileResource'
 import { ConditionDbParser } from '../../../../core/db/sql/condition/ConditionDbParser'
@@ -8,6 +8,7 @@ import { File } from '../../../../demo/modules/file/File'
 import { castFile } from '../../../../demo/modules/file/helper'
 import { FileService } from '../../../../demo/modules/file/FileService'
 import { settings } from '../../../../demo/configs'
+import { FSWrapper } from '../../../../core/utils/fsWrapper'
 
 describe('Test FileService', () => {
   const contentFile =
@@ -16,14 +17,14 @@ describe('Test FileService', () => {
   const knexConfig = (connections as any)[process.env.NODE_ENV || 'development'] as Knex.Config
   const connectionRecord = knexConfig.connection as Knex.Sqlite3ConnectionConfig
 
-  const connection = Knex(knexConfig)
+  const connection = knex(knexConfig)
   const resource = new FileResource(connection, new ConditionDbParser(), new EntityFactory(File, castFile))
   const service = new FileService(settings.runtimeDir, resource)
 
   beforeAll(async () => {
-    fs.removeSync(`${settings.runtimeDir}/usr`)
-    fs.removeSync(connectionRecord.filename)
-    fs.createFileSync(connectionRecord.filename)
+    FSWrapper.removeSync(`${settings.runtimeDir}/usr`)
+    FSWrapper.removeSync(connectionRecord.filename)
+    FSWrapper.createFileSync(connectionRecord.filename)
     await connection.schema.createTable('file', (t) => {
       t.increments('id').unsigned().primary()
       t.string('code', 255)
@@ -42,9 +43,8 @@ describe('Test FileService', () => {
     await connection.table('file').truncate()
   })
 
-  afterAll(() => {
-    fs.removeSync(`${settings.runtimeDir}/usr`)
-    fs.removeSync(connectionRecord.filename)
+  afterAll(async () => {
+    await Promise.all([FSWrapper.remove(`${settings.runtimeDir}/usr`), FSWrapper.remove(connectionRecord.filename)])
   })
 
   it('should create file from url and delete it', async () => {

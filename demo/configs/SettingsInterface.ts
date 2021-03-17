@@ -1,4 +1,4 @@
-import Knex from 'knex'
+import { Knex } from 'knex'
 import { ClientOptions } from '@elastic/elasticsearch'
 import { IHttpServerConfig } from '../../core/http/config'
 import { IWSConfig } from '../../core/ws/config'

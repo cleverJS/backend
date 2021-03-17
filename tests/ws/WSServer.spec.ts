@@ -64,10 +64,4 @@ describe('Test WSServer', () => {
     expect(response.message).toEqual('Handler does not exist article:_test')
     wsClient.disconnect()
   })
-  //
-  // test('should keepalive', async () => {
-  //   const wsClient = new WSClient(WS_URL, false)
-  //   await sleep(10000)
-  //   wsClient.disconnect()
-  // })
 })

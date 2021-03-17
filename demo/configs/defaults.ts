@@ -1,4 +1,4 @@
-import Knex from 'knex'
+import { Knex } from 'knex'
 import path from 'path'
 import { ISettings } from './SettingsInterface'
 import * as connections from '../../knexfile'

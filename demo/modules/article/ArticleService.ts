@@ -15,6 +15,10 @@ export interface ArticleEvents {
 export class ArticleService extends AbstractService<Article, ArticleResource> {
   public readonly eventEmitter: TypedEmitter<ArticleEvents> = new EventEmitter()
 
+  public async findWithAuthor() {
+    return this.resource.findWithAuthor()
+  }
+
   public async findByAuthor(author: string): Promise<Article | null> {
     return cacheContainer.cacheRuntime.getOrSet(
       author,

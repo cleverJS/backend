@@ -1,5 +1,5 @@
-import fs from 'fs-extra'
 import winston, { format } from 'winston'
+import * as fs from 'fs'
 import { LogLevel, TransportInterface } from './TransportInterface'
 
 export class TransportWinston implements TransportInterface {
@@ -7,7 +7,7 @@ export class TransportWinston implements TransportInterface {
 
   public constructor(logDir: string) {
     if (!fs.existsSync(logDir)) {
-      fs.mkdirpSync(logDir)
+      fs.mkdirSync(logDir, { recursive: true })
     }
 
     const logFormat = format.printf((info) => {

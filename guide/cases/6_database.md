@@ -20,7 +20,7 @@ In this example we will use SQLite
 1. Create `./knexfile.ts`
 
    ```ts
-   import Knex from 'knex'
+   import { Knex } from 'knex'
    import path from 'path'
  
    // Path where SQLite db file is  
@@ -45,7 +45,7 @@ In this example we will use SQLite
 2. Initialize it in [App.ts](../../demo/App.ts)
 
    ```ts
-   import Knex from 'knex'
+   import { Knex, knex } from 'knex'
    import * as connections from '../knexfile'
 
    // Get connection config for environment    
@@ -57,7 +57,7 @@ In this example we will use SQLite
      protected readonly connection: Knex
 
      public constructor() {
-       this.connection = Knex(knexConfig)
+       this.connection = knex(knexConfig)
      }
 
      // This will be called on process finish and DB connection
@@ -77,7 +77,7 @@ In this example we will use SQLite
 3. Create resource `app/modules/Article/resource/ArticleResource.ts`
 
    ```ts
-   import Knex from 'knex'
+   import { Knex } from 'knex'
 
    export class ArticleResource {
      protected readonly connection: Knex
@@ -120,7 +120,7 @@ In this example we will use SQLite
 At this point your [App.ts](../../demo/App.ts) should looks like this
 
 ```ts
-import Knex from 'knex'
+import { Knex, knex } from 'knex'
 import * as connections from '../knexfile'
 import cors from 'fastify-cors'
 import { HttpServer } from 'cleverJS/core/http/HttpServer'
@@ -159,7 +159,7 @@ export class App {
     )
 
     // DB connection initialization
-    this.connection = Knex(knexConfig)
+    this.connection = knex(knexConfig)
 
     const articleResource = new ArticleResource(this.connection)
     const articleService = new ArticleService(articleResource)
