@@ -61,7 +61,7 @@ describe('Test WSServer', () => {
   test('should report about wrong endpoint', async () => {
     const wsClient = new WSClient(WS_URL, false)
     const response = await wsClient.call('article', '_test', {}, true)
-    expect(response.message).toEqual('Handler does not exist article:_test')
+    expect(response.error).toEqual('Handler does not exist article:_test')
     wsClient.disconnect()
   })
 })

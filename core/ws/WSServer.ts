@@ -64,7 +64,7 @@ export class WSServer {
       try {
         if (client.readyState === WebSocket.OPEN) {
           client.send(response.toString())
-        } else if ([WebSocket.CLOSED, WebSocket.CLOSING].includes(client.readyState)) {
+        } else if (client.readyState === WebSocket.CLOSED || client.readyState === WebSocket.CLOSING) {
           this.logger.warn('force closing')
           client.terminate()
         } else {

@@ -44,7 +44,7 @@ export const defaults: ISettings = {
   },
 
   elastic: {
-    node: process.env.ELASTIC_HOST || '',
+    node: process.env.ELASTIC_HOST || 'http://localhost:9200',
     auth: {
       username: process.env.ELASTIC_USER || '',
       password: process.env.ELASTIC_PASSWORD || '',

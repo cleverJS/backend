@@ -26,25 +26,22 @@ interface IResponseHeader {
   type?: ResponseType
 }
 
-interface TResponse {
+interface TResponse<T extends Record<string, any>> {
   header: IResponseHeader
   payload: Record<string, any>
+  status: 'success' | 'error' | 'fail'
+  data: T
   error?: string
 }
 
 interface TRequest {
-  resolve: (value: TResponse) => void
+  resolve: (payload: TResponse<any> | PromiseLike<TResponse<any>>) => void
   reject: (payload: Error) => void
   header: IRequestHeader
   payload: Record<string, any>
   returnError: boolean
   responseLength?: number
   start: number
-}
-
-interface TResponse {
-  status: 'success' | 'error' | 'fail'
-  data: Record<string, any>
 }
 
 export class WSClient {
@@ -71,7 +68,12 @@ export class WSClient {
 
   /**
    */
-  public call(service: string, action: string, payload: Record<string, any> = {}, returnError = false): Promise<Record<string, any>> {
+  public call<T = Record<string, any>>(
+    service: string,
+    action: string,
+    payload: Record<string, any> = {},
+    returnError = false
+  ): Promise<TResponse<T>> {
     const uuid = uuid4()
     const header = { uuid, service, action }
     const start = Date.now()
@@ -172,7 +174,7 @@ export class WSClient {
   private handleMessage = (message: string) => {
     try {
       const responseLength = message.length
-      const data: TResponse = JSON.parse(message) || {}
+      const data: TResponse<Record<string, any>> = JSON.parse(message) || {}
       if (data.header) {
         const { uuid } = data.header
         const payload = data.payload || {}
@@ -180,10 +182,10 @@ export class WSClient {
 
         if (data.error) {
           status = 'error'
-          payload.message = data.error
+          payload.error = data.error
         }
 
-        const error = ['error', 'fail'].includes(status) ? payload.message || 'System Error' : null
+        const error = ['error', 'fail'].includes(status) ? payload.error || 'System Error' : null
 
         const request = this.requests[uuid]
         const returnError = request && request.returnError
