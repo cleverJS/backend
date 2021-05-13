@@ -33,6 +33,17 @@ export class App {
 
   public async run(): Promise<void> {
     await this.httpServer.start()
+    try {
+      const rows = await this.connection.raw('SELECT 1 as result')
+      if (!rows || !rows.length || rows[0]['result'] !== 1) {
+        throw new Error()
+      }
+      this.logger.info('DB connection successful')
+    } catch (e) {
+      this.logger.warn('Cannot connect to DB')
+      // eslint-disable-next-line no-process-exit
+      process.exit(1)
+    }
   }
 
   // This will be called on process finish and terminate http server

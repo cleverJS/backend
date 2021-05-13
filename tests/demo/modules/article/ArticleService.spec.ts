@@ -154,6 +154,17 @@ describe('Test AbstractDBResource and AbstractService', () => {
     expect(dbItems.length).toEqual(3)
   })
 
+  test('should batchInsert with chunk size', async () => {
+    const item1 = service.createEntity(payload1)
+    const item2 = service.createEntity(payload2)
+    const item3 = service.createEntity(payload3)
+
+    await resource.batchInsert([item1, item2, item3], 1)
+
+    const dbItems = await service.findAll()
+    expect(dbItems.length).toEqual(3)
+  })
+
   test('should count', async () => {
     const item1 = service.createEntity(payload1)
     const item2 = service.createEntity(payload2)

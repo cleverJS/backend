@@ -105,22 +105,22 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     return true
   }
 
-  public async batchInsert(items: E[]): Promise<string[] | number[] | any> {
+  public async batchInsert(items: E[], chunkSize?: number): Promise<string[] | number[] | any> {
     const rows = items.map((i) => {
       const data = this.mapToDB(i)
       delete data[this.primaryKey]
       return data
     })
 
-    return this.batchInsertRaw(rows)
+    return this.batchInsertRaw(rows, chunkSize)
   }
 
-  public async batchInsertRaw(rows: Record<string, any>[]): Promise<string[] | number[] | any> {
+  public async batchInsertRaw(rows: Record<string, any>[], chunkSize?: number): Promise<string[] | number[] | any> {
     if (['pg', 'mssql', 'oracle'].includes(this.connection.client.config.client)) {
-      return this.connection.batchInsert(this.table, rows).returning(this.primaryKey)
+      return this.connection.batchInsert(this.table, rows, chunkSize).returning(this.primaryKey)
     }
 
-    return this.connection.batchInsert(this.table, rows)
+    return this.connection.batchInsert(this.table, rows, chunkSize)
   }
 
   public async insert(data: Record<string, any>): Promise<any | null> {
