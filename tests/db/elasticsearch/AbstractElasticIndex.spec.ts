@@ -8,8 +8,6 @@ import { TransportWinston } from '../../../core/logger/transport/TransportWinsto
 import { settings } from '../../../demo/configs'
 import { sleep } from '../../../core/utils/sleep'
 
-process.env.ELASTIC_ALIAS_PREFIX = 'cleverjs'
-
 class TestIndex extends AbstractElasticIndex {
   protected alias = 'alias-test'
 
@@ -65,7 +63,8 @@ describe('Test AbstractElasticIndex', () => {
   const index = new TestIndex(client)
 
   beforeEach(async () => {
-    await index.create(true, 'cleverjs-test')
+    await index.delete('cleverjs-test')
+    await index.create('cleverjs-test')
   })
 
   it('should index document', async () => {

@@ -27,11 +27,7 @@ export abstract class AbstractElasticIndex {
     this.client = client
   }
 
-  public async create(recreate: boolean = true, index: string) {
-    if (recreate) {
-      await this.delete(index)
-    }
-
+  public async create(index: string, updateAlias: boolean = true) {
     let result = false
     let responseExists
     try {
@@ -42,7 +38,7 @@ export abstract class AbstractElasticIndex {
         const response = await this.client.indices.create(indexParams)
         result = response && response.statusCode === 200 && response.body['acknowledged']
 
-        if (result) {
+        if (result && updateAlias) {
           await this.updateAlias(index)
         }
       }

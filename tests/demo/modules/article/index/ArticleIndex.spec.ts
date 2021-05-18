@@ -23,12 +23,9 @@ describe('Test ArticleIndex', () => {
   const elasticClient = new Client(settings.elastic)
   const index = new ArticleIndex(elasticClient)
 
-  beforeAll(async () => {
-    await index.create(true, indexName)
-  })
-
   beforeEach(async () => {
-    await index.create(true, indexName)
+    await index.delete(indexName)
+    await index.create(indexName)
   })
 
   test('should index item', async () => {
