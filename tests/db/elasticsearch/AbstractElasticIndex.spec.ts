@@ -6,10 +6,12 @@ import { logger } from '../../../core/logger/logger'
 import { ILoggerConfig } from '../../../core/logger/config'
 import { TransportWinston } from '../../../core/logger/transport/TransportWinston'
 import { settings } from '../../../demo/configs'
+import { sleep } from '../../../core/utils/sleep'
+
+process.env.ELASTIC_ALIAS_PREFIX = 'cleverjs'
 
 class TestIndex extends AbstractElasticIndex {
-  public prefix: string = 'cleverjs'
-  public index = 'test'
+  protected alias = 'alias-test'
 
   public async fetchByKeyword(keyword: string) {
     const params: Omit<Search, 'index'> = {
@@ -25,15 +27,21 @@ class TestIndex extends AbstractElasticIndex {
     return this.searchDocument(params)
   }
 
-  protected createIndexParams(): IndicesCreate {
+  protected createIndexParams(index: string): IndicesCreate {
     return {
-      index: this.getIndex(),
+      index,
       body: {
         mappings: {
           properties: {
             keyword: { type: 'keyword' },
             text: { type: 'text' },
             integer: { type: 'integer', index: false },
+            meta: {
+              properties: {
+                author: { type: 'text' },
+                coAuthor: { type: 'text' },
+              },
+            },
           },
         },
       },
@@ -50,14 +58,14 @@ describe('Test AbstractElasticIndex', () => {
   } as ILoggerConfig)
   logger.addTransport(new TransportWinston(runtimeDir))
 
-  const index = new TestIndex(
-    new Client({
-      node: 'http://localhost:9200',
-    })
-  )
+  const client = new Client({
+    node: 'http://localhost:9200',
+  })
+
+  const index = new TestIndex(client)
 
   beforeEach(async () => {
-    await index.create()
+    await index.create(true, 'cleverjs-test')
   })
 
   it('should index document', async () => {
@@ -95,6 +103,51 @@ describe('Test AbstractElasticIndex', () => {
 
     const responseFetch = await index.fetchById(response.body['_id'])
     expect(responseFetch).toBeNull()
+  })
+
+  it('should delete by query', async () => {
+    const items = [
+      {
+        keyword: 'key',
+        text: 'text',
+        integer: 15,
+      },
+      {
+        keyword: 'key',
+        text: 'text',
+        integer: 15,
+      },
+      {
+        keyword: 'key2',
+        text: 'text2',
+        integer: 15,
+      },
+    ]
+
+    const response = await index.bulkIndexDocument(items, { refresh: true })
+
+    expect(response).toHaveLength(3)
+
+    await index.deleteDocumentsByQuery({
+      refresh: true,
+      body: {
+        query: {
+          bool: {
+            filter: {
+              term: {
+                keyword: 'key',
+              },
+            },
+          },
+        },
+      },
+    })
+
+    const responseFetch1 = await index.fetchByKeyword('key')
+    expect(responseFetch1.body.hits.hits).toHaveLength(0)
+
+    const responseFetch2 = await index.fetchByKeyword('key2')
+    expect(responseFetch2.body.hits.hits).toHaveLength(1)
   })
 
   it('should index document and update', async () => {
@@ -179,6 +232,52 @@ describe('Test AbstractElasticIndex', () => {
       }
 
       await Promise.all(promises)
+    } catch (e) {
+      logger.error(e)
+    }
+  })
+
+  it('should search_after', async () => {
+    const items = []
+    for (let i = 1; i <= 3; i++) {
+      items.push({
+        id: null,
+        keyword: 'key1',
+        text: 'text1',
+        integer: i,
+      })
+    }
+    await index.bulkIndexDocument(items)
+    await sleep(1000)
+
+    const params: Search = {
+      body: {
+        sort: [{ integer: { order: 'asc' } }],
+        query: {
+          match_all: {},
+        },
+      },
+      size: 1,
+      track_total_hits: false,
+    }
+
+    try {
+      let hitCnt = 1
+      while (true) {
+        const response = await client.search(params)
+        const hits = response.body.hits.hits
+        if (!hits || !hits.length) {
+          break
+        }
+
+        for (const hit of hits) {
+          expect(hitCnt).toEqual(hit['_source']['integer'])
+          hitCnt++
+        }
+
+        // @ts-ignore
+        params.body['search_after'] = hits[hits.length - 1].sort
+      }
     } catch (e) {
       logger.error(e)
     }

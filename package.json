@@ -1,6 +1,6 @@
 {
   "name": "backend",
-  "version": "1.6.2",
+  "version": "1.6.3",
   "description": "CleverJS backend",
   "author": "",
   "license": "MIT",
@@ -30,7 +30,7 @@
     "dotenv": "^9.0.2",
     "fastest-validator": "=1.10.1",
     "fastify": "=3.15.1",
-    "knex": "=0.95.5",
+    "knex": "=0.95.6",
     "path": "^0.12.7",
     "redis": "=3.1.2",
     "ts-node": "=9.1.1",

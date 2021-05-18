@@ -1,6 +1,17 @@
 import { Client } from '@elastic/elasticsearch'
-import { ApiResponse } from '@elastic/elasticsearch/lib/Transport'
-import { UpdateByQuery, DeleteByQuery, Msearch, Update, Search, Count, Delete, Index, Bulk } from '@elastic/elasticsearch/api/requestParams'
+import { ApiResponse, TransportRequestOptions } from '@elastic/elasticsearch/lib/Transport'
+import {
+  UpdateByQuery,
+  DeleteByQuery,
+  Msearch,
+  Update,
+  Search,
+  Count,
+  Delete,
+  Index,
+  Bulk,
+  IndicesCreate,
+} from '@elastic/elasticsearch/api/requestParams'
 import { loggerNamespace } from '../../logger/logger'
 
 export interface IndexData {
@@ -8,42 +19,46 @@ export interface IndexData {
 }
 
 export abstract class AbstractElasticIndex {
+  protected abstract alias: string
   protected readonly logger = loggerNamespace('AbstractElasticIndex')
   protected readonly client: Client
-  protected abstract index: string
-  protected readonly prefix: string = 'elastic'
 
   public constructor(client: Client) {
     this.client = client
   }
 
-  public async create(recreate: boolean = true) {
+  public async create(recreate: boolean = true, index: string) {
     if (recreate) {
-      await this.delete()
+      await this.delete(index)
     }
 
+    let result = false
+    let responseExists
     try {
-      const responseExists = await this.client.indices.exists({ index: this.getIndex() })
+      responseExists = await this.client.indices.exists({ index })
       if (!responseExists || !responseExists.body) {
-        const indexParams = this.createIndexParams()
+        const indexParams = this.createIndexParams(index)
+        indexParams['index'] = index
         const response = await this.client.indices.create(indexParams)
-        return response && response.statusCode === 200 && response.body['acknowledged']
-      }
+        result = response && response.statusCode === 200 && response.body['acknowledged']
 
-      this.logger.error('create index', JSON.stringify(responseExists))
+        if (result) {
+          await this.updateAlias(index)
+        }
+      }
     } catch (e) {
-      this.logger.error('create index', e)
+      this.logger.error('create index', JSON.stringify(responseExists), e)
       throw e
     }
 
-    return false
+    return result
   }
 
-  public async delete() {
+  public async delete(index: string) {
     try {
-      const responseExists = await this.client.indices.exists({ index: this.getIndex() })
+      const responseExists = await this.client.indices.exists({ index })
       if (responseExists && responseExists.body) {
-        const responseDelete = await this.client.indices.delete({ index: this.getIndex() })
+        const responseDelete = await this.client.indices.delete({ index })
         return responseDelete && responseDelete.statusCode === 200 && responseDelete.body['acknowledged']
       }
     } catch (e) {
@@ -57,7 +72,7 @@ export abstract class AbstractElasticIndex {
   public async count(params?: Omit<Count, 'index'>) {
     const nextParams: Count = {
       ...params,
-      index: this.getIndex(),
+      index: this.alias,
     }
 
     try {
@@ -109,29 +124,29 @@ export abstract class AbstractElasticIndex {
     return result
   }
 
-  public async deleteDocumentsByQuery(params: Omit<DeleteByQuery, 'index'>) {
+  public async deleteDocumentsByQuery(params: Omit<DeleteByQuery, 'index'>, options?: TransportRequestOptions) {
     const nextParams: DeleteByQuery = {
       ...params,
-      index: this.getIndex(),
+      index: this.alias,
     }
 
-    return this.client.deleteByQuery(nextParams)
+    return this.client.deleteByQuery(nextParams, options)
   }
 
-  public async deleteDocument(id: string, params?: Omit<Delete, 'index' | 'id'>) {
+  public async deleteDocument(id: string, params?: Omit<Delete, 'index' | 'id'>, options?: TransportRequestOptions) {
     const nextParams: Delete = {
       ...params,
       id,
-      index: this.getIndex(),
+      index: this.alias,
     }
 
-    return this.client.delete(nextParams)
+    return this.client.delete(nextParams, options)
   }
 
   public async indexDocument(params: Omit<Index, 'index'>) {
     const nextParams: Index = {
       ...params,
-      index: this.getIndex(),
+      index: this.alias,
     }
 
     return this.client.index(nextParams)
@@ -140,7 +155,7 @@ export abstract class AbstractElasticIndex {
   public async updateDocumentByQuery(params: Omit<UpdateByQuery, 'index'>) {
     const nextParams: UpdateByQuery = {
       ...params,
-      index: this.getIndex(),
+      index: this.alias,
     }
 
     return this.client.updateByQuery(nextParams)
@@ -150,7 +165,7 @@ export abstract class AbstractElasticIndex {
     const nextParams: Update = {
       ...params,
       id,
-      index: this.getIndex(),
+      index: this.alias,
       body: {
         doc: document,
       },
@@ -168,7 +183,7 @@ export abstract class AbstractElasticIndex {
   public async bulkIndexDocument(dataset: Record<string, any>[], params?: Omit<Bulk, 'body'>): Promise<string[]> {
     const result = []
 
-    const body = dataset.flatMap((doc) => [{ index: { _index: this.getIndex() } }, doc]) as any
+    const body = dataset.flatMap((doc) => [{ index: { _index: this.alias } }, doc]) as any
     try {
       const nextParams: Bulk = {
         ...params,
@@ -213,7 +228,7 @@ export abstract class AbstractElasticIndex {
 
   public async searchDocumentById(id: string) {
     const params = {
-      index: this.getIndex(),
+      index: this.alias,
       body: {
         query: {
           terms: {
@@ -228,7 +243,7 @@ export abstract class AbstractElasticIndex {
   public async searchDocument(params: Omit<Search, 'index'>) {
     const nextParams: Search = {
       ...params,
-      index: this.getIndex(),
+      index: this.alias,
     }
 
     return this.client.search(nextParams)
@@ -237,7 +252,7 @@ export abstract class AbstractElasticIndex {
   public async fetchById<T extends IndexData>(id: string): Promise<T | null> {
     const params = {
       id,
-      index: this.getIndex(),
+      index: this.alias,
     }
 
     let result = null
@@ -258,7 +273,7 @@ export abstract class AbstractElasticIndex {
   }
 
   public async *searchDocumentBulk(params: Record<string, any>) {
-    params['index'] = this.getIndex()
+    params['index'] = this.alias
     params['scroll'] = '10s'
 
     let response = await this.client.search(params)
@@ -286,7 +301,7 @@ export abstract class AbstractElasticIndex {
   }
 
   public multiSearch(dataset: Record<string, any>[]): Promise<ApiResponse | null> {
-    const body = dataset.flatMap((doc) => [{ index: this.getIndex() }, doc]) as any
+    const body = dataset.flatMap((doc) => [{ index: this.alias }, doc]) as any
 
     const p: Msearch = {
       body,
@@ -299,9 +314,57 @@ export abstract class AbstractElasticIndex {
     return Promise.resolve(null)
   }
 
-  public getIndex(): string {
-    return `${this.prefix}-${this.index}`
+  public async updateAlias(newIndex: string): Promise<void> {
+    try {
+      const actions = []
+
+      const index = await this.getIndexByAlias(this.alias)
+      let createAlias = true
+      if (index) {
+        if (index !== newIndex) {
+          actions.push({
+            remove: { index, alias: this.alias },
+          })
+        } else {
+          createAlias = false
+        }
+      }
+
+      if (createAlias) {
+        actions.push({
+          add: { index: newIndex, alias: this.alias },
+        })
+
+        await this.client.indices.updateAliases({
+          body: {
+            actions,
+          },
+        })
+      }
+    } catch (e) {
+      this.logger.error(e)
+    }
   }
 
-  protected abstract createIndexParams(): any
+  public async getIndexByAlias(alias: string) {
+    let index = null
+    try {
+      const response = await this.client.indices.getAlias(
+        {
+          name: alias,
+        },
+        { ignore: [404] }
+      )
+
+      if (response.statusCode === 200) {
+        index = Object.keys(response.body)[0]
+      }
+    } catch (e) {
+      this.logger.error(e)
+    }
+
+    return index
+  }
+
+  protected abstract createIndexParams(index: string): IndicesCreate
 }

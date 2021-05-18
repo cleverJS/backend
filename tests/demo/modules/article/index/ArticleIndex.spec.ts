@@ -3,6 +3,8 @@ import { ArticleIndex, ArticleIndexData } from '../../../../../demo/modules/arti
 import { settings } from '../../../../../demo/configs'
 
 describe('Test ArticleIndex', () => {
+  const indexName = 'demo-article'
+
   const payload1 = {
     title: 'The Fundamentals of Mathematical Analysis I',
     author: 'G. M. Fikhtengolts',
@@ -22,15 +24,11 @@ describe('Test ArticleIndex', () => {
   const index = new ArticleIndex(elasticClient)
 
   beforeAll(async () => {
-    await index.create()
+    await index.create(true, indexName)
   })
 
   beforeEach(async () => {
-    await index.create()
-  })
-
-  afterAll(async () => {
-    await index.create()
+    await index.create(true, indexName)
   })
 
   test('should index item', async () => {

@@ -11,8 +11,7 @@ export interface ArticleIndexData {
 }
 
 export class ArticleIndex extends AbstractElasticIndex {
-  public prefix: string = 'demo'
-  public index = 'article'
+  protected alias = 'alias-article'
 
   protected convertDocumentsToEntity(documents: ApiResponse): ArticleIndexData[] {
     const items: any = []
@@ -27,9 +26,9 @@ export class ArticleIndex extends AbstractElasticIndex {
     return items
   }
 
-  protected createIndexParams(): IndicesCreate {
+  protected createIndexParams(index: string): IndicesCreate {
     return {
-      index: this.getIndex(),
+      index,
       body: {
         mappings: {
           properties: {
