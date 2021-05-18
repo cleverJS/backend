@@ -1,6 +1,6 @@
 import path from 'path'
 import { Client } from '@elastic/elasticsearch'
-import { IndicesCreate, Search } from '@elastic/elasticsearch/api/requestParams'
+import { Index, IndicesCreate, Search } from '@elastic/elasticsearch/api/requestParams'
 import { AbstractElasticIndex } from '../../../core/db/elasticsearch/AbstractElasticIndex'
 import { logger } from '../../../core/logger/logger'
 import { ILoggerConfig } from '../../../core/logger/config'
@@ -9,7 +9,7 @@ import { settings } from '../../../demo/configs'
 import { sleep } from '../../../core/utils/sleep'
 
 class TestIndex extends AbstractElasticIndex {
-  protected alias = 'alias-test'
+  public alias = 'alias-test'
 
   public async fetchByKeyword(keyword: string) {
     const params: Omit<Search, 'index'> = {
@@ -280,5 +280,49 @@ describe('Test AbstractElasticIndex', () => {
     } catch (e) {
       logger.error(e)
     }
+  })
+
+  it('should reindex and change alias', async () => {
+    const params: Omit<Index, 'index'> = {
+      refresh: 'wait_for',
+      body: {
+        id: null,
+        keyword: 'key1',
+        text: 'text1',
+        integer: 1,
+      },
+    }
+    await index.indexDocument(params)
+    const response = await index.fetchByKeyword('key1')
+
+    expect(response.body.hits.hits[0]['_source']).toEqual(params.body)
+
+    const indexNext = new TestIndex(client)
+    await indexNext.delete('cleverjs-test-next')
+    await indexNext.create('cleverjs-test-next', false)
+    indexNext.alias = 'cleverjs-test-next'
+
+    const paramsNext: Omit<Index, 'index'> = {
+      refresh: 'wait_for',
+      body: {
+        id: null,
+        keyword: 'key2',
+        text: 'text1',
+        integer: 2,
+      },
+    }
+
+    await indexNext.indexDocument(paramsNext)
+    const response2 = await indexNext.fetchByKeyword('key2')
+
+    expect(response2.body.hits.hits[0]['_source']).toEqual(paramsNext.body)
+
+    const response3 = await index.fetchByKeyword('key1')
+    expect(response3.body.hits.hits[0]['_source']).toEqual(params.body)
+
+    await index.updateAlias('cleverjs-test-next')
+
+    const response4 = await index.fetchByKeyword('key2')
+    expect(response4.body.hits.hits[0]['_source']).toEqual(paramsNext.body)
   })
 })

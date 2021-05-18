@@ -19,7 +19,7 @@ export interface IndexData {
 }
 
 export abstract class AbstractElasticIndex {
-  protected abstract alias: string
+  public abstract alias: string
   protected readonly logger = loggerNamespace('AbstractElasticIndex')
   protected readonly client: Client
 
@@ -139,13 +139,13 @@ export abstract class AbstractElasticIndex {
     return this.client.delete(nextParams, options)
   }
 
-  public async indexDocument(params: Omit<Index, 'index'>) {
+  public async indexDocument(params: Omit<Index, 'index'>, options?: TransportRequestOptions) {
     const nextParams: Index = {
       ...params,
       index: this.alias,
     }
 
-    return this.client.index(nextParams)
+    return this.client.index(nextParams, options)
   }
 
   public async updateDocumentByQuery(params: Omit<UpdateByQuery, 'index'>) {

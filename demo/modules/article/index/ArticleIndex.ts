@@ -11,7 +11,7 @@ export interface ArticleIndexData {
 }
 
 export class ArticleIndex extends AbstractElasticIndex {
-  protected alias = 'alias-article'
+  public alias = 'alias-article'
 
   protected convertDocumentsToEntity(documents: ApiResponse): ArticleIndexData[] {
     const items: any = []
