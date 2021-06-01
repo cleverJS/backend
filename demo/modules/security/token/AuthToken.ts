@@ -11,7 +11,7 @@ export type TAuthToken = {
 }
 
 export class AuthToken extends AbstractEntity<TAuthToken> implements TAuthToken {
-  public id: number = 0
+  public id: number | null = null
   public userId: number = 0
   public token: string = ''
   public refreshToken: string = ''

@@ -1,5 +1,5 @@
 // eslint-disable-next-line max-classes-per-file
-import * as yup from 'yup'
+import { object, string } from 'yup'
 import path from 'path'
 import { knex } from 'knex'
 import { AbstractEntity } from '../../../core/entity/AbstractEntity'
@@ -13,18 +13,22 @@ interface TTest {
   title: string
 }
 
-const scheme = yup.object().required().shape({
-  id: yup.string(),
-  title: yup.string(),
-})
+const scheme = object()
+  .defined()
+  .shape({
+    id: string().defined().default('0'),
+    title: string().defined().default(''),
+  })
 
 const castTest = (data: unknown): TTest => {
   return scheme.noUnknown().cast(data)
 }
 
-const scheme2 = yup.object().required().shape({
-  title: yup.string(),
-})
+const scheme2 = object()
+  .required()
+  .shape({
+    title: string().defined().default(''),
+  })
 
 interface TTest2 {
   title: string
@@ -36,6 +40,14 @@ const castTest2 = (data: unknown): TTest2 => {
 
 describe('Test AbstractDBResource', () => {
   const dbPath = path.resolve(`${__dirname}/db.sqlite`)
+
+  const connection = knex({
+    client: 'sqlite3',
+    connection: {
+      filename: dbPath,
+    },
+    useNullAsDefault: true,
+  })
 
   beforeEach(() => {
     FSWrapper.createFileSync(dbPath)
@@ -49,34 +61,11 @@ describe('Test AbstractDBResource', () => {
     FSWrapper.removeSync(dbPath)
   })
 
-  class Test extends AbstractEntity<TTest> implements TTest {
-    public id = '0'
-    public title = ''
-  }
-
-  class Test2 extends AbstractEntity<TTest> implements TTest2 {
-    public title = ''
-  }
-
-  class TestResource extends AbstractDBResource<Test> {}
-  class Test2Resource extends AbstractDBResource<Test> {
-    protected primaryKey = 'entryId'
-  }
-  class Test3Resource extends AbstractDBResource<Test2> {}
-
   it('should', () => {
     const factory = new EntityFactory(Test, castTest)
     const item = factory.create({
       id: '1',
       title: 'test',
-    })
-
-    const connection = knex({
-      client: 'sqlite3',
-      connection: {
-        filename: dbPath,
-      },
-      useNullAsDefault: true,
     })
 
     const resource = new TestResource(connection, new ConditionDbParser(), factory)
@@ -121,3 +110,18 @@ describe('Test AbstractDBResource', () => {
     }).toEqual(data2)
   })
 })
+
+class Test extends AbstractEntity<TTest> implements TTest {
+  public id = '0'
+  public title = ''
+}
+
+class Test2 extends AbstractEntity<TTest> implements TTest2 {
+  public title = ''
+}
+
+class TestResource extends AbstractDBResource<Test> {}
+class Test2Resource extends AbstractDBResource<Test> {
+  protected primaryKey = 'entryId'
+}
+class Test3Resource extends AbstractDBResource<Test2> {}

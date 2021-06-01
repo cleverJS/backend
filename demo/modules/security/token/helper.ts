@@ -1,17 +1,16 @@
-import * as yup from 'yup'
+import { date, number, object, string } from 'yup'
 import { TAuthToken } from './AuthToken'
 
-const scheme = yup
-  .object()
-  .required()
+const scheme = object()
+  .defined()
   .shape({
-    id: yup.number().defined().nullable(),
-    userId: yup.number().defined().nullable(false),
-    token: yup.string().defined().nullable(false),
-    refreshToken: yup.string().defined().nullable(false),
-    ttl: yup.date().defined().nullable(),
-    createdAt: yup.date().defined().default(new Date()),
-    updatedAt: yup.date().defined().default(new Date()),
+    id: number().defined().nullable().default(null),
+    userId: number().defined().nullable(false).default(0),
+    token: string().defined().nullable(false).default(''),
+    refreshToken: string().defined().nullable(false).default(''),
+    ttl: date().defined().nullable().default(null),
+    createdAt: date().defined().default(new Date()),
+    updatedAt: date().defined().default(new Date()),
   })
 
 export function castAuthToken(data: unknown): TAuthToken {

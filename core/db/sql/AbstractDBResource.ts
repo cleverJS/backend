@@ -89,12 +89,12 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     try {
       const data = this.mapToDB(item)
       if (data) {
-        delete data[this.primaryKey]
         const { id } = item
         if (id) {
           const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: this.primaryKey, value: id }] })
           return this.update(condition, data)
         }
+
         item.id = await this.insert(data)
       }
     } catch (e) {
@@ -105,31 +105,15 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     return true
   }
 
-  public async batchInsert(items: E[], chunkSize?: number): Promise<string[] | number[] | any> {
-    const rows = items.map((i) => {
-      const data = this.mapToDB(i)
-      delete data[this.primaryKey]
-      return data
-    })
-
-    return this.batchInsertRaw(rows, chunkSize)
-  }
-
-  public async batchInsertRaw(rows: Record<string, any>[], chunkSize?: number): Promise<string[] | number[] | any> {
-    if (['pg', 'mssql', 'oracle'].includes(this.connection.client.config.client)) {
-      return this.connection.batchInsert(this.table, rows, chunkSize).returning(this.primaryKey)
-    }
-
-    return this.connection.batchInsert(this.table, rows, chunkSize)
-  }
-
   public async insert(data: Record<string, any>): Promise<any | null> {
+    const { [this.primaryKey]: id, ...dataNext } = data
+
     const queryBuilder: Knex.QueryBuilder = this.connection(this.table)
     let result
     if (['pg', 'mssql', 'oracle'].includes(this.connection.client.config.client)) {
-      result = await queryBuilder.insert(data).returning(this.primaryKey)
+      result = await queryBuilder.insert(dataNext).returning(this.primaryKey)
     } else {
-      result = await queryBuilder.insert(data)
+      result = await queryBuilder.insert(dataNext)
     }
 
     if (result && result.length > 0) {
@@ -142,14 +126,34 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
 
   public async update(condition: Readonly<Condition>, data: Record<string, any>): Promise<boolean> {
     try {
+      const { [this.primaryKey]: id, ...dataNext } = data
+
       const queryBuilder: Knex.QueryBuilder = this.connection(this.table)
       this.conditionParser.parse(queryBuilder, condition)
-      const result = await queryBuilder.update(data)
+      const result = await queryBuilder.update(dataNext)
       return result > 0
     } catch (e) {
       this.logger.error(e)
       throw e
     }
+  }
+
+  public async batchInsert(items: E[], chunkSize?: number): Promise<string[] | number[] | any> {
+    const rows = items.map((i) => {
+      const data = this.mapToDB(i)
+      const { [this.primaryKey]: id, ...dataNext } = data
+      return dataNext
+    })
+
+    return this.batchInsertRaw(rows, chunkSize)
+  }
+
+  public async batchInsertRaw(rows: Record<string, any>[], chunkSize?: number): Promise<string[] | number[] | any> {
+    if (['pg', 'mssql', 'oracle'].includes(this.connection.client.config.client)) {
+      return this.connection.batchInsert(this.table, rows, chunkSize).returning(this.primaryKey)
+    }
+
+    return this.connection.batchInsert(this.table, rows, chunkSize)
   }
 
   public async truncate() {
@@ -184,19 +188,18 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
   }
 
   public createEntityList(rows: any[]) {
-    const result = []
-    if (rows.length) {
-      for (let i = 0; i < rows.length; i++) {
-        const row = rows[parseInt(`${i}`, 10)]
-        try {
-          const entity = this.createEntity(this.map(row))
-          result.push(entity)
-        } catch (e) {
-          this.logger.error(e)
-          throw e
-        }
+    const result: E[] = []
+
+    rows.forEach((row) => {
+      try {
+        const entity = this.createEntity(this.map(row))
+        result.push(entity)
+      } catch (e) {
+        this.logger.error(e)
+        throw e
       }
-    }
+    })
+
     return result
   }
 
@@ -208,7 +211,7 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
   }
 
   public mapToDB(item: E): any {
-    const { id, ...data } = item.getData()
+    const { id, [this.primaryKey]: primaryKey, ...data } = item.getData()
     return data
   }
 }

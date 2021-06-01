@@ -63,7 +63,11 @@ describe('Test AbstractDBResource and AbstractService', () => {
   test('should findById', async () => {
     const item = service.createEntity(payload1)
     await service.save(item)
-    const dbItem = await service.findById(item.id)
+
+    let dbItem
+    if (item.id) {
+      dbItem = await service.findById(item.id)
+    }
     expect(dbItem).toEqual(item)
   })
 
@@ -104,8 +108,12 @@ describe('Test AbstractDBResource and AbstractService', () => {
   test('should delete', async () => {
     const item = service.createEntity(payload1)
     await service.save(item)
-    await service.delete(item.id)
-    const dbItem = await service.findById(item.id)
+
+    let dbItem
+    if (item.id) {
+      await service.delete(item.id)
+      dbItem = await service.findById(item.id)
+    }
     expect(dbItem).toBeNull()
   })
 
@@ -139,7 +147,29 @@ describe('Test AbstractDBResource and AbstractService', () => {
 
     item.title = 'The Fundamentals of Mathematical Analysis II'
     await service.save(item)
-    const dbItem = await service.findById(item.id)
+    let dbItem
+    if (item.id) {
+      dbItem = await service.findById(item.id)
+    }
+    expect(dbItem?.title).toEqual('The Fundamentals of Mathematical Analysis II')
+  })
+
+  test('should remove primary key on update item', async () => {
+    const item = service.createEntity(payload1)
+
+    await service.save(item)
+
+    item.title = 'The Fundamentals of Mathematical Analysis II'
+
+    if (item.id) {
+      const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: 'id', value: item.id }] })
+      await resource.update(condition, item.getData())
+    }
+
+    let dbItem
+    if (item.id) {
+      dbItem = await service.findById(item.id)
+    }
     expect(dbItem?.title).toEqual('The Fundamentals of Mathematical Analysis II')
   })
 
@@ -147,6 +177,17 @@ describe('Test AbstractDBResource and AbstractService', () => {
     const item1 = service.createEntity(payload1)
     const item2 = service.createEntity(payload2)
     const item3 = service.createEntity(payload3)
+
+    await resource.batchInsert([item1, item2, item3])
+
+    const dbItems = await service.findAll()
+    expect(dbItems.length).toEqual(3)
+  })
+
+  test('should remove id on batchInsert', async () => {
+    const item1 = service.createEntity({ ...payload1, id: 1 })
+    const item2 = service.createEntity({ ...payload2, id: 2 })
+    const item3 = service.createEntity({ ...payload3, id: 3 })
 
     await resource.batchInsert([item1, item2, item3])
 

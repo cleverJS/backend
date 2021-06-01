@@ -1,9 +1,10 @@
+import { v4 as uuidV4 } from 'uuid'
 import { LogLevel, TransportInterface } from './transport/TransportInterface'
 import { ILoggerConfig } from './config'
 
 class Logger {
   protected config?: ILoggerConfig
-  protected transports: TransportInterface[] = []
+  protected transports: Map<string, TransportInterface> = new Map()
 
   public constructor(config?: ILoggerConfig) {
     this.setConfig(config)
@@ -15,9 +16,13 @@ class Logger {
 
   /**
    * @param transport
+   * @param code
    */
-  public addTransport(transport: TransportInterface) {
-    this.transports.push(transport)
+  public addTransport(transport: TransportInterface, code?: string) {
+    if (!code) {
+      code = uuidV4()
+    }
+    this.transports.set(code, transport)
   }
 
   /**
@@ -25,7 +30,7 @@ class Logger {
    */
   public debug = (...msg: any[]) => {
     if (this.config && this.config.debug) {
-      this.log('debug', ...msg)
+      this.log(null, 'debug', ...msg)
     }
   }
 
@@ -34,7 +39,7 @@ class Logger {
    */
   public info = (...msg: any[]) => {
     if (this.config && this.config.info) {
-      this.log('info', ...msg)
+      this.log(null, 'info', ...msg)
     }
   }
 
@@ -43,21 +48,31 @@ class Logger {
    */
   public warn = (...msg: any[]) => {
     if (this.config && this.config.warn) {
-      this.log('warn', ...msg)
+      this.log(null, 'warn', ...msg)
     }
   }
 
   /**
    * @param msg
    */
-  public error = (...msg: any[]) => this.log('error', ...msg)
+  public error = (...msg: any[]) => this.log(null, 'error', ...msg)
 
   /**
+   * @param transportCode
    * @param level
    * @param msg
    */
-  private log(level: LogLevel, ...msg: any[]) {
-    this.transports.forEach((transport) => transport.log(level, ...msg))
+  public log(transportCode: string | null, level: LogLevel, ...msg: any[]) {
+    if (transportCode) {
+      const transport = this.transports.get(transportCode)
+      if (transport) {
+        transport.log(level, ...msg)
+      }
+    } else {
+      for (const transport of this.transports.values()) {
+        transport.log(level, ...msg)
+      }
+    }
   }
 }
 

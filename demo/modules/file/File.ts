@@ -1,7 +1,7 @@
 import { AbstractEntity } from '../../../core/entity/AbstractEntity'
 
 export type TFile = {
-  id: number
+  id: number | null
   code: string | null
   name: string
   mime: string | null
@@ -14,7 +14,7 @@ export type TFile = {
 }
 
 export class File extends AbstractEntity<TFile> implements TFile {
-  public id = 0
+  public id: number | null = null
   public code = ''
   public name = ''
   public mime = ''

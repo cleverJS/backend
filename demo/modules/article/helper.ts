@@ -1,13 +1,15 @@
-import * as yup from 'yup'
+import { boolean, number, object, string } from 'yup'
 import { TArticle } from './Article'
 
-const scheme = yup.object().required().shape({
-  id: yup.number().defined(),
-  title: yup.string(),
-  author: yup.string(),
-  content: yup.string(),
-  isPublished: yup.boolean(),
-})
+const scheme = object()
+  .defined()
+  .shape({
+    id: number().defined().nullable(true).default(null),
+    title: string().defined().default(''),
+    author: string().defined().default(''),
+    content: string().defined().default(''),
+    isPublished: boolean().defined().default(false),
+  })
 
 export const castArticle = (data: unknown): TArticle => {
   return scheme.noUnknown().cast(data)

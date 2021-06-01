@@ -1,7 +1,7 @@
 import { AbstractEntity } from '../../../core/entity/AbstractEntity'
 
 export type TArticle = {
-  id: number
+  id: number | null
   title: string
   author: string
   content: string
@@ -9,7 +9,7 @@ export type TArticle = {
 }
 
 export class Article extends AbstractEntity<TArticle> implements TArticle {
-  public id = 0
+  public id: number | null = null
   public title = ''
   public author = ''
   public content = ''

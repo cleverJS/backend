@@ -12,6 +12,7 @@ Entity example
 import { AbstractEntity } from 'cleverJS/core/entity/AbstractEntity'
 
 export type TArticle = {
+  id: number | null
   title: string
   author: string
   content: string
@@ -19,6 +20,7 @@ export type TArticle = {
 }
 
 export class Article extends AbstractEntity<TArticle> implements TArticle {
+  public id: number | null = null
   public title: string = ''
   public author: string = ''
   public content: string = ''
@@ -36,16 +38,18 @@ It could be done in the following way:
 1. Create validator helper function `./app/modules/article/helper.ts`
 
 ```ts
-import * as yup from 'yup'
+import { boolean, number, object, string } from 'yup'
 import { TArticle } from './Article'
 
-const scheme = yup.object().required().shape({
-  id: yup.number(),
-  title: yup.string(),
-  author: yup.string(),
-  content: yup.string(),
-  isPublished: yup.boolean(),
-})
+const scheme = object()
+  .defined()
+  .shape({
+    id: number().defined().nullable(true).default(null),
+    title: string().defined().default(''),
+    author: string().defined().default(''),
+    content: string().defined().default(''),
+    isPublished: boolean().defined().default(false),
+  })
 
 export const castArticle = (data: unknown): TArticle => {
   return scheme.noUnknown().cast(data)

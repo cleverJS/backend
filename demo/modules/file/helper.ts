@@ -1,20 +1,19 @@
-import * as yup from 'yup'
+import { date, number, object, string } from 'yup'
 import { TFile } from './File'
 
-const scheme = yup
-  .object()
-  .required()
+const scheme = object()
+  .defined()
   .shape({
-    id: yup.number(),
-    code: yup.string().defined().nullable(true),
-    name: yup.string(),
-    mime: yup.string().defined().nullable(true),
-    baseDir: yup.string(),
-    url: yup.string(),
-    sort: yup.number().defined().default(100),
-    data: yup.object(),
-    createdAt: yup.date().default(new Date()).defined(),
-    updatedAt: yup.date().default(new Date()).defined(),
+    id: number().defined().nullable(true).default(null),
+    code: string().defined().nullable(true).default(null),
+    name: string().defined().default(''),
+    mime: string().defined().nullable(true).default(null),
+    baseDir: string().defined().default(''),
+    url: string().defined().default(''),
+    sort: number().defined().default(100),
+    data: object().defined().default({}),
+    createdAt: date().default(new Date()).defined(),
+    updatedAt: date().default(new Date()).defined(),
   })
 
 export const castFile = (data: unknown): TFile => {

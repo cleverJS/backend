@@ -1,24 +1,26 @@
-import * as yup from 'yup'
+import { boolean, date, number, object, string } from 'yup'
 import { EUserRoles, TUser } from './User'
 
-const scheme = yup
-  .object()
-  .required()
+const scheme = object()
+  .defined()
   .shape({
-    id: yup.number().defined().nullable(),
-    password: yup.string().defined().nullable(false),
-    salt: yup.string().defined().nullable(false),
-    login: yup.string().defined().nullable(false),
-    uuid: yup.string().defined().nullable(false),
-    role: yup.number().defined().oneOf([EUserRoles.user, EUserRoles.admin]).default(EUserRoles.user),
-    firstName: yup.string().defined().nullable(),
-    lastName: yup.string().defined().nullable(),
-    restoreToken: yup.string().defined().nullable(),
-    active: yup.boolean().defined().default(false),
-    data: yup.object().defined(),
-    lastVisit: yup.date().defined().nullable(),
-    createdAt: yup.date().defined().default(new Date()),
-    updatedAt: yup.date().defined().default(new Date()),
+    id: number().defined().nullable().default(null),
+    password: string().defined().nullable(false).default(''),
+    salt: string().defined().nullable(false).default(''),
+    login: string().defined().nullable(false).default(''),
+    uuid: string().defined().nullable(false).default(''),
+    role: number()
+      .oneOf(Object.values(EUserRoles) as number[])
+      .defined()
+      .default(EUserRoles.user),
+    firstName: string().defined().nullable().default(null),
+    lastName: string().defined().nullable().default(null),
+    restoreToken: string().defined().nullable().default(null),
+    active: boolean().defined().default(false),
+    data: object().defined().default({}),
+    lastVisit: date().defined().nullable().default(null),
+    createdAt: date().defined().default(new Date()),
+    updatedAt: date().defined().default(new Date()),
   })
 
 export function castUser(data: unknown): TUser {
