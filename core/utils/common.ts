@@ -21,3 +21,14 @@ export const chunkArray = <T = any>(array: T[], size: number): T[][] => {
 export const arrayUnique = <T = any>(arr: T[]): T[] => {
   return Array.from(new Set(arr))
 }
+
+export function JSONStringifySafe(json: unknown): string | null {
+  let result = null
+  try {
+    result = JSON.stringify(json)
+  } catch (e) {
+    // Nothing todo
+  }
+
+  return result
+}

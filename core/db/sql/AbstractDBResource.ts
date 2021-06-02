@@ -8,7 +8,7 @@ import { loggerNamespace } from '../../logger/logger'
 import { Paginator } from '../../utils/Paginator'
 
 export abstract class AbstractDBResource<E extends IEntity> extends AbstractResource<E> {
-  protected readonly logger = loggerNamespace('AbstractDBResource')
+  protected readonly logger = loggerNamespace(`AbstractDBResource:${this.constructor.name}`)
   protected readonly connection: Knex
   protected readonly conditionParser: ConditionDbParser
   protected primaryKey = 'id'
@@ -188,17 +188,17 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
   }
 
   public createEntityList(rows: any[]) {
-    const result: E[] = []
+    let result: E[] = []
 
-    rows.forEach((row) => {
-      try {
+    try {
+      rows.forEach((row) => {
         const entity = this.createEntity(this.map(row))
         result.push(entity)
-      } catch (e) {
-        this.logger.error(e)
-        throw e
-      }
-    })
+      })
+    } catch (e) {
+      this.logger.error(`createEntityList was interrupted because validation unsatisfying record was received`)
+      result = []
+    }
 
     return result
   }
