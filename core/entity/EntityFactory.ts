@@ -16,6 +16,13 @@ export class EntityFactory<T extends Record<string, any>, E extends AbstractEnti
     this.cast = cast
   }
 
+  /**
+   *
+   * @param {unknown} data
+   * @return {E} The new Entity object
+   *
+   * @throws {Error} e
+   */
   public create(data: unknown): E {
     const item = new this.EntityClass()
 

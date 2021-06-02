@@ -62,7 +62,7 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     try {
       rows = await queryBuilder.select()
     } catch (e) {
-      this.logger.error(e)
+      this.logger.error(e.message, queryBuilder.toQuery())
       throw e
     }
 
@@ -110,30 +110,36 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
 
     const queryBuilder: Knex.QueryBuilder = this.connection(this.table)
     let result
-    if (['pg', 'mssql', 'oracle'].includes(this.connection.client.config.client)) {
-      result = await queryBuilder.insert(dataNext).returning(this.primaryKey)
-    } else {
-      result = await queryBuilder.insert(dataNext)
-    }
 
-    if (result && result.length > 0) {
-      const [identificator] = result
-      return identificator
+    try {
+      if (['pg', 'mssql', 'oracle'].includes(this.connection.client.config.client)) {
+        result = await queryBuilder.insert(dataNext).returning(this.primaryKey)
+      } else {
+        result = await queryBuilder.insert(dataNext)
+      }
+
+      if (result && result.length > 0) {
+        const [identificator] = result
+        return identificator
+      }
+    } catch (e) {
+      this.logger.error(e.message, queryBuilder.toQuery())
+      throw e
     }
 
     return null
   }
 
   public async update(condition: Readonly<Condition>, data: Record<string, any>): Promise<boolean> {
-    try {
-      const { [this.primaryKey]: id, ...dataNext } = data
+    const { [this.primaryKey]: id, ...dataNext } = data
+    const queryBuilder: Knex.QueryBuilder = this.connection(this.table)
 
-      const queryBuilder: Knex.QueryBuilder = this.connection(this.table)
+    try {
       this.conditionParser.parse(queryBuilder, condition)
       const result = await queryBuilder.update(dataNext)
       return result > 0
     } catch (e) {
-      this.logger.error(e)
+      this.logger.error(e.message, queryBuilder.toQuery())
       throw e
     }
   }
@@ -196,7 +202,7 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
         result.push(entity)
       })
     } catch (e) {
-      this.logger.error(`createEntityList was interrupted because validation unsatisfying record was received`)
+      this.logger.warn('createEntityList was interrupted because validation unsatisfying record was received')
       result = []
     }
 
