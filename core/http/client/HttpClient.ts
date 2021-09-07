@@ -1,4 +1,5 @@
-import axios, { AxiosInstance, AxiosRequestConfig, Canceler, CancelToken, Method } from 'axios'
+import { types } from 'util'
+import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, Canceler, CancelToken, Method } from 'axios'
 import * as fs from 'fs'
 import { RequestCancel } from './RequestCancel'
 import { logger } from '../../logger/logger'
@@ -82,9 +83,19 @@ export class HttpClient {
       const { data } = await this.client({ ...config, ...this.extendedConfig })
       return data || {}
     } catch (error) {
-      const message = error.response && error.response.data && error.response.data.message ? error.response.data.message : null
+      const isAxiosError = (candidate: any): candidate is AxiosError => {
+        return candidate.isAxiosError === true
+      }
+
+      let message = ''
+      if (isAxiosError(error)) {
+        message = error.response && error.response.data && error.response.data.message ? error.response.data.message : null
+      } else if (types.isNativeError(error)) {
+        message = error.message || ''
+      }
+
       logger.error(message || error)
-      error.serverMessage = message
+
       throw error
     }
   }

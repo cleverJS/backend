@@ -1,3 +1,4 @@
+import path from 'path'
 import { Knex, knex } from 'knex'
 import * as connections from '../../../../knexfile'
 import { ConditionDbParser } from '../../../../core/db/sql/condition/ConditionDbParser'
@@ -9,9 +10,21 @@ import { Article } from '../../../../demo/modules/article/Article'
 import { ArticleService } from '../../../../demo/modules/article/ArticleService'
 import { castArticle } from '../../../../demo/modules/article/helper'
 import { FSWrapper } from '../../../../core/utils/fsWrapper'
+import { logger } from '../../../../core/logger/logger'
+import { ILoggerConfig } from '../../../../core/logger/config'
+import { TransportWinston } from '../../../../core/logger/transport/TransportWinston'
+import { cacheContainer } from '../../../../demo/CacheContainer'
 
 const knexConfig = (connections as any)[process.env.NODE_ENV || 'development'] as Knex.Config
 const connectionRecord = knexConfig.connection as Knex.Sqlite3ConnectionConfig
+
+const runtimeDir = path.resolve(`${__dirname}/../runtime`)
+logger.setConfig({
+  debug: (process.env.APP_DEBUG || 'false') === 'true',
+  info: true,
+  warn: true,
+} as ILoggerConfig)
+logger.addTransport(new TransportWinston(runtimeDir))
 
 describe('Test AbstractDBResource and AbstractService', () => {
   const payload1 = {
@@ -49,8 +62,9 @@ describe('Test AbstractDBResource and AbstractService', () => {
     await connection.table('article').truncate()
   })
 
-  afterAll(() => {
+  afterAll(async () => {
     FSWrapper.removeSync(connectionRecord.filename)
+    await cacheContainer.clear()
   })
 
   test('should insert item', async () => {
@@ -62,6 +76,19 @@ describe('Test AbstractDBResource and AbstractService', () => {
 
   test('should findById', async () => {
     const item = service.createEntity(payload1)
+    await service.save(item)
+
+    let dbItem
+    if (item.id) {
+      dbItem = await service.findById(item.id)
+    }
+    expect(dbItem).toEqual(item)
+  })
+
+  test('should findById 2', async () => {
+    const item = service.createEntity(payload1)
+
+    item.author = ''
     await service.save(item)
 
     let dbItem

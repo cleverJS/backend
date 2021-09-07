@@ -1,3 +1,4 @@
+import { types } from 'util'
 import { settings } from '../configs'
 import { MSG_ACCESS_DENIED } from '../configs/messages'
 import { IAppConnection } from '../types/WSConnection'
@@ -34,9 +35,13 @@ export abstract class AbstractController {
     return this.response('fail', payload)
   }
 
-  protected responseError(message: string, error?: Error): IJSendResponse {
+  protected responseError(message: string, error?: Error | unknown): IJSendResponse {
     if (error) {
-      return this.response('error', { message: error.message }, message)
+      let errorMessage = ''
+      if (types.isNativeError(error)) {
+        errorMessage = error.message
+      }
+      return this.response('error', { message: errorMessage }, message)
     }
 
     return this.response('error', undefined, message)

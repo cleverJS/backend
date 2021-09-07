@@ -1,3 +1,4 @@
+import { types } from 'util'
 import { Knex } from 'knex'
 import { IEntity } from '../../entity/AbstractEntity'
 import { AbstractResource } from '../AbstractResource'
@@ -62,7 +63,10 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     try {
       rows = await queryBuilder.select()
     } catch (e) {
-      this.logger.error(e.message, queryBuilder.toQuery())
+      if (types.isNativeError(e)) {
+        this.logger.error(e.message, queryBuilder.toQuery())
+      }
+
       throw e
     }
 
@@ -123,7 +127,10 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
         return identificator
       }
     } catch (e) {
-      this.logger.error(e.message, queryBuilder.toQuery())
+      if (types.isNativeError(e)) {
+        this.logger.error(e.message, queryBuilder.toQuery())
+      }
+
       throw e
     }
 
@@ -139,7 +146,10 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
       const result = await queryBuilder.update(dataNext)
       return result > 0
     } catch (e) {
-      this.logger.error(e.message, queryBuilder.toQuery())
+      if (types.isNativeError(e)) {
+        this.logger.error(e.message, queryBuilder.toQuery())
+      }
+
       throw e
     }
   }

@@ -1,3 +1,4 @@
+import { types } from 'util'
 import WebSocket from 'ws'
 import { v4 as uuidV4 } from 'uuid'
 import { EventEmitter } from 'events'
@@ -185,9 +186,12 @@ export class WSServer {
         let errMessage
         if (process.env.NODE_ENV === 'production') {
           errMessage = MESSAGE_SYSTEM_ERROR
-        } else {
+        } else if (types.isNativeError(e)) {
           errMessage = e.message || MESSAGE_SYSTEM_ERROR
+        } else {
+          errMessage = MESSAGE_SYSTEM_ERROR
         }
+
         this.logger.error(e)
         this.sendError(connection, errMessage, uuid).catch(this.logger.error)
       }

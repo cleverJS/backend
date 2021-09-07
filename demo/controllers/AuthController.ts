@@ -1,3 +1,4 @@
+import { types } from 'util'
 import { RouteHandlerMethod } from 'fastify'
 import { AbstractController, IJSendResponse, IProtectDependencies } from './AbstractController'
 import { HttpServer } from '../../core/http/HttpServer'
@@ -201,7 +202,7 @@ export class AuthController extends AbstractController {
     } catch (e) {
       let msg = MSG_ACCESS_DENIED
 
-      if (e.message === 'User already exists') {
+      if (types.isNativeError(e) && e.message === 'User already exists') {
         msg = MSG_EXISTS
         this.logger.warn(e.message, login)
       } else {

@@ -1,3 +1,4 @@
+import { types } from 'util'
 import { AbstractEntity } from './AbstractEntity'
 import { loggerNamespace } from '../logger/logger'
 import { JSONStringifySafe } from '../utils/common'
@@ -33,7 +34,10 @@ export class EntityFactory<T extends Record<string, any>, E extends AbstractEnti
 
       item.setData(data as T)
     } catch (e) {
-      this.logger.error(`Class [${this.EntityClass.name}]:`, e.message, JSONStringifySafe(data))
+      if (types.isNativeError(e)) {
+        this.logger.error(`Class [${this.EntityClass.name}]:`, e.message, JSONStringifySafe(data))
+      }
+
       throw e
     }
 
