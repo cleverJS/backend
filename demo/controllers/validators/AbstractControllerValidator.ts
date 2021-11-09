@@ -1,12 +1,12 @@
-import { ValidationError } from 'fastest-validator'
+import { SyncCheckFunction, AsyncCheckFunction, ValidationError } from 'fastest-validator'
 
-export type IValidator = (object: Record<string, any>) => true | ValidationError[]
+export type IValidator = SyncCheckFunction | AsyncCheckFunction
 
 export abstract class AbstractControllerValidator<T> {
   private validators: Map<string, IValidator> = new Map()
 
-  public validate(name: T, payload: Record<string, any>): ValidationError[] | true {
-    let result: ValidationError[] | true = true
+  public validate(name: T, payload: Record<string, any>): ValidationError[] | true | Promise<ValidationError[] | true> {
+    let result: ValidationError[] | true | Promise<ValidationError[] | true> = true
     const validator = this.getValidator(name)
     if (validator) {
       result = validator(payload)
@@ -18,11 +18,12 @@ export abstract class AbstractControllerValidator<T> {
     this.validators.set(`${this.constructor.name}:${name}`, validator)
   }
 
-  protected getValidator(name: T): (object: Record<string, any>) => true | ValidationError[] {
+  protected getValidator(name: T): IValidator {
     const validator = this.validators.get(`${this.constructor.name}:${name}`)
     if (!validator) {
       throw new Error(`${this.constructor.name}:getValidator Validator ${name} was not found`)
     }
+
     return validator
   }
 }

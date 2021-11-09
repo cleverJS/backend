@@ -1,8 +1,8 @@
-import Validator, { ValidationError } from 'fastest-validator'
+import Validator, { AsyncCheckFunction, SyncCheckFunction } from 'fastest-validator'
 import { WSRequest } from '../WSRequest'
 
-export class WSRequestValidator {
-  public validator: (object: Record<string, any>) => true | ValidationError[]
+class WSRequestValidator {
+  public validator: SyncCheckFunction | AsyncCheckFunction
 
   public constructor() {
     const schema = {
@@ -10,7 +10,7 @@ export class WSRequestValidator {
         type: 'object',
         strict: 'remove',
         props: {
-          uuid: [{ type: 'string' }, { type: 'number', positive: true, integer: true, min: 1, max: 4294967295 }],
+          uuid: { type: 'string' },
           service: { type: 'string' },
           action: { type: 'string' },
         },
@@ -20,6 +20,7 @@ export class WSRequestValidator {
         optional: true,
       },
       $$strict: true,
+      $$async: true,
     }
 
     const validator = new Validator()
@@ -31,8 +32,10 @@ export class WSRequestValidator {
    * @param {WSRequest} request
    * @throws Error
    */
-  public validate(request: WSRequest): boolean {
-    const result = this.validator(request)
+  public async validate(request: WSRequest): Promise<boolean> {
+    const result = await this.validator(request)
     return result === true
   }
 }
+
+export const wsRequestValidator = new WSRequestValidator()

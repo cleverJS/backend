@@ -2,11 +2,11 @@
   "compilerOptions": {
     /* Basic Options */
     // "incremental": true,                   /* Enable incremental compilation */
-    "target": "ES2019",
+    "target": "es2020",
     /* Specify ECMAScript target version: 'ES3' (default), 'ES5', 'ES2015', 'ES2016', 'ES2017', 'ES2018', 'ES2019' or 'ESNEXT'. */
     "module": "commonjs",
     /* Specify module code generation: 'none', 'commonjs', 'amd', 'system', 'umd', 'es2015', or 'ESNext'. */
-    "lib": ["ES2019"] /* Specify library files to be included in the compilation. */,
+    "lib": ["es2020"] /* Specify library files to be included in the compilation. */,
     "allowJs": true /* Generates corresponding '.map' file. */, // "checkJs": true,                       /* Report errors in .js files. */ // "jsx": "preserve",                     /* Specify JSX code generation: 'preserve', 'react-native', or 'react'. */
     /* Allow javascript files to be compiled. */ //    "outFile": "./build/main.js",                       /* Concatenate and emit output to single file. */
     "outDir": "./build",
@@ -14,7 +14,10 @@
     "rootDir": "." /* Specify the root directory of input files. Use to control the output directory structure with --outDir. */,
     // "composite": true,                     /* Enable project compilation */
     // "tsBuildInfoFile": "./",               /* Specify file to store incremental compilation information */
-    "removeComments": true, // "noEmit": true,                        /* Do not emit outputs. */ // "importHelpers": true,                 /* Import emit helpers from 'tslib'. */ // "downlevelIteration": true,            /* Provide full support for iterables in 'for-of', spread, and destructuring when targeting 'ES5' or 'ES3'. */
+    "removeComments": true,
+    // "noEmit": true,                        /* Do not emit outputs. */
+    // "importHelpers": true,/* Import emit helpers from 'tslib'. */
+    // "downlevelIteration": true,            /* Provide full support for iterables in 'for-of', spread, and destructuring when targeting 'ES5' or 'ES3'. */
     /* Do not emit comments to output. */ "isolatedModules": false /* Strict Type-Checking Options */,
     /* Transpile each file as a separate module (similar to 'ts.transpileModule'). */
     "strict": true,
@@ -53,8 +56,8 @@
     "declarationMap": true /* Generates a sourcemap for each corresponding '.d.ts' file. */,
     "sourceMap": true,
     /* Experimental Options */
-    // "experimentalDecorators": true,        /* Enables experimental support for ES7 decorators. */
-    // "emitDecoratorMetadata": true,         /* Enables experimental support for emitting type metadata for decorators. */
+     "experimentalDecorators": true,        /* Enables experimental support for ES7 decorators. */
+     "emitDecoratorMetadata": true,         /* Enables experimental support for emitting type metadata for decorators. */
     "paths": {
       /* A series of entries which re-map imports to lookup locations relative to the 'baseUrl'. */
       //      "@src/*": [

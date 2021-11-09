@@ -14,15 +14,15 @@
   },
   "plugins": [
     "@typescript-eslint",
-    "eslint-comments",
-    "promise",
-    "jest",
-    "node",
-    "import",
     "prettier",
-    "security",
+    "eslint-comments",
+    "import",
+    "jest",
+    "no-loops",
+    "node",
     "optimize-regex",
-    "no-loops"
+    "promise",
+    "security"
   ],
   "extends": [
     "eslint:recommended",

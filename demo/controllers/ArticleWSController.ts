@@ -5,6 +5,7 @@ import { ArticleService } from '../modules/article/ArticleService'
 import { Paginator } from '../../core/utils/Paginator'
 import { WSResponse } from '../../core/ws/WSResponse'
 import { IAppConnection } from '../types/WSConnection'
+import { route } from '../../core/decorators/routes'
 
 interface IDependencies {
   wsServer: WSServer
@@ -17,10 +18,10 @@ export class ArticleWSController {
 
   public constructor(deps: IDependencies) {
     this.deps = deps
-    this.init()
     this.onEvents()
   }
 
+  @route('article', 'replace')
   public actionReplace = async (request: WSRequest, connection: IAppConnection): Promise<Record<string, any>> => {
     const { text, author } = request.payload
 
@@ -34,6 +35,7 @@ export class ArticleWSController {
     }
   }
 
+  @route('article', 'author')
   public actionAuthorList = async (request: WSRequest, connection: IAppConnection): Promise<Record<string, any>> => {
     const { page = 1, itemsPerPage } = request.payload
 
@@ -51,6 +53,7 @@ export class ArticleWSController {
     }
   }
 
+  @route('article', 'fetch-list')
   public actionFetchList = async (request: WSRequest, connection: IAppConnection): Promise<Record<string, any>> => {
     const { page = 1, itemsPerPage } = request.payload
 
@@ -68,6 +71,7 @@ export class ArticleWSController {
     }
   }
 
+  @route('article', 'subscribe')
   public actionSubscribe = async (request: WSRequest, connection: IAppConnection): Promise<Record<string, any>> => {
     connection.state.subscriptions.article = true
 
@@ -89,12 +93,5 @@ export class ArticleWSController {
         })
       })
     })
-  }
-
-  protected init(): void {
-    this.deps.wsServer.onRequest('article', 'subscribe', this.actionSubscribe)
-    this.deps.wsServer.onRequest('article', 'replace', this.actionReplace)
-    this.deps.wsServer.onRequest('article', 'authors', this.actionAuthorList)
-    this.deps.wsServer.onRequest('article', 'fetch-list', this.actionFetchList)
   }
 }

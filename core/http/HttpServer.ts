@@ -4,10 +4,10 @@ import { loggerNamespace } from '../logger/logger'
 import { IHttpServerConfig } from './config'
 
 export class HttpServer {
-  private readonly logger = loggerNamespace('HttpServer')
-  private readonly server: FastifyInstance<Server, IncomingMessage, ServerResponse>
-  private readonly port: number = 5000
-  private readonly address: string = '0.0.0.0'
+  protected readonly logger = loggerNamespace('HttpServer')
+  protected readonly server: FastifyInstance<Server, IncomingMessage, ServerResponse>
+  protected readonly port: number = 5000
+  protected readonly address: string = '0.0.0.0'
 
   constructor(config: IHttpServerConfig) {
     this.server = fastify({})

@@ -7,7 +7,7 @@ import { IWSRequest, WSRequest } from './WSRequest'
 import { WSResponse } from './WSResponse'
 import { loggerNamespace } from '../logger/logger'
 import { IWSConfig } from './config'
-import { WSRequestValidator } from './validator/WSRequestValidator'
+import { wsRequestValidator } from './validator/WSRequestValidator'
 import { CORE_DEBUG } from '../utils/common'
 
 const KEEP_ALIVE_DEFAULT = 1000 * 60
@@ -34,10 +34,8 @@ export class WSServer {
   protected readonly connections: Map<string, IConnection> = new Map()
   protected readonly keepAliveTimeout: number
   protected readonly handlers: Map<string, RequestHandler> = new Map()
-  protected readonly validatorRequest: WSRequestValidator
 
   public constructor(config: IWSConfig, server?: Server) {
-    this.validatorRequest = new WSRequestValidator()
     this.bus = new EventEmitter()
     this.config = config
     this.keepAliveTimeout = config.keepalive || KEEP_ALIVE_DEFAULT
@@ -146,7 +144,7 @@ export class WSServer {
   /**
    * @param connection
    */
-  protected handleMessage(connection: IConnection): void {
+  protected async handleMessage(connection: IConnection): Promise<void> {
     const { client, id } = connection
     client.on('message', async (message: string) => {
       let requestObject: IWSRequest
@@ -158,7 +156,8 @@ export class WSServer {
         return
       }
 
-      if (!this.validatorRequest.validate(requestObject)) {
+      const isValid = await wsRequestValidator.validate(requestObject)
+      if (!isValid) {
         this.logger.error(requestObject)
         // TODO: We cannot do anything ?
         return
@@ -267,7 +266,9 @@ export class WSServer {
     ws.on('connection', (client: WebSocket, request: IncomingMessage) => {
       const id = uuidV4()
       const state: Record<string, any> = {}
-      const connection: IConnection = { id, client, state, isAlive: true, remoteAddress: request.socket.remoteAddress }
+      const remoteAddress = request.headers.origin || request.socket.remoteAddress
+
+      const connection: IConnection = { id, client, state, remoteAddress, isAlive: true }
       this.connections.set(id, connection)
       this.handleMessage(connection)
       this.handleClose(connection)
