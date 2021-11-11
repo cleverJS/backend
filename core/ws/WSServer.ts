@@ -113,18 +113,23 @@ export class WSServer {
     }
   }
 
-  public broadcast(cb: (connection: IConnection) => Promise<WSResponse | null>): void {
-    for (const toConnection of this.connections.values()) {
-      if (toConnection.client.readyState === WebSocket.OPEN) {
-        cb(toConnection)
-          .then(async (response) => {
-            if (response) {
-              this.send(toConnection, response).catch(this.logger.error)
-            }
-          })
-          .catch(this.logger.error)
-      }
+  public broadcast(cb: (connection: IConnection) => Promise<WSResponse | null>, connections?: IConnection[]): void {
+    if (!connections) {
+      connections = Array.from(this.connections.values())
     }
+
+    connections.forEach(async (connection) => {
+      if (connection.client.readyState === WebSocket.OPEN) {
+        const response = await cb(connection)
+        if (response) {
+          try {
+            this.send(connection, response).catch(this.logger.error)
+          } catch (e) {
+            this.logger.error(e)
+          }
+        }
+      }
+    })
   }
 
   /**
@@ -209,16 +214,15 @@ export class WSServer {
    * @param {IConnection} connection
    */
   protected handleKeepAlive(connection: IConnection): void {
-    if (this.keepAliveTimeout) {
-      connection.keepAlive = setInterval(() => {
-        if (!connection.isAlive) {
-          connection.client.terminate()
-        }
+    connection.keepAlive = setInterval(() => {
+      if (!connection.isAlive) {
+        connection.client.terminate()
+        return
+      }
 
-        connection.isAlive = false
-        connection.client.ping()
-      }, this.keepAliveTimeout)
-    }
+      connection.isAlive = false
+      connection.client.ping()
+    }, this.keepAliveTimeout)
   }
 
   /**
@@ -227,17 +231,19 @@ export class WSServer {
    * @param keepAlive
    */
   protected handleClose({ id, client, keepAlive }: IConnection): void {
-    client.on('close', () => {
+    client.on('close', (code: number, reason: Buffer) => {
+      const connection = this.connections.get(id)
+      const r = reason.toString('utf8')
+      this.logger.info(r)
       if (keepAlive) {
         clearInterval(keepAlive)
       }
-
-      const connection = this.connections.get(id)
 
       let state = {}
       if (connection && connection.state) {
         state = connection.state
       }
+
       this.bus.emit(EVENT_DISCONNECT, state)
       this.connections.delete(id)
       if (CORE_DEBUG) {
@@ -246,8 +252,14 @@ export class WSServer {
     })
   }
 
-  protected handleError({ id, client }: IConnection): void {
+  protected handleError({ id, client, keepAlive }: IConnection): void {
     client.on('error', (err: Error) => {
+      if (keepAlive) {
+        clearInterval(keepAlive)
+      }
+
+      this.connections.delete(id)
+
       this.logger.error(`connection ${id}: `, err)
     })
   }
@@ -263,17 +275,17 @@ export class WSServer {
 
     this.logger.info(`started on ws://0.0.0.0:${port}${path}`)
 
-    ws.on('connection', (client: WebSocket, request: IncomingMessage) => {
+    ws.on('connection', async (client: WebSocket, request: IncomingMessage) => {
       const id = uuidV4()
       const state: Record<string, any> = {}
       const remoteAddress = request.headers.origin || request.socket.remoteAddress
 
       const connection: IConnection = { id, client, state, remoteAddress, isAlive: true }
       this.connections.set(id, connection)
-      this.handleMessage(connection)
-      this.handleClose(connection)
       this.handleKeepAlive(connection)
       this.handleError(connection)
+      this.handleClose(connection)
+      this.handleMessage(connection).catch(this.logger.error)
       this.bus.emit(EVENT_CONNECT, id)
       client.on('pong', () => {
         connection.isAlive = true

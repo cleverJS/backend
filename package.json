@@ -1,6 +1,6 @@
 {
   "name": "backend",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "description": "CleverJS Backend",
   "author": "",
   "license": "MIT",
@@ -20,7 +20,6 @@
     "node": ">=16.0.0"
   },
   "dependencies": {
-    "@types/node": "^16.11.7",
     "@types/pretty-hrtime": "^1.0.1",
     "@types/redis": "^2.8.32",
     "@types/uuid": "^8.3.1",
@@ -41,13 +40,11 @@
     "ws": "=8.2.3"
   },
   "devDependencies": {
+    "@types/node": "^16.11.7",
     "@types/jest": "^27.0.2",
     "@types/jsonwebtoken": "^8.5.5",
-    "@types/md5": "^2.3.1",
-    "@types/yup": "^0.29.13",
     "@typescript-eslint/eslint-plugin": "^5.3.0",
     "@typescript-eslint/parser": "^5.3.0",
-    "argon2": "^0.28.2",
     "eslint": "^7.32.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^8.3.0",
@@ -60,6 +57,8 @@
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-promise": "^5.1.1",
     "eslint-plugin-security": "^1.4.0",
+    "@types/md5": "^2.3.1",
+    "@types/yup": "^0.29.13",
     "fastify-cors": "^6.0.2",
     "google-auth-library": "^7.10.2",
     "jest": "^27.3.1",
@@ -71,6 +70,7 @@
     "sqlite3": "^5.0.2",
     "ts-jest": "^27.0.7",
     "typed-emitter": "^1.4.0",
-    "yup": "^0.32.11"
+    "yup": "^0.32.11",
+    "argon2": "^0.28.2"
   }
 }

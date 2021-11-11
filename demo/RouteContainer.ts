@@ -4,11 +4,13 @@ import { HttpServer } from '../core/http/HttpServer'
 import { ArticleWSController } from './controllers/ArticleWSController'
 import { ArticleHTTPController } from './controllers/ArticleHTTPController'
 import { AuthController } from './controllers/AuthController'
+import { initRoutes } from '../core/decorators/routes'
 
 export class RouteContainer {
   public constructor(services: ServiceContainer, wsServer: WSServer, http: HttpServer) {
     this.initWS(services, wsServer, http)
     this.initHTTP(services, http)
+    initRoutes(wsServer)
   }
 
   protected initWS(services: ServiceContainer, wsServer: WSServer, http: HttpServer): void {

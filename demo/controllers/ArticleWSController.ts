@@ -19,6 +19,15 @@ export class ArticleWSController {
   public constructor(deps: IDependencies) {
     this.deps = deps
     this.onEvents()
+
+    this.deps.wsServer.onConnect((id: string) => {
+      const connection = this.deps.wsServer.getConnection(id)
+      if (connection) {
+        connection.state.subscriptions = {
+          article: false,
+        }
+      }
+    })
   }
 
   @route('article', 'replace')
@@ -82,15 +91,13 @@ export class ArticleWSController {
 
   protected onEvents(): void {
     this.deps.articleService.eventEmitter.on('new', (item) => {
-      this.deps.wsServer.broadcast((connection: IAppConnection) => {
-        return new Promise((resolve) => {
-          let result = null
-          if (connection.state.subscriptions.article) {
-            result = WSResponse.createEventResponse('article:new', { data: item })
-          }
+      this.deps.wsServer.broadcast(async (connection: IAppConnection) => {
+        let result = null
+        if (connection.state.subscriptions.article) {
+          result = WSResponse.createEventResponse('article:new', { data: item })
+        }
 
-          resolve(result)
-        })
+        return result
       })
     })
   }
