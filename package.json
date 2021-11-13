@@ -6,7 +6,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cleverJS/backend"
+    "url": "https://github.com/cleverJS/backend"
   },
   "scripts": {
     "build": "tsc -d -p tsconfig.prod.json",
