@@ -67,6 +67,16 @@ describe('Test AbstractElasticIndex', () => {
     await index.create('cleverjs-test')
   })
 
+  afterAll(async () => {
+    await index.delete('cleverjs-test')
+    await new Promise((resolve) => {
+      client.close(() => {
+        logger.info('Elastic connections closed')
+        resolve(true)
+      })
+    })
+  })
+
   it('should index document', async () => {
     const params = {
       body: {
@@ -234,6 +244,8 @@ describe('Test AbstractElasticIndex', () => {
     } catch (e) {
       logger.error(e)
     }
+
+    expect(true).toBeTruthy()
   })
 
   it('should search_after', async () => {

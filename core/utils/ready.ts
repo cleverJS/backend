@@ -1,14 +1,16 @@
 export class Ready {
-  public resolved: boolean = false
-  public readonly promise: Promise<any>
+  protected readonly promise: Promise<any>
 
   constructor() {
     this.promise = new Promise((resolve) => {
       this.resolve = () => {
         resolve(true)
-        this.resolved = true
       }
     })
+  }
+
+  public async isReady(): Promise<true> {
+    return this.promise
   }
 
   public resolve = () => {}

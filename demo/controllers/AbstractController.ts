@@ -1,7 +1,7 @@
 import { types } from 'util'
 import { settings } from '../configs'
 import { MSG_ACCESS_DENIED } from '../configs/messages'
-import { IAppConnection } from '../types/WSConnection'
+import { IAppConnectionInfo } from '../types/WSConnection'
 import { SecurityHelper } from '../modules/security/SecurityHelper'
 
 export interface IProtectDependencies {}
@@ -51,7 +51,7 @@ export abstract class AbstractController {
     return this.responseError(MSG_ACCESS_DENIED)
   }
 
-  protected async isAuthorized(connection: IAppConnection): Promise<boolean> {
+  protected async isAuthorized(connection: IAppConnectionInfo): Promise<boolean> {
     const { token } = connection.state
 
     let result = Promise.resolve(false)

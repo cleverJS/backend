@@ -45,7 +45,7 @@ export class ArticleService extends AbstractService<Article, ArticleResource> {
 
   public async replaceAuthor(text: string, author: string): Promise<string> {
     const result = text.replace('{{author}}', author)
-    await cacheContainer.cacheRuntime.clearByTag('article')
+    await cacheContainer.cacheRuntime.clearByTag(['article'])
     return result
   }
 

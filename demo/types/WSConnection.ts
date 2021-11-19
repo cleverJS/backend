@@ -1,4 +1,4 @@
-import { IConnection } from '../../core/ws/WSServer'
+import { IConnectionInfo } from '../../core/ws/WSServer'
 
 interface IPermissions {
   user: {
@@ -8,6 +8,7 @@ interface IPermissions {
 }
 
 export interface IConnectionState {
+  id: number
   userId: number
   token: string
   permissions: IPermissions
@@ -16,6 +17,6 @@ export interface IConnectionState {
   }
 }
 
-export interface IAppConnection extends IConnection {
+export interface IAppConnectionInfo extends IConnectionInfo {
   state: IConnectionState
 }

@@ -7,6 +7,7 @@ import { EntityFactory } from '../../../core/entity/EntityFactory'
 import { AbstractDBResource } from '../../../core/db/sql/AbstractDBResource'
 import { ConditionDbParser } from '../../../core/db/sql/condition/ConditionDbParser'
 import { FSWrapper } from '../../../core/utils/fsWrapper'
+import { logger } from '../../../core/logger/logger'
 
 interface TTest {
   id: string
@@ -57,8 +58,14 @@ describe('Test AbstractDBResource', () => {
     FSWrapper.removeSync(dbPath)
   })
 
-  afterAll(() => {
+  afterAll(async () => {
     FSWrapper.removeSync(dbPath)
+    await new Promise((resolve) => {
+      connection.destroy(() => {
+        logger.info('DB connections closed')
+        resolve(true)
+      })
+    })
   })
 
   it('should', () => {

@@ -9,6 +9,6 @@ export class CacheAdapterNull implements CacheAdapterInterface {
     return fn()
   }
   public async clear(key?: string): Promise<void> {}
-  public async clearByTag(tag: string): Promise<void> {}
+  public async clearByTag(tags: string[]): Promise<void> {}
   public async checkExpired(): Promise<void> {}
 }

@@ -39,8 +39,8 @@ export class Cache implements CacheAdapterInterface {
     return this.adapter.clear(key || undefined)
   }
 
-  public clearByTag(tag: string): Promise<void> {
-    return this.adapter.clearByTag(tag)
+  public clearByTag(tags: string[]): Promise<void> {
+    return this.adapter.clearByTag(tags)
   }
 
   public checkExpired(): Promise<void> {

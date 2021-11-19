@@ -7,7 +7,7 @@ import { AuthService, ITelegramPayload } from '../modules/security/auth/AuthServ
 import { WSServer } from '../../core/ws/WSServer'
 import { AuthControllerValidator } from './validators/AuthControllerValidator'
 import { WSRequest } from '../../core/ws/WSRequest'
-import { IAppConnection, IConnectionState } from '../types/WSConnection'
+import { IAppConnectionInfo } from '../types/WSConnection'
 import { EUserRoles, User } from '../modules/user/User'
 import { MSG_ACCESS_DENIED, MSG_EXISTS } from '../configs/messages'
 import { loggerNamespace } from '../../core/logger/logger'
@@ -39,7 +39,7 @@ export class AuthController extends AbstractController {
    * @param request
    * @param connection
    */
-  public actionSingIn = async (request: WSRequest, connection: IAppConnection): Promise<IJSendResponse> => {
+  public actionSingIn = async (request: WSRequest, connection: IAppConnectionInfo): Promise<IJSendResponse> => {
     const validatorResult = await this.validator.validate('ValidatorSingIn', request.payload)
 
     if (validatorResult !== true) {
@@ -91,7 +91,7 @@ export class AuthController extends AbstractController {
    * @param request
    * @param connection
    */
-  public actionTelegram = async (request: WSRequest, connection: IAppConnection): Promise<IJSendResponse> => {
+  public actionTelegram = async (request: WSRequest, connection: IAppConnectionInfo): Promise<IJSendResponse> => {
     const validatorResult = await this.validator.validate('ValidatorTelegram', request.payload)
 
     if (validatorResult !== true) {
@@ -136,7 +136,7 @@ export class AuthController extends AbstractController {
    * @param request
    * @param connection
    */
-  public actionSingInByToken = async (request: WSRequest, connection: IAppConnection): Promise<IJSendResponse> => {
+  public actionSingInByToken = async (request: WSRequest, connection: IAppConnectionInfo): Promise<IJSendResponse> => {
     const validatorResult = await this.validator.validate('ValidatorSingInByToken', request.payload)
 
     if (validatorResult !== true) {
@@ -178,7 +178,7 @@ export class AuthController extends AbstractController {
    * @param request
    * @param connection
    */
-  public actionRegistration = async (request: WSRequest, connection: IAppConnection): Promise<IJSendResponse> => {
+  public actionRegistration = async (request: WSRequest, connection: IAppConnectionInfo): Promise<IJSendResponse> => {
     const validatorResult = await this.validator.validate('ValidatorRegistration', request.payload)
 
     if (validatorResult !== true) {
@@ -231,7 +231,7 @@ export class AuthController extends AbstractController {
    * @param request
    * @param connection
    */
-  public actionRefreshToken = async (request: WSRequest, connection: IAppConnection): Promise<IJSendResponse> => {
+  public actionRefreshToken = async (request: WSRequest, connection: IAppConnectionInfo): Promise<IJSendResponse> => {
     const validatorResult = await this.validator.validate('ValidatorRefreshToken', request.payload)
 
     if (validatorResult !== true) {
@@ -297,7 +297,7 @@ export class AuthController extends AbstractController {
    * @param request
    * @param connection
    */
-  public actionReset = async (request: WSRequest, connection: IAppConnection): Promise<IJSendResponse> => {
+  public actionReset = async (request: WSRequest, connection: IAppConnectionInfo): Promise<IJSendResponse> => {
     const validatorResult = await this.validator.validate('ValidatorReset', request.payload)
 
     if (validatorResult !== true) {
@@ -340,7 +340,7 @@ export class AuthController extends AbstractController {
     return response.send()
   }
 
-  public actionGoogle = async (request: WSRequest, connection: IAppConnection): Promise<IJSendResponse> => {
+  public actionGoogle = async (request: WSRequest, connection: IAppConnectionInfo): Promise<IJSendResponse> => {
     let user: User | null = null
     let accessToken: string
     let refreshToken: string
@@ -379,7 +379,7 @@ export class AuthController extends AbstractController {
     })
   }
 
-  protected setConnectionState(connection: IAppConnection, token: string, user: User): void {
+  protected setConnectionState(connection: IAppConnectionInfo, token: string, user: User): void {
     const { id: userId, role: userRole } = user
 
     if (!userId) {
@@ -414,9 +414,9 @@ export class AuthController extends AbstractController {
     this.deps.wsServer.onRequest('auth', 'forgot', this.actionForgot)
     this.deps.wsServer.onRequest('auth', 'reset', this.actionReset)
 
-    this.deps.wsServer.onDisconnect(async (state: IConnectionState) => {
-      if (state.userId) {
-        this.deps.userService.updateLastVisitByUserId(state.userId).catch(this.logger.error)
+    this.deps.wsServer.onDisconnect(async (connectionInfo?: IAppConnectionInfo) => {
+      if (connectionInfo && connectionInfo.state.userId) {
+        this.deps.userService.updateLastVisitByUserId(connectionInfo.state.userId).catch(this.logger.error)
       }
     })
   }

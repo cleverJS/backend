@@ -1,4 +1,7 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Node 16",
+
   "compilerOptions": {
     /* Basic Options */
     // "incremental": true,                   /* Enable incremental compilation */
@@ -7,7 +10,7 @@
     "module": "commonjs",
     /* Specify module code generation: 'none', 'commonjs', 'amd', 'system', 'umd', 'es2015', or 'ESNext'. */
     "lib": ["es2020"] /* Specify library files to be included in the compilation. */,
-    "allowJs": true /* Generates corresponding '.map' file. */, // "checkJs": true,                       /* Report errors in .js files. */ // "jsx": "preserve",                     /* Specify JSX code generation: 'preserve', 'react-native', or 'react'. */
+    "allowJs": false /* Generates corresponding '.map' file. */, // "checkJs": true,                       /* Report errors in .js files. */ // "jsx": "preserve",                     /* Specify JSX code generation: 'preserve', 'react-native', or 'react'. */
     /* Allow javascript files to be compiled. */ //    "outFile": "./build/main.js",                       /* Concatenate and emit output to single file. */
     "outDir": "./build",
     /* Redirect output structure to the directory. */

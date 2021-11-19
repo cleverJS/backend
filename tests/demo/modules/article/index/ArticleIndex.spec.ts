@@ -1,6 +1,7 @@
 import { Client } from '@elastic/elasticsearch'
 import { ArticleIndex, ArticleIndexData } from '../../../../../demo/modules/article/index/ArticleIndex'
 import { settings } from '../../../../../demo/configs'
+import { logger } from '../../../../../core/logger/logger'
 
 describe('Test ArticleIndex', () => {
   const indexName = 'demo-article'
@@ -26,6 +27,16 @@ describe('Test ArticleIndex', () => {
   beforeEach(async () => {
     await index.delete(indexName)
     await index.create(indexName)
+  })
+
+  afterAll(async () => {
+    await index.delete(indexName)
+    await new Promise((resolve) => {
+      elasticClient.close(() => {
+        logger.info('Elastic connections closed')
+        resolve(true)
+      })
+    })
   })
 
   test('should index item', async () => {

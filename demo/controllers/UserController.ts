@@ -1,7 +1,7 @@
 import { UserService } from '../modules/user/UserService'
 import { UserControllerValidator } from './validators/UserControllerValidator'
 import { IProtectDependencies } from '../modules/security/auth/AuthService'
-import { IAppConnection } from '../types/WSConnection'
+import { IAppConnectionInfo } from '../types/WSConnection'
 import { AbstractController, IJSendResponse } from './AbstractController'
 import { WSServer } from '../../core/ws/WSServer'
 import { WSRequest } from '../../core/ws/WSRequest'
@@ -22,7 +22,7 @@ export class UserController extends AbstractController {
     this.init()
   }
 
-  public actionFetchById = async (request: WSRequest, connection: IAppConnection): Promise<IJSendResponse> => {
+  public actionFetchById = async (request: WSRequest, connection: IAppConnectionInfo): Promise<IJSendResponse> => {
     const { read, write } = connection.state.permissions.user
 
     if (!(await this.isAuthorized(connection)) && !(read || write)) {

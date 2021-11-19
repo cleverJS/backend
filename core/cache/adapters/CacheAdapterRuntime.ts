@@ -1,7 +1,7 @@
 import { CacheAdapterInterface } from './CacheAdapterInterface'
 import { loggerNamespace } from '../../logger/logger'
 
-export class CacheAdapterRuntime implements CacheAdapterInterface {
+export class CacheAdapterRuntime extends CacheAdapterInterface {
   protected readonly logger = loggerNamespace('CacheAdapterRuntime')
   protected readonly caches: Map<string, any> = new Map()
   protected readonly keyTags: Map<string, Set<string>> = new Map()
@@ -46,22 +46,6 @@ export class CacheAdapterRuntime implements CacheAdapterInterface {
     return Promise.resolve()
   }
 
-  /**
-   *
-   * @param key
-   * @param fn
-   * @param ttl - in seconds
-   * @param tags
-   */
-  public async getOrSet(key: string, fn: () => Promise<any>, ttl?: number | null, tags?: string[]): Promise<unknown> {
-    let result = await this.get(key)
-    if (result === undefined) {
-      result = await fn()
-      this.set(key, result, ttl, tags).catch(this.logger.error)
-    }
-    return result
-  }
-
   public clear(key?: string): Promise<void> {
     return new Promise((resolve) => {
       if (key) {
@@ -78,20 +62,21 @@ export class CacheAdapterRuntime implements CacheAdapterInterface {
     })
   }
 
-  public clearByTag(tag: string): Promise<void> {
-    return new Promise((resolve) => {
-      const clearPromise = []
-      const keySet = this.tagKeys.get(tag)
-      if (keySet) {
-        const keyArray = Array.from(keySet)
-        for (let i = 0; i < keyArray.length; i++) {
-          const key = keyArray[i]
-          clearPromise.push(this.clear(key))
+  public async clearByTag(tags: string[]): Promise<void> {
+    await new Promise((resolve) => {
+      const clearPromise: Promise<void>[] = []
+      for (const tag of tags) {
+        const keySet = this.tagKeys.get(tag)
+        if (keySet) {
+          const keyArray = Array.from(keySet)
+          for (let i = 0; i < keyArray.length; i++) {
+            const key = keyArray[i]
+            clearPromise.push(this.clear(key).catch(this.logger.error))
+          }
         }
-
-        Promise.all(clearPromise).catch(this.logger.error)
-        resolve()
       }
+
+      resolve(Promise.all(clearPromise))
     })
   }
 

@@ -2,7 +2,7 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   testMatch: ["**/*.spec.ts"],
-  testPathIgnorePatterns: ["tmp", "node_modules", "core", "app"],
+  testPathIgnorePatterns: ["tmp", "node_modules", "core", "app", "runtime"],
   setupFiles: ["dotenv/config"],
   moduleDirectories: [
     "node_modules",

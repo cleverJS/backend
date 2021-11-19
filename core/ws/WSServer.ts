@@ -1,45 +1,48 @@
-import { types } from 'util'
-import WebSocket from 'ws'
-import { v4 as uuidV4 } from 'uuid'
 import { EventEmitter } from 'events'
+import TypedEmitter from 'typed-emitter'
+import WebSocket from 'ws'
+import { types } from 'util'
+import { v4 as uuidV4 } from 'uuid'
 import { Server, IncomingMessage } from 'http'
 import { IWSRequest, WSRequest } from './WSRequest'
 import { WSResponse } from './WSResponse'
 import { loggerNamespace } from '../logger/logger'
 import { IWSConfig } from './config'
 import { wsRequestValidator } from './validator/WSRequestValidator'
-import { CORE_DEBUG } from '../utils/common'
+
+export const WS_DEBUG = (process.env.WS_DEBUG || 'false') === 'true'
 
 const KEEP_ALIVE_DEFAULT = 1000 * 60
-const EVENT_CONNECT = 'connect'
-const EVENT_DISCONNECT = 'disconnect'
+const EVENT_CONNECT = 'WS_CONNECT'
+const EVENT_DISCONNECT = 'WS_DISCONNECT'
 const MESSAGE_SYSTEM_ERROR = 'System error'
 
-export interface IConnection {
+export interface IConnectionInfo {
   id: string
-  client: WebSocket
-  keepAlive?: NodeJS.Timeout
-  isAlive: boolean
   remoteAddress?: string
   state: any
 }
 
-export type RequestHandler = (request: WSRequest, connection: IConnection) => Promise<Record<string, any>>
+export type RequestHandler = (request: WSRequest, connectionInfo: IConnectionInfo, client: WebSocket) => Promise<Record<string, any>>
+
+interface IWSServerEvents {
+  [EVENT_CONNECT]: (client: WebSocket) => void
+  [EVENT_DISCONNECT]: (connectionInfo: IConnectionInfo) => void
+}
 
 export class WSServer {
   public ws: WebSocket.Server
-  protected bus: EventEmitter
+  public readonly connectionInfoMap: Map<WebSocket, IConnectionInfo> = new Map()
+  protected bus: TypedEmitter<IWSServerEvents>
   protected readonly logger = loggerNamespace('WSServer')
-  protected readonly config: IWSConfig
-  protected readonly connections: Map<string, IConnection> = new Map()
   protected readonly keepAliveTimeout: number
+  protected keepAliveTimer: NodeJS.Timer | null = null
   protected readonly handlers: Map<string, RequestHandler> = new Map()
 
   public constructor(config: IWSConfig, server?: Server) {
     this.bus = new EventEmitter()
-    this.config = config
     this.keepAliveTimeout = config.keepalive || KEEP_ALIVE_DEFAULT
-    this.ws = this.init(server)
+    this.ws = this.init(config, server)
   }
 
   /**
@@ -53,51 +56,32 @@ export class WSServer {
   }
 
   /**
-   * @param connection
+   * @param client
    * @param response
    */
-  public async send(connection: IConnection, response: WSResponse): Promise<void> {
-    if (connection) {
-      const { client } = connection
-
+  public async send(client: WebSocket, response: WSResponse): Promise<void> {
+    if (client) {
       try {
+        if (client.readyState === WebSocket.CONNECTING) {
+          this.logger.warn('connecting')
+          await WSServer.waitForSocketState(client, WebSocket.CONNECTING)
+        }
+
         if (client.readyState === WebSocket.OPEN) {
           client.send(response.toString())
         } else if (client.readyState === WebSocket.CLOSED || client.readyState === WebSocket.CLOSING) {
           this.logger.warn('force closing')
+          this.connectionInfoMap.delete(client)
           client.terminate()
         } else {
           this.logger.error(new Error(`connection is not open: '${client.readyState}'`))
+          this.connectionInfoMap.delete(client)
           client.terminate()
         }
       } catch (e) {
         this.logger.error(e)
       }
     }
-  }
-
-  /**
-   */
-  public getConnections(): IConnection[] {
-    return Array.from(this.connections.values())
-  }
-
-  /**
-   */
-  public getConnection(id: string): IConnection | undefined {
-    return this.connections.get(id)
-  }
-
-  public terminateConnection(id: string): boolean {
-    const connection = this.getConnection(id)
-
-    if (connection) {
-      connection.client.terminate()
-      this.connections.delete(id)
-      return true
-    }
-
-    return false
   }
 
   /**
@@ -113,19 +97,18 @@ export class WSServer {
     }
   }
 
-  public broadcast(cb: (connection: IConnection) => Promise<WSResponse | null>, connections?: IConnection[]): void {
-    if (!connections) {
-      connections = Array.from(this.connections.values())
+  public broadcast(cb: (connectionInfo: IConnectionInfo, client: WebSocket) => Promise<WSResponse | null>, clients?: Set<WebSocket>): void {
+    if (!clients) {
+      clients = this.ws.clients
     }
 
-    connections.forEach(async (connection) => {
-      if (connection.client.readyState === WebSocket.OPEN) {
-        const response = await cb(connection)
-        if (response) {
-          try {
-            this.send(connection, response).catch(this.logger.error)
-          } catch (e) {
-            this.logger.error(e)
+    clients.forEach(async (client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        const connectionInfo = this.connectionInfoMap.get(client)
+        if (connectionInfo) {
+          const response = await cb(connectionInfo, client)
+          if (response) {
+            this.send(client, response).catch(this.logger.error)
           }
         }
       }
@@ -134,23 +117,22 @@ export class WSServer {
 
   /**
    */
-  public onConnect(handler: (id: string) => void): () => EventEmitter {
+  public onConnect(handler: (client: WebSocket) => Promise<void>): () => EventEmitter {
     this.bus.addListener(EVENT_CONNECT, handler)
     return (): EventEmitter => this.bus.removeListener(EVENT_CONNECT, handler)
   }
 
   /**
    */
-  public onDisconnect(handler: (state: any) => void): () => EventEmitter {
+  public onDisconnect(handler: (connectionInfo: IConnectionInfo) => Promise<void>): () => EventEmitter {
     this.bus.addListener(EVENT_DISCONNECT, handler)
     return (): EventEmitter => this.bus.removeListener(EVENT_DISCONNECT, handler)
   }
 
   /**
-   * @param connection
+   * @param client
    */
-  protected async handleMessage(connection: IConnection): Promise<void> {
-    const { client, id } = connection
+  protected handleMessage(client: WebSocket): void {
     client.on('message', async (message: string) => {
       let requestObject: IWSRequest
 
@@ -172,19 +154,23 @@ export class WSServer {
 
       try {
         const request = new WSRequest(requestObject)
-        if (CORE_DEBUG) {
-          this.logger.debug(`request from ${id}:`, request)
+        if (WS_DEBUG) {
+          this.logger.debug('request', request)
         }
+
         const key = `${request.header.service}:${request.header.action}`
         const handler = this.handlers.get(key)
         if (handler) {
-          const payload = await handler(request, connection)
-          const response = WSResponse.create(uuid, payload, request.header.service, request.header.action)
-          this.send(connection, response).catch(this.logger.error)
+          const connectionInfo = this.connectionInfoMap.get(client)
+          if (connectionInfo) {
+            const payload = await handler(request, connectionInfo, client)
+            const response = WSResponse.create(uuid, payload, request.header.service, request.header.action)
+            this.send(client, response).catch(this.logger.error)
+          }
         } else {
           const messageError = `Handler does not exist ${key}`
           this.logger.error(messageError)
-          this.sendError(connection, messageError, uuid).catch(this.logger.error)
+          this.sendError(client, messageError, uuid).catch(this.logger.error)
         }
       } catch (e) {
         let errMessage
@@ -197,75 +183,42 @@ export class WSServer {
         }
 
         this.logger.error(e)
-        this.sendError(connection, errMessage, uuid).catch(this.logger.error)
+        this.sendError(client, errMessage, uuid).catch(this.logger.error)
       }
     })
   }
 
-  protected async sendError(connection: IConnection, message: string, requestUUID: string | number): Promise<void> {
+  protected async sendError(client: WebSocket, message: string, requestUUID: string | number): Promise<void> {
     const response = await WSResponse.create(requestUUID, {})
     response.error = message
-    return this.send(connection, response)
+    return this.send(client, response)
   }
 
   /**
-   * Ping a client connection and terminate in case of unavailable.
-   *
-   * @param {IConnection} connection
+   * @param client WebSocket
    */
-  protected handleKeepAlive(connection: IConnection): void {
-    connection.keepAlive = setInterval(() => {
-      if (!connection.isAlive) {
-        connection.client.terminate()
-        return
-      }
-
-      connection.isAlive = false
-      connection.client.ping()
-    }, this.keepAliveTimeout)
-  }
-
-  /**
-   * @param id
-   * @param client
-   * @param keepAlive
-   */
-  protected handleClose({ id, client, keepAlive }: IConnection): void {
-    client.on('close', (code: number, reason: Buffer) => {
-      const connection = this.connections.get(id)
-      const r = reason.toString('utf8')
-      this.logger.info(r)
-      if (keepAlive) {
-        clearInterval(keepAlive)
-      }
-
-      let state = {}
-      if (connection && connection.state) {
-        state = connection.state
-      }
-
-      this.bus.emit(EVENT_DISCONNECT, state)
-      this.connections.delete(id)
-      if (CORE_DEBUG) {
-        this.logger.debug('disconnected: ', id)
+  protected handleClose(client: WebSocket): void {
+    client.on('close', async (code: number, reason: Buffer) => {
+      const connectionInfo = this.connectionInfoMap.get(client)
+      if (connectionInfo) {
+        this.bus.emit(EVENT_DISCONNECT, connectionInfo)
+        this.connectionInfoMap.delete(client)
       }
     })
   }
 
-  protected handleError({ id, client, keepAlive }: IConnection): void {
+  protected handleError(client: WebSocket): void {
     client.on('error', (err: Error) => {
-      if (keepAlive) {
-        clearInterval(keepAlive)
+      const connectionInfo = this.connectionInfoMap.get(client)
+      this.logger.error('handleError:', err, connectionInfo)
+      if (connectionInfo) {
+        this.connectionInfoMap.delete(client)
       }
-
-      this.connections.delete(id)
-
-      this.logger.error(`connection ${id}: `, err)
     })
   }
 
-  protected init(server?: Server): WebSocket.Server {
-    const { port, path } = this.config
+  protected init(config: IWSConfig, server?: Server): WebSocket.Server {
+    const { port, path } = config
     let ws: WebSocket.Server
     if (server) {
       ws = new WebSocket.Server({ server, path })
@@ -276,26 +229,82 @@ export class WSServer {
     this.logger.info(`started on ws://0.0.0.0:${port}${path}`)
 
     ws.on('connection', async (client: WebSocket, request: IncomingMessage) => {
+      this.setKeepAlive(client, true)
       const id = uuidV4()
       const state: Record<string, any> = {}
       const remoteAddress = request.headers.origin || request.socket.remoteAddress
 
-      const connection: IConnection = { id, client, state, remoteAddress, isAlive: true }
-      this.connections.set(id, connection)
-      this.handleKeepAlive(connection)
-      this.handleError(connection)
-      this.handleClose(connection)
-      this.handleMessage(connection).catch(this.logger.error)
-      this.bus.emit(EVENT_CONNECT, id)
+      const connectionInfo: IConnectionInfo = { id, state, remoteAddress }
+      this.connectionInfoMap.set(client, connectionInfo)
+      this.handleError(client)
+      this.handleClose(client)
+      this.handleMessage(client)
+      this.bus.emit(EVENT_CONNECT, client)
       client.on('pong', () => {
-        connection.isAlive = true
+        this.setKeepAlive(client, true)
       })
     })
 
+    this.handleKeepAlive()
+
     ws.on('close', () => {
-      this.connections.clear()
+      if (this.keepAliveTimer) {
+        clearInterval(this.keepAliveTimer)
+        this.connectionInfoMap.clear()
+      }
     })
 
     return ws
+  }
+
+  /**
+   * Ping a client connections and terminate in case of unavailable.
+   *
+   */
+  protected handleKeepAlive(): void {
+    this.keepAliveTimer = setInterval(() => {
+      this.ws.clients.forEach((client: WebSocket) => {
+        if (!this.isAlive(client)) {
+          client.terminate()
+          return
+        }
+
+        this.setKeepAlive(client, false)
+        client.ping()
+      })
+    }, this.keepAliveTimeout)
+  }
+
+  protected setKeepAlive(client: WebSocket, value: boolean) {
+    // @ts-ignore
+    client.keepAlive = value
+  }
+
+  protected isAlive(client: WebSocket) {
+    // @ts-ignore
+    return client.keepAlive
+  }
+
+  public static async gracefulClose(client: WebSocket): Promise<void> {
+    client.close()
+    await WSServer.waitForSocketState(client, client.CLOSED)
+  }
+
+  public static async waitForSocketState(client: WebSocket, state: 0 | 1 | 2 | 3, maxNumberOfAttempts: number = 200): Promise<true> {
+    return new Promise((resolve, reject) => {
+      const intervalTime = 200 // ms
+
+      let currentAttempt = 0
+      const interval = setInterval(() => {
+        if (currentAttempt > maxNumberOfAttempts - 1) {
+          clearInterval(interval)
+          reject(new Error('Maximum number of attempts exceeded'))
+        } else if (client.readyState === state) {
+          clearInterval(interval)
+          resolve(true)
+        }
+        currentAttempt++
+      }, intervalTime)
+    })
   }
 }
