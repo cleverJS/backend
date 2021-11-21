@@ -31,7 +31,7 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": false,
-    "noEmit": true,
+    "noEmit": false,
   },
   "exclude": ["node_modules", "build", "core/**/*.spec.ts", "demo/**/*", "tmp", "tests/**/*.spec.ts", "knexfile.ts", "guide/**/*"],
   "include": ["core/**/*"],
