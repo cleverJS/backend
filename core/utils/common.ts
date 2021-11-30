@@ -30,10 +30,14 @@ export const arrayUnique = <T = any>(arr: T[]): T[] => {
   return Array.from(new Set(arr))
 }
 
-export function JSONStringifySafe(json: unknown): string | null {
-  let result = null
+export function JSONStringifySafe(
+  json: any,
+  replacer?: (this: any, key: string, value: any) => any | (number | string)[] | null,
+  space?: string | number
+): string {
+  let result = ''
   try {
-    result = JSON.stringify(json)
+    result = JSON.stringify(json, replacer, space)
   } catch (e) {
     // Nothing todo
   }
@@ -58,4 +62,46 @@ export function formatBytes(bytes: number): string {
   if (absBytes < gigaBytes) return `${(bytes / megaBytes).toFixed(decimal)} MB`
   // return GB if less than a TB
   return `${(bytes / gigaBytes).toFixed(decimal)} GB`
+}
+
+export function argsStringify(...args: any[]) {
+  const space = ' '
+  const carryover = '\n'
+
+  return args.reduce((prev, current, index) => {
+    const isBeginning = index === 0
+
+    let messageNext = prev
+    try {
+      if (['string', 'number', 'boolean', 'bigint', 'undefined'].includes(typeof current)) {
+        messageNext += `${!isBeginning ? space : ''}${current}`
+      } else if (current instanceof Error) {
+        const { stack, ...other } = current
+        messageNext += `${!isBeginning ? carryover : ''}${JSON.stringify(other)}\n`
+        messageNext += `${!isBeginning ? carryover : ''}[Stack trace]: ${stack}`
+      } else if (typeof current === 'function') {
+        messageNext += `${!isBeginning ? carryover : ''}[Function]`
+      } else {
+        messageNext += `${!isBeginning ? carryover : ''}${JSON.stringify(current, null, 4)}`
+      }
+    } catch (e) {
+      messageNext += `${!isBeginning ? carryover : ''}${JSONStringifySafe(current, getCircularReplacer(), 4)}`
+    }
+
+    return messageNext
+  }, '')
+}
+
+export function getCircularReplacer() {
+  const seen = new WeakSet()
+  return function (key: string, value: any) {
+    if (typeof value === 'object' && value !== null) {
+      if (seen.has(value)) {
+        return '[Circular Object]'
+      }
+      seen.add(value)
+    }
+
+    return value
+  }
 }

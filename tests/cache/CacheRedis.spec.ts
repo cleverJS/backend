@@ -4,7 +4,7 @@ import { sleep } from '../../core/utils/sleep'
 import { CacheAdapterRedis } from '../../core/cache/adapters/CacheAdapterRedis'
 import { Redis } from '../../core/db/redis/Redis'
 
-describe('Test Cache', () => {
+describe('Test Cache Redis', () => {
   const redis = new Redis({
     host: 'localhost',
     port: 6379,

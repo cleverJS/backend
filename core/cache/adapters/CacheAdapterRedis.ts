@@ -1,10 +1,12 @@
 import { CacheAdapterInterface } from './CacheAdapterInterface'
 import { ESetTTLMode, Redis } from '../../db/redis/Redis'
+import { loggerNamespace } from '../../logger/logger'
 
 const PREFIX = process.env.REDIS_CACHE_PREFIX || 'cache'
 
 export class CacheAdapterRedis extends CacheAdapterInterface {
   protected redis: Redis
+  protected logger = loggerNamespace('CacheAdapterRedis')
 
   public constructor(redisClient: Redis) {
     super()
@@ -12,7 +14,7 @@ export class CacheAdapterRedis extends CacheAdapterInterface {
   }
 
   public async get(key: string, defaultValue?: unknown): Promise<unknown | undefined> {
-    let result = await this.redis.get(CacheAdapterRedis.createKey(key))
+    let result = await this.redis.client.get(CacheAdapterRedis.createKey(key))
 
     if (result) {
       result = JSON.parse(result)
@@ -22,83 +24,55 @@ export class CacheAdapterRedis extends CacheAdapterInterface {
   }
 
   public async set(key: string, value: unknown, ttl?: number | null, tags?: string[]): Promise<void> {
-    await new Promise((resolve, reject) => {
-      try {
-        const redisKey = CacheAdapterRedis.createKey(key)
-        const data: string = JSON.stringify(value)
-        // if (typeof value !== 'string') {
-        //   if (typeof value === 'object') {
-        //     data = JSON.stringify(value)
-        //   } else if (typeof value === 'number') {
-        //     data = String(value)
-        //   } else {
-        //     reject(new Error('Unknown value'))
-        //     return
-        //   }
-        // } else {
-        //   data = value
-        // }
+    try {
+      const redisKey = CacheAdapterRedis.createKey(key)
+      const data: string = JSON.stringify(value)
 
-        const multi = this.redis.client.multi()
-        if (tags) {
-          tags.forEach((tag) => {
-            multi.sadd(CacheAdapterRedis.createTagKey(tag), redisKey)
-          })
-        }
-
-        if (ttl) {
-          multi.set(redisKey, data, ESetTTLMode.ex, ttl || 0)
-        } else {
-          multi.set(redisKey, data)
-        }
-
-        multi.exec((err, result) => {
-          if (err) {
-            reject(err)
-            return
-          }
-
-          resolve(result.length > 1 && result[1] === 'OK')
+      const multi = this.redis.client.multi()
+      if (tags) {
+        tags.forEach((tag) => {
+          multi.sAdd(CacheAdapterRedis.createTagKey(tag), redisKey)
         })
-      } catch (e) {
-        reject(e)
       }
-    })
+
+      if (ttl) {
+        multi.set(redisKey, data, { [ESetTTLMode.ex]: ttl || 0 })
+      } else {
+        multi.set(redisKey, data)
+      }
+
+      await multi.exec()
+    } catch (e) {
+      this.logger.error(e)
+    }
   }
 
   public async clear(key?: string): Promise<void> {
-    const keys = key ? [CacheAdapterRedis.createKey(key)] : await this.redis.keys(PREFIX)
-    await this.redis.del(keys)
+    const keys = key ? [CacheAdapterRedis.createKey(key)] : await this.redis.client.keys(`${PREFIX}:*`)
+    if (keys.length) {
+      await this.redis.client.del(keys)
+    }
   }
 
   public async clearByTag(tags: string[]): Promise<void> {
-    const promises = tags.map((tag) => this.redis.smembers(CacheAdapterRedis.createTagKey(tag)))
+    const promises = tags.map((tag) => this.redis.client.sMembers(CacheAdapterRedis.createTagKey(tag)))
     const keys = (await Promise.all(promises)).flat()
 
-    await new Promise((resolve, reject) => {
-      try {
-        const multi = this.redis.client.multi()
+    try {
+      const multi = this.redis.client.multi()
 
-        keys.forEach((key) => {
-          multi.del(key)
-        })
+      keys.forEach((key) => {
+        multi.del(key)
+      })
 
-        tags.forEach((tag) => {
-          multi.del(CacheAdapterRedis.createTagKey(tag))
-        })
+      tags.forEach((tag) => {
+        multi.del(CacheAdapterRedis.createTagKey(tag))
+      })
 
-        multi.exec((err, result) => {
-          if (err) {
-            reject(err)
-            return
-          }
-
-          resolve(result.length > 1 && result[1] === 'OK')
-        })
-      } catch (err) {
-        reject(err)
-      }
-    })
+      await multi.exec()
+    } catch (err) {
+      this.logger.error(err)
+    }
   }
 
   public async checkExpired(): Promise<void> {

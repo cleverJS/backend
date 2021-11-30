@@ -93,7 +93,7 @@ describe('Test AbstractElasticIndex', () => {
     expect(response.body['_id']).not.toBeNull()
   })
 
-  it('should index document and delete', async () => {
+  it('should index document and delete by _id', async () => {
     const params = {
       body: {
         keyword: 'key',
