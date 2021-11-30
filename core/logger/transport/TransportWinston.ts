@@ -57,7 +57,7 @@ export class TransportWinston implements TransportInterface {
     try {
       this.logger.log({
         level,
-        message: argsStringify(msg),
+        message: argsStringify(...msg),
       })
     } catch (e) {
       // eslint-disable-next-line no-console
