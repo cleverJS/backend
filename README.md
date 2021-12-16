@@ -1,7 +1,6 @@
 # README
 
-It is not a framework or something. It is a helpful tool that is trying to
-simplify common development's things:
+Tool that simplify common development's things:
 
 - http/websocket endpoint creation
 - Connections and requests to mysql / postgres / mssql / oracle / sqlite / elasticsearch / redis
@@ -20,5 +19,5 @@ simplify common development's things:
 - You may use the tool partial.
 - You may replace suggested Http/WebSocket servers with any.
 - You may use your lovely logger.  
-- You may use your project structure.
+- You may use your favorite project structure.
 - You may override everything in your way. 

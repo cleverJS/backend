@@ -12,7 +12,7 @@ If your choice is [Fastify](https://github.com/fastify/fastify) then it will be 
 
 2. Add HTTP server initialization
 
-    ```ts
+```ts
     import { HttpServer } from 'cleverJS/core/http/HttpServer'
     import { loggerNamespace } from 'cleverJS/core/logger/logger'
     
@@ -32,11 +32,11 @@ If your choice is [Fastify](https://github.com/fastify/fastify) then it will be 
         }
       }
     }
-    ```
+```
 
 3. Create controller ```app/controllers/ArticleHTTPController.ts```
 
-    ```ts
+```ts
     import { FastifyRequest } from 'fastify'
     import { loggerNamespace } from 'cleverJS/core/logger/logger'
     import { HttpServer } from 'cleverJS/core/http/HttpServer'
@@ -97,11 +97,11 @@ If your choice is [Fastify](https://github.com/fastify/fastify) then it will be 
     interface IAuthorQueryRequest {
       limit: number
     }
-    ```
+```
 
 4. Now we should initialize this controller in [App.ts](../../demo/App.ts) 
 
-    ```ts
+```ts
     // Install and import fastify cors plugin
     import cors from 'fastify-cors'
     import { HttpServer } from 'cleverJS/core/http/HttpServer'
@@ -140,7 +140,7 @@ If your choice is [Fastify](https://github.com/fastify/fastify) then it will be 
         })
       }
     }
-    ```
+```
 
 5. Frontend could access enpoints now.
 

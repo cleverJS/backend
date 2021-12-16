@@ -10,7 +10,7 @@ As a built-in Websocket server we use [websockets/ws](https://github.com/websock
 
 2. Add Websocket server initialization
 
-    ```ts
+```ts
     import { WSServer } from 'cleverJS/core/ws/WSServer'
     import { HttpServer } from 'cleverJS/core/http/HttpServer'
     import { loggerNamespace } from 'cleverJS/core/logger/logger'
@@ -40,13 +40,13 @@ As a built-in Websocket server we use [websockets/ws](https://github.com/websock
         }
       }
     }
-    ```
+```
 
 3. Websocket is available on ws://localhost:8080/ws now.
 
 4. Create controller ```app/controllers/ArticleWSController.ts```
 
-    ```ts
+```ts
     import { IConnection, WSServer } from 'cleverJS/core/ws/WSServer'
     import { WSRequest } from 'cleverJS/core/ws/WSRequest'
     import { loggerNamespace } from 'cleverJS/core/logger/logger'
@@ -97,11 +97,11 @@ As a built-in Websocket server we use [websockets/ws](https://github.com/websock
         this.deps.wsServer.onRequest('article', 'authors', this.actionAuthorList)
       }
     }
-    ```
+```
 
 5. Now we should initialize this controller in [App.ts](../../demo/App.ts) 
 
-    ```ts
+```ts
     import { HttpServer } from 'cleverJS/core/http/HttpServer'
     import { WSServer } from 'cleverJS/core/ws/WSServer'
     import { logger } from 'cleverJS/core/logger/logger'
@@ -138,13 +138,13 @@ As a built-in Websocket server we use [websockets/ws](https://github.com/websock
         }
       }
     }
-    ```
+```
 
 6. Frontend could access endpoints now.
 
-    Example
+Example
     
-    ```ts
+```ts
     import { v4 as uuidV4 } from 'uuid'
     
     const ws = new WebSocket('ws://localhost:8080/ws')
@@ -177,11 +177,11 @@ As a built-in Websocket server we use [websockets/ws](https://github.com/websock
     }
     
     ws.send(messageAuthorList)
-    ```
+```
 
 7. Pay attention on request object
 
-    ```ts
+```ts
     interface IRequestHeader {
       uuid: string
       service: string
@@ -192,11 +192,11 @@ As a built-in Websocket server we use [websockets/ws](https://github.com/websock
       header: IRequestHeader
       payload: Record<string, any>
     }
-    ```
+```
 
 7. Pay attention on response object   
 
-    ```ts
+```ts
     interface IResponseHeader {
       uuid: string
       type: ResponseType
@@ -207,7 +207,7 @@ As a built-in Websocket server we use [websockets/ws](https://github.com/websock
       payload: TResponsePayload
       error?: string
     }
-    ```   
+```   
 
 You may have a look at our frontend ws client [WSClient.ts](../../tests/app/lib/WSClient.ts)
     

@@ -24,26 +24,27 @@
 
 2. Add dependencies to ```package.json```
 
-    ```json
+```json
     {
       "dependencies": {
-        "cleverJS": "github:cleverJS/backend#1.4.3",
-        "ts-node": "latest"
+        "cleverJS": "github:cleverJS/backend#1.7.1"
       }
     }
-    ```
+```
    
 3. Add start server script to ```package.json```
 
-    ```json
+```json
+    {
       "scripts": {
-        "server": "ts-node -r tsconfig-paths/register -r dotenv/config  app/index.ts",
+        "server": "ts-node -r tsconfig-paths/register -r dotenv/config  app/index.ts"
       }
-    ```
+    }
+```
 
 4. In [tsconfig.json](./files/tsconfig.json) pay attention that it includes the following:
 
-    ```json
+```json
     {
         "paths": {
           "cleverJS/*": ["./node_modules/cleverJS/build/*"]
@@ -51,7 +52,7 @@
         
         "include": ["node_modules/cleverJS/**/*"]
     }
-    ```
+```
    
 5. Run ```npm i```
 
@@ -60,7 +61,7 @@
     
     - Initialize application context [App.ts](../../demo/App.ts)
     
-    - Initialize process destroy listener [destroy.ts](../../core/utils/destroy.ts) where you pass all things (e.g. DB connection termination, HTTP server shutdown...) which should be executed before application shutdown.
+    - Initialize process destroyer listener [destroy.ts](../../core/utils/destroy.ts) where you should pass all staff (e.g. DB connection termination, HTTP server shutdown...) which should be executed before application shutdown.
 
 7. [App.ts](../../demo/App.ts) it is place for application context initialization (e.g HTTP server start, establish DB connection, define routes...)    
 

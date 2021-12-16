@@ -19,7 +19,7 @@ In this example we will use SQLite
 
 1. Create `./knexfile.ts`
 
-   ```ts
+```ts
    import { Knex } from 'knex'
    import path from 'path'
  
@@ -40,11 +40,11 @@ In this example we will use SQLite
      development: config,
      production: config,
    }
-   ```
+```
 
 2. Initialize it in [App.ts](../../demo/App.ts)
 
-   ```ts
+```ts
    import { Knex, knex } from 'knex'
    import * as connections from '../knexfile'
 
@@ -72,11 +72,11 @@ In this example we will use SQLite
         }
      }
    }
-   ```
+```
 
 3. Create resource `app/modules/Article/resource/ArticleResource.ts`
 
-   ```ts
+```ts
    import { Knex } from 'knex'
 
    export class ArticleResource {
@@ -93,11 +93,11 @@ In this example we will use SQLite
        })
      }
    }
-   ```
+```
 
 4. Since we have layer for handling with a DB we may change ArticleService.ts to use it.
 
-   ```ts
+```ts
    import { ArticleResource } from './resource/ArticleResource'
 
    export class ArticleService {
@@ -115,7 +115,7 @@ In this example we will use SQLite
        return text.replace('{{author}}', author)
      }
    }
-   ```
+```
 
 At this point your [App.ts](../../demo/App.ts) should looks like this
 
