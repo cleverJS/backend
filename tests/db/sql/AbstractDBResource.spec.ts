@@ -1,7 +1,7 @@
 // eslint-disable-next-line max-classes-per-file
 import { object, string } from 'yup'
 import path from 'path'
-import { knex } from 'knex'
+import knex from 'knex'
 import { AbstractEntity } from '../../../core/entity/AbstractEntity'
 import { EntityFactory } from '../../../core/entity/EntityFactory'
 import { AbstractDBResource } from '../../../core/db/sql/AbstractDBResource'
@@ -40,7 +40,8 @@ const castTest2 = (data: unknown): TTest2 => {
 }
 
 describe('Test AbstractDBResource', () => {
-  const dbPath = path.resolve(`${__dirname}/db.sqlite`)
+  const dbPath = path.resolve('./runtime/db2.sqlite')
+  const conditionDBParse = ConditionDbParser.getInstance()
 
   const connection = knex({
     client: 'sqlite3',
@@ -75,7 +76,7 @@ describe('Test AbstractDBResource', () => {
       title: 'test',
     })
 
-    const resource = new TestResource(connection, new ConditionDbParser(), factory)
+    const resource = new TestResource(connection, conditionDBParse, factory)
 
     const data = resource.mapToDB(item)
     expect({
@@ -92,7 +93,7 @@ describe('Test AbstractDBResource', () => {
       title: 'test',
     }).toEqual(dataDB)
 
-    const resource2 = new Test2Resource(connection, new ConditionDbParser(), factory)
+    const resource2 = new Test2Resource(connection, conditionDBParse, factory)
 
     const dataDB2 = resource2.map({
       entryId: '1',
@@ -109,7 +110,7 @@ describe('Test AbstractDBResource', () => {
     const item2 = factory.create({
       title: 'test',
     })
-    const resource3 = new Test3Resource(connection, new ConditionDbParser(), factory2)
+    const resource3 = new Test3Resource(connection, conditionDBParse, factory2)
 
     const data2 = resource3.mapToDB(item2)
     expect({
@@ -127,8 +128,13 @@ class Test2 extends AbstractEntity<TTest> implements TTest2 {
   public title = ''
 }
 
-class TestResource extends AbstractDBResource<Test> {}
+class TestResource extends AbstractDBResource<Test> {
+  protected table: string = ''
+}
 class Test2Resource extends AbstractDBResource<Test> {
   protected primaryKey = 'entryId'
+  protected table: string = ''
 }
-class Test3Resource extends AbstractDBResource<Test2> {}
+class Test3Resource extends AbstractDBResource<Test2> {
+  protected table: string = ''
+}

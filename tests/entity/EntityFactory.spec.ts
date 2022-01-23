@@ -1,45 +1,11 @@
-import { boolean, number, object, string } from 'yup'
-import { AbstractEntity } from '../../core/entity/AbstractEntity'
 import { EntityFactory } from '../../core/entity/EntityFactory'
-
-interface ITest extends Object {
-  id: number
-  title: string
-  active: boolean
-}
-
-const scheme = object()
-  .defined()
-  .shape({
-    id: number().defined().default(0),
-    title: string().defined().default(''),
-    active: boolean().defined().default(false),
-  })
-
-const castTest = (data: unknown): ITest => {
-  return scheme.noUnknown().cast(data)
-}
-
-class Test extends AbstractEntity<ITest> implements ITest {
-  public id = 0
-  public title = ''
-  public active = false
-
-  #modified: boolean = false
-
-  public setIsModified(value: boolean): void {
-    this.#modified = value
-  }
-
-  public isModified(): boolean {
-    return this.#modified
-  }
-}
+import { castTest, Test } from './Test'
 
 describe('Test EntityFactory', () => {
   it('should create a model', () => {
     const factory = new EntityFactory(Test, castTest)
-    const item = factory.create({
+
+    const payload = {
       id: 1,
       title: 'test',
       active: 1,
@@ -47,7 +13,9 @@ describe('Test EntityFactory', () => {
       complex: {
         title: 'ComplexTitle',
       },
-    })
+    }
+
+    const item = factory.create(payload)
 
     item.setIsModified(true)
     expect(item.isModified()).toBeTruthy()
@@ -60,6 +28,7 @@ describe('Test EntityFactory', () => {
     expect({
       id: 1,
       title: 'test',
+      object: {},
       active: true,
     }).toEqual(data)
   })
@@ -74,6 +43,7 @@ describe('Test EntityFactory', () => {
     expect(item).toEqual({
       id: 1,
       title: 'test',
+      object: {},
       active: false,
     })
 
@@ -84,7 +54,33 @@ describe('Test EntityFactory', () => {
     expect(item).toEqual({
       id: 1,
       title: 'test2',
+      object: {},
       active: false,
     })
+  })
+
+  it('should clone payload on entity creation', () => {
+    const factory = new EntityFactory(Test, castTest)
+
+    const payload = {
+      id: 1,
+      title: 'test',
+      active: 1,
+      object: {
+        id: 2,
+      },
+    }
+
+    const item = factory.create(payload)
+    payload.object.id = 3
+
+    expect({
+      id: 1,
+      title: 'test',
+      active: true,
+      object: {
+        id: 2,
+      },
+    }).toEqual(item.getData())
   })
 })

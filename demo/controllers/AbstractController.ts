@@ -3,8 +3,7 @@ import { settings } from '../configs'
 import { MSG_ACCESS_DENIED } from '../configs/messages'
 import { IAppConnectionInfo } from '../types/WSConnection'
 import { SecurityHelper } from '../modules/security/SecurityHelper'
-
-export interface IProtectDependencies {}
+import { WSServer } from '../../core/ws/WSServer'
 
 export interface IJSendResponse {
   status: 'success' | 'error' | 'fail'
@@ -13,10 +12,10 @@ export interface IJSendResponse {
 }
 
 export abstract class AbstractController {
-  protected readonly deps: IProtectDependencies
+  protected wsServer: WSServer
 
-  protected constructor(deps: IProtectDependencies) {
-    this.deps = deps
+  protected constructor(wsServer: WSServer) {
+    this.wsServer = wsServer
   }
 
   protected response(status: 'success' | 'fail' | 'error', data?: Record<string, any>, message?: string): IJSendResponse {
@@ -62,7 +61,7 @@ export abstract class AbstractController {
     return result
   }
 
-  private static async verifyToken(token: string): Promise<boolean> {
+  protected static async verifyToken(token: string): Promise<boolean> {
     let isAuthorized = false
     const verifiedToken = await SecurityHelper.verifyToken(token, {
       algorithms: [settings.security.jwtToken.algorithm],

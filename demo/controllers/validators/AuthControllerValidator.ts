@@ -1,18 +1,18 @@
-import Validator from 'fastest-validator'
-import { AbstractControllerValidator } from './AbstractControllerValidator'
+import { EValidator } from './enum/ValidatorNameList'
+import { controllerValidator } from './ControllerValidator'
 
-type TValidator =
-  | 'ValidatorTelegram'
-  | 'ValidatorSingIn'
-  | 'ValidatorSingInByToken'
-  | 'ValidatorRefreshToken'
-  | 'ValidatorRegistration'
-  | 'ValidatorForgot'
-  | 'ValidatorReset'
+export class AuthControllerValidator {
+  private static instance: AuthControllerValidator
 
-export class AuthControllerValidator extends AbstractControllerValidator<TValidator> {
-  public constructor() {
-    super()
+  public static init(): AuthControllerValidator {
+    if (!AuthControllerValidator.instance) {
+      AuthControllerValidator.instance = new AuthControllerValidator()
+    }
+
+    return AuthControllerValidator.instance
+  }
+
+  private constructor() {
     this.initValidatorTelegram()
     this.initValidatorSingIn()
     this.initValidatorSingInByToken()
@@ -32,10 +32,10 @@ export class AuthControllerValidator extends AbstractControllerValidator<TValida
       username: { type: 'string', optional: true },
       photo_url: { type: 'string', optional: true },
       $$strict: true,
+      $$async: true,
     }
 
-    const validator = new Validator()
-    this.setValidator('ValidatorTelegram', validator.compile(schema))
+    controllerValidator.initValidator(EValidator.authControllerValidatorTelegram, schema)
   }
 
   protected initValidatorSingIn(): void {
@@ -43,20 +43,20 @@ export class AuthControllerValidator extends AbstractControllerValidator<TValida
       login: { type: 'email' },
       password: { type: 'string' },
       $$strict: true,
+      $$async: true,
     }
 
-    const validator = new Validator()
-    this.setValidator('ValidatorSingIn', validator.compile(schema))
+    controllerValidator.initValidator(EValidator.authControllerValidatorSingIn, schema)
   }
 
   protected initValidatorSingInByToken(): void {
     const schema = {
       token: { type: 'string' },
       $$strict: true,
+      $$async: true,
     }
 
-    const validator = new Validator()
-    this.setValidator('ValidatorSingInByToken', validator.compile(schema))
+    controllerValidator.initValidator(EValidator.authControllerValidatorSingInByToken, schema)
   }
 
   protected initValidatorRefreshToken(): void {
@@ -64,10 +64,10 @@ export class AuthControllerValidator extends AbstractControllerValidator<TValida
       accessToken: { type: 'string' },
       refreshToken: { type: 'string' },
       $$strict: true,
+      $$async: true,
     }
 
-    const validator = new Validator()
-    this.setValidator('ValidatorRefreshToken', validator.compile(schema))
+    controllerValidator.initValidator(EValidator.authControllerValidatorRefreshToken, schema)
   }
 
   protected initValidatorRegistration(): void {
@@ -75,20 +75,20 @@ export class AuthControllerValidator extends AbstractControllerValidator<TValida
       login: { type: 'email' },
       password: { type: 'string' },
       $$strict: true,
+      $$async: true,
     }
 
-    const validator = new Validator()
-    this.setValidator('ValidatorRegistration', validator.compile(schema))
+    controllerValidator.initValidator(EValidator.authControllerValidatorRegistration, schema)
   }
 
   protected initValidatorForgot(): void {
     const schema = {
       email: { type: 'email' },
       $$strict: true,
+      $$async: true,
     }
 
-    const validator = new Validator()
-    this.setValidator('ValidatorForgot', validator.compile(schema))
+    controllerValidator.initValidator(EValidator.authControllerValidatorForgot, schema)
   }
 
   protected initValidatorReset(): void {
@@ -96,9 +96,9 @@ export class AuthControllerValidator extends AbstractControllerValidator<TValida
       token: { type: 'string' },
       password: { type: 'string' },
       $$strict: true,
+      $$async: true,
     }
 
-    const validator = new Validator()
-    this.setValidator('ValidatorReset', validator.compile(schema))
+    controllerValidator.initValidator(EValidator.authControllerValidatorReset, schema)
   }
 }

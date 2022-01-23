@@ -21,13 +21,18 @@
     "no-loops",
     "node",
     "optimize-regex",
+    "regexp",
     "promise",
-    "security"
+    "security",
+    "sonarjs",
+    "sort-export-all"
   ],
   "extends": [
     "eslint:recommended",
     "airbnb-base",
+    "airbnb-typescript/base",
     "plugin:eslint-comments/recommended",
+    "plugin:regexp/recommended",
     "plugin:promise/recommended",
     "plugin:jest/recommended",
     "plugin:node/recommended",
@@ -38,7 +43,9 @@
     // Disable rules from packages above that could interfere with prettier
     "prettier",
     "plugin:prettier/recommended",
-    "plugin:security/recommended"
+    "plugin:security/recommended",
+    "plugin:sort-export-all/recommended",
+    "plugin:sonarjs/recommended"
   ],
   "rules": {
     "@typescript-eslint/no-unused-vars": 0,
@@ -49,6 +56,12 @@
     "@typescript-eslint/no-inferrable-types": 0,
     "@typescript-eslint/no-empty-function": 0,
     "@typescript-eslint/no-empty-interface": 0,
+    "sonarjs/no-collapsible-if": 0,
+    "no-shadow": 0,
+    "@typescript-eslint/lines-between-class-members": 0,
+    "@typescript-eslint/return-await": 0,
+    "@typescript-eslint/no-use-before-define": 0,
+    "import/no-unresolved": 0,
     "node/no-unpublished-import": 0,
     "jest/no-conditional-expect": 0,
     "prefer-destructuring": 0,
@@ -86,7 +99,7 @@
     "no-underscore-dangle": [
       "error",
       {
-        "allow": ["_id"]
+        "allow": ["_id", "_source", "_scroll_id", "_validator"]
       }
     ],
     "linebreak-style": [

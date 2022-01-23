@@ -24,7 +24,7 @@ In this example we will use SQLite
    import path from 'path'
  
    // Path where SQLite db file is  
-   const dbPath = path.resolve(`${__dirname}/runtime/db.sqlite`)
+   const dbPath = path.resolve('./runtime/db.sqlite')
 
    const config = {
      client: 'sqlite3',
@@ -45,8 +45,8 @@ In this example we will use SQLite
 2. Initialize it in [App.ts](../../demo/App.ts)
 
 ```ts
-   import { Knex, knex } from 'knex'
-   import * as connections from '../knexfile'
+   import knex, { Knex } from 'knex'
+   import connections from '../knexfile'
 
    // Get connection config for environment    
    const knexConfig = (connections as any)[
@@ -120,8 +120,8 @@ In this example we will use SQLite
 At this point your [App.ts](../../demo/App.ts) should looks like this
 
 ```ts
-import { Knex, knex } from 'knex'
-import * as connections from '../knexfile'
+import knex, { Knex } from 'knex'
+import connections from '../knexfile'
 import cors from 'fastify-cors'
 import { HttpServer } from 'cleverJS/core/http/HttpServer'
 import { WSServer } from 'cleverJS/core/ws/WSServer'

@@ -9,7 +9,18 @@ interface IConditionOptions {
 }
 
 export class ConditionDbParser {
+  protected static instance: ConditionDbParser
   protected readonly logger = loggerNamespace('ConditionDbParser')
+
+  protected constructor() {}
+
+  public static getInstance(): ConditionDbParser {
+    if (!ConditionDbParser.instance) {
+      ConditionDbParser.instance = new ConditionDbParser()
+    }
+
+    return ConditionDbParser.instance
+  }
 
   public parse(queryBuilder: Knex.QueryBuilder, condition?: Readonly<Condition>): void {
     if (!condition) {

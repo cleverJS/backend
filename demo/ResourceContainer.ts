@@ -10,20 +10,25 @@ import { User } from './modules/user/User'
 import { castUser } from './modules/user/helper'
 import { AuthToken } from './modules/security/token/AuthToken'
 import { castAuthToken } from './modules/security/token/helper'
+import { FileResource } from './modules/file/resource/FileResource'
+import { File } from './modules/file/File'
+import { castFile } from './modules/file/helper'
 
 export class ResourceContainer {
   public readonly userResource: UserResource
   public readonly authTokenResource: AuthTokenResource
   public readonly articleResource: ArticleResource
+  public readonly fileResource: FileResource
 
-  constructor(connection: Knex) {
-    const conditionDbParser = new ConditionDbParser()
+  constructor(connection: Knex<any, unknown[]>) {
+    const conditionDbParser = ConditionDbParser.getInstance()
     const userEntityFactory = new EntityFactory(User, castUser)
     const authTokenEntityFactory = new EntityFactory(AuthToken, castAuthToken)
     const articleEntityFactory = new EntityFactory(Article, castArticle)
 
     this.userResource = new UserResource(connection, conditionDbParser, userEntityFactory)
     this.authTokenResource = new AuthTokenResource(connection, conditionDbParser, authTokenEntityFactory)
-    this.articleResource = new ArticleResource(connection, new ConditionDbParser(), articleEntityFactory)
+    this.articleResource = new ArticleResource(connection, conditionDbParser, articleEntityFactory)
+    this.fileResource = new FileResource(connection, conditionDbParser, new EntityFactory(File, castFile))
   }
 }

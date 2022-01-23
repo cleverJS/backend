@@ -42,8 +42,8 @@ export abstract class AbstractService<E extends IEntity, R extends AbstractResou
     return this.resource.save(item)
   }
 
-  public createEntity(data: Partial<E>): E {
-    return this.resource.createEntity(data)
+  public createEntity(data: Partial<E>, clone: boolean = true): E {
+    return this.resource.createEntity(data, clone)
   }
 
   public async list(paginator: Readonly<Paginator>, condition?: Readonly<Condition>): Promise<E[]> {

@@ -8,8 +8,8 @@ Tool that simplify common development's things:
 - Logging
 - Caching
 
-1. [Wizard guide](/guide/wizard.md) - Step-by-step guide
-3. [Lifecycle](guide/lifecycle.md) - Suggested life cycle (visualization)
+1. [Wizard guide](./guide/wizard.md) - Step-by-step guide
+3. [Lifecycle](./guide/lifecycle.md) - Suggested life cycle (visualization)
 5. [Demo](./demo) - Demo application code
 
 **NOTE:**  There is no restriction.

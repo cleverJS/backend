@@ -1,13 +1,19 @@
-import Validator from 'fastest-validator'
-import { AbstractControllerValidator } from './AbstractControllerValidator'
+import { EValidator } from './enum/ValidatorNameList'
+import { controllerValidator } from './ControllerValidator'
 
-type TValidator = 'ValidatorIdExists'
+export class UserControllerValidator {
+  private static instance: UserControllerValidator
 
-export class UserControllerValidator extends AbstractControllerValidator<TValidator> {
-  public constructor() {
-    super()
+  public static init(): UserControllerValidator {
+    if (!UserControllerValidator.instance) {
+      UserControllerValidator.instance = new UserControllerValidator()
+    }
+
+    return UserControllerValidator.instance
+  }
+
+  private constructor() {
     this.initValidatorList()
-    this.initValidatorIdExists()
     this.initValidatorCreate()
     this.initValidatorUpdate()
   }
@@ -34,20 +40,10 @@ export class UserControllerValidator extends AbstractControllerValidator<TValida
         },
       },
       $$strict: true,
+      $$async: true,
     }
 
-    const validator = new Validator()
-    this.setValidator('ValidatorList', validator.compile(schema))
-  }
-
-  protected initValidatorIdExists(): void {
-    const schema = {
-      id: { type: 'number', positive: true, integer: true, min: 1 },
-      $$strict: true,
-    }
-
-    const validator = new Validator()
-    this.setValidator('ValidatorIdExists', validator.compile(schema))
+    controllerValidator.initValidator(EValidator.userControllerValidatorList, schema)
   }
 
   protected initValidatorCreate(): void {
@@ -58,10 +54,10 @@ export class UserControllerValidator extends AbstractControllerValidator<TValida
       login: { type: 'string' },
       password: { type: 'string' },
       $$strict: true,
+      $$async: true,
     }
 
-    const validator = new Validator()
-    this.setValidator('ValidatorCreate', validator.compile(schema))
+    controllerValidator.initValidator(EValidator.userControllerValidatorCreate, schema)
   }
 
   protected initValidatorUpdate(): void {
@@ -73,9 +69,9 @@ export class UserControllerValidator extends AbstractControllerValidator<TValida
       login: { type: 'string', optional: true },
       password: { type: 'string', optional: true },
       $$strict: true,
+      $$async: true,
     }
 
-    const validator = new Validator()
-    this.setValidator('ValidatorUpdate', validator.compile(schema))
+    controllerValidator.initValidator(EValidator.userControllerValidatorUpdate, schema)
   }
 }

@@ -18,10 +18,12 @@ export abstract class AbstractResource<E extends IEntity> {
   public abstract delete(id: string | number): Promise<boolean>
   public abstract deleteAll(condition?: Readonly<Condition>): Promise<boolean>
   public abstract save(item: E): Promise<boolean>
+  public abstract insert(data: Record<string, any>): Promise<any | null>
+  public abstract update(condition: Readonly<Condition>, data: Record<string, any>): Promise<boolean>
   public abstract batchInsert(item: E[], chunkSize?: number): Promise<string[] | number[] | any>
   public abstract batchInsertRaw(rows: Record<string, any>[], chunkSize?: number): Promise<string[] | number[] | any>
   public abstract truncate(): Promise<any>
-  public abstract createEntity(data: unknown): E
+  public abstract createEntity(data: unknown, clone: boolean): E
   public abstract map(data: Record<string, any>): any
   public abstract mapToDB(item: E): any
 }

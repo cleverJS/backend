@@ -22,11 +22,7 @@ export class UserResource extends AbstractDBResource<User> {
   protected table = 'user'
 
   public async findByTelegramId(id: number): Promise<User | null> {
-    const query = this.connection(this.table).where(
-      this.connection.raw('JSON_EXTRACT(data, "$.telegramId") = :key', {
-        key: id,
-      })
-    )
+    const query = this.connection(this.table).whereJsonPath(UserResourceColumns.dataColumn, '$.telegramId', '=', id)
 
     const rows = await query
 
@@ -44,12 +40,7 @@ export class UserResource extends AbstractDBResource<User> {
   public async findByGoogleId(id: string, email?: string): Promise<User | null> {
     const { loginColumn } = UserResourceColumns
 
-    const query = this.connection(this.table).where(
-      this.connection.raw('JSON_EXTRACT(data, "$.googleId") = :key', {
-        key: id,
-      })
-    )
-
+    const query = this.connection(this.table).whereJsonPath(UserResourceColumns.dataColumn, '$.googleId', '=', id)
     if (email) {
       query.orWhere(loginColumn, '=', email)
     }

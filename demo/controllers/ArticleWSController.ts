@@ -9,35 +9,32 @@ import { WSResponse } from '../../core/ws/WSResponse'
 import { IAppConnectionInfo } from '../types/WSConnection'
 import { route } from '../../core/decorators/routes'
 import { sleep } from '../../core/utils/sleep'
+import { AbstractCRUDController } from './AbstractCRUDController'
 
-interface IDependencies {
-  wsServer: WSServer
-  articleService: ArticleService
+interface IArticleReplacePayload {
+  text: string
+  author: string
 }
 
-export class ArticleWSController {
-  protected readonly deps: IDependencies
+interface IArticleAuthorPayload {
+  page: number
+  itemsPerPage: number
+}
+
+export class ArticleWSController extends AbstractCRUDController<ArticleService> {
   protected readonly logger = loggerNamespace('ArticleWSController')
 
-  public constructor(deps: IDependencies) {
-    this.deps = deps
+  public constructor(wsServer: WSServer, service: ArticleService) {
+    super(wsServer, service, 'article')
+    this.onWSConnect()
     this.onEvents()
-
-    this.deps.wsServer.onConnect(async (client: WebSocket) => {
-      const connection = this.deps.wsServer.connectionInfoMap.get(client)
-      if (connection) {
-        connection.state.subscriptions = {
-          article: false,
-        }
-      }
-    })
   }
 
   @route('article', 'replace')
-  public actionReplace = async (request: WSRequest, connection: IAppConnectionInfo): Promise<Record<string, any>> => {
+  public actionReplace = async (request: WSRequest<IArticleReplacePayload>, connection: IAppConnectionInfo): Promise<Record<string, any>> => {
     const { text, author } = request.payload
 
-    const result = this.deps.articleService.replaceAuthor(text, author)
+    const result = this.service.replaceAuthor(text, author)
 
     return {
       status: 'success',
@@ -48,14 +45,14 @@ export class ArticleWSController {
   }
 
   @route('article', 'author')
-  public actionAuthorList = async (request: WSRequest, connection: IAppConnectionInfo): Promise<Record<string, any>> => {
+  public actionAuthorList = async (request: WSRequest<IArticleAuthorPayload>, connection: IAppConnectionInfo): Promise<Record<string, any>> => {
     const { page = 1, itemsPerPage } = request.payload
 
     const paginator = new Paginator()
     paginator.setItemsPerPage(itemsPerPage)
     paginator.setCurrentPage(page)
 
-    const result = await this.deps.articleService.fetchAuthorList(paginator)
+    const result = await this.service.fetchAuthorList(paginator)
 
     return {
       success: true,
@@ -65,21 +62,10 @@ export class ArticleWSController {
     }
   }
 
-  @route('article', 'fetch-list')
-  public actionFetchList = async (request: WSRequest, connection: IAppConnectionInfo): Promise<Record<string, any>> => {
-    const { page = 1, itemsPerPage } = request.payload
-
-    const paginator = new Paginator()
-    paginator.setItemsPerPage(itemsPerPage)
-    paginator.setCurrentPage(page)
-
-    const result = await this.deps.articleService.list(paginator)
-
+  @route('article', 'test')
+  public actionTest = async (request: WSRequest, connection: IAppConnectionInfo): Promise<Record<string, any>> => {
     return {
       success: true,
-      data: {
-        result,
-      },
     }
   }
 
@@ -101,9 +87,20 @@ export class ArticleWSController {
     }
   }
 
+  protected onWSConnect() {
+    this.wsServer.onConnect(async (client: WebSocket) => {
+      const connection = this.wsServer.connectionInfoMap.get(client)
+      if (connection) {
+        connection.state.subscriptions = {
+          article: false,
+        }
+      }
+    })
+  }
+
   protected onEvents(): void {
-    this.deps.articleService.eventEmitter.on('new', (item) => {
-      this.deps.wsServer.broadcast(async (connection: IAppConnectionInfo) => {
+    this.service.eventEmitter.on('new', (item) => {
+      this.wsServer.broadcast(async (connection: IAppConnectionInfo) => {
         let result = null
         if (connection.state.subscriptions.article) {
           result = WSResponse.createEventResponse('article:new', { data: item })

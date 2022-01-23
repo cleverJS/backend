@@ -3,6 +3,7 @@ syntax: glob
 .idea
 .env
 node_modules
+libs
 build
 runtime
 tmp

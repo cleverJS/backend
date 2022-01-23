@@ -1,8 +1,9 @@
-import { knex } from 'knex'
+import knex from 'knex'
 import { ConditionDbParser } from '../../../../core/db/sql/condition/ConditionDbParser'
 import { Condition, TConditionOperator } from '../../../../core/db/Condition'
 
 describe('Test Conditions', () => {
+  const conditionDBParse = ConditionDbParser.getInstance()
   let condition1: Condition
   let condition2: Condition
   let condition3: Condition
@@ -74,7 +75,7 @@ describe('Test Conditions', () => {
   })
 
   it('should create a mysql or condition', () => {
-    const parser = new ConditionDbParser()
+    const parser = conditionDBParse
     const connection = knex({
       client: 'mysql',
     })
@@ -101,7 +102,7 @@ describe('Test Conditions', () => {
   })
 
   it('should add or condition after creation', () => {
-    const parser = new ConditionDbParser()
+    const parser = conditionDBParse
     const connection = knex({
       client: 'mysql',
     })
@@ -124,7 +125,7 @@ describe('Test Conditions', () => {
   })
 
   it('should add and condition after creation', () => {
-    const parser = new ConditionDbParser()
+    const parser = conditionDBParse
     const connection = knex({
       client: 'mysql',
     })
@@ -144,7 +145,7 @@ describe('Test Conditions', () => {
   })
 
   it('should add and condition after creation 2', () => {
-    const parser = new ConditionDbParser()
+    const parser = conditionDBParse
     const connection = knex({
       client: 'mysql',
     })
@@ -171,7 +172,7 @@ describe('Test Conditions', () => {
   })
 
   it('should add like', () => {
-    const parser = new ConditionDbParser()
+    const parser = conditionDBParse
     const connection = knex({
       client: 'mysql',
     })
@@ -199,5 +200,19 @@ describe('Test Conditions', () => {
 
     parser.parse(qb, condition4)
     expect(qb.toQuery()).toEqual("select * from `test` where (`a` not like 'test%')")
+  })
+
+  it('should cloned', () => {
+    const condition = new Condition({ conditions: [{ operator: TConditionOperator.NOT_LIKE, field: 'a', value: 'test%' }] })
+    condition.setSort('id', 'asc')
+
+    const conditionCloned = condition.clone()
+    conditionCloned.clearSort()
+    condition.addCondition({ conditions: [{ operator: TConditionOperator.EQUALS, field: 'b', value: 'test' }] })
+
+    expect(condition.getConditionItemList()?.conditions.length).toEqual(2)
+    expect(condition.getSort()).toEqual([{ sort: 'id', dir: 'asc' }])
+    expect(conditionCloned.getSort()).toEqual([])
+    expect(conditionCloned.getConditionItemList()?.conditions.length).toEqual(1)
   })
 })

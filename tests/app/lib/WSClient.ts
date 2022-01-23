@@ -27,16 +27,19 @@ interface IResponseHeader {
   type?: ResponseType
 }
 
-interface TResponse<T extends Record<string, any>> {
-  header: IResponseHeader
-  payload: Record<string, any>
+export interface TResult<T extends Record<string, any>> {
   status: 'success' | 'error' | 'fail'
   data: T
   error?: string
 }
 
-interface TRequest {
-  resolve: (payload: TResponse<any> | PromiseLike<TResponse<any>>) => void
+export interface TResponse<T extends Record<string, any>> {
+  header: IResponseHeader
+  payload: TResult<T>
+}
+
+export interface TRequest {
+  resolve: (payload: TResult<any> | PromiseLike<TResult<any>>) => void
   reject: (payload: Error) => void
   header: IRequestHeader
   payload: Record<string, any>
@@ -56,10 +59,13 @@ export class WSClient {
   protected readonly shouldReconnect: boolean = true
   protected readonly logger = loggerNamespace('WSClient')
   protected readonly wsUrl: string
-  protected ws: WebSocket | null
+  protected ws: WebSocket | null = null
   protected requests: Map<string, TRequest> = new Map()
   protected delayAttempt: number = 1000
   protected requestTimeoutMS: number
+  protected dropRequestIntervalId: NodeJS.Timer | null = null
+  protected waitForSocketStateTimeoutId: NodeJS.Timer | null = null
+  protected requestsQueueCheckTimerId: NodeJS.Timer | null = null
 
   /**
    */
@@ -68,9 +74,21 @@ export class WSClient {
     this.shouldReconnect = reconnect
     this.debug = debug
     this.wsUrl = wsUrl
-    this.ws = this.connect()
     this.dropRequests()
   }
+
+  /**
+   */
+  public connect = async (): Promise<void> => {
+    this.ws = new WebSocket(this.wsUrl)
+    this.ws.addEventListener('error', this.handleError)
+    this.ws.addEventListener('open', this.handleOpen)
+    this.ws.addEventListener('close', this.handleClose)
+    this.ws.addEventListener('message', this.handleMessage)
+    await this.isConnectionOpen.isReady()
+  }
+
+  public modifyResponse = async (response: TResponse<Record<string, any>>, request?: TRequest): Promise<void> => {}
 
   /**
    */
@@ -79,7 +97,10 @@ export class WSClient {
     action: string,
     payload: Record<string, any> = {},
     returnError = false
-  ): Promise<TResponse<T>> {
+  ): Promise<TResult<T>> {
+    if (!this.isConnected) {
+      this.logger.warn('Client is not connected')
+    }
     const uuid = uuid4()
     const header = { uuid, service, action }
     const start = Date.now()
@@ -126,26 +147,35 @@ export class WSClient {
     }
   }
 
+  public async isRequestsQueueEmpty() {
+    const result = await new Promise((resolve) => {
+      this.requestsQueueCheckTimerId = setInterval(() => {
+        if (this.requests.size === 0) {
+          this.logger.info('empty')
+          resolve(true)
+          return
+        }
+        this.logger.info('not empty')
+      }, 1000)
+    })
+
+    if (this.requestsQueueCheckTimerId) {
+      clearInterval(this.requestsQueueCheckTimerId)
+    }
+
+    return result
+  }
+
   /**
    */
   protected async send(header: IRequestHeader, payload: Record<string, any> = {}) {
     const message = JSON.stringify({ header, payload })
 
     await this.isConnectionOpen.isReady()
+
     if (this.ws) {
       this.ws.send(message)
     }
-  }
-
-  /**
-   */
-  protected connect = (): WebSocket => {
-    this.ws = new WebSocket(this.wsUrl)
-    this.ws.addEventListener('error', this.handleError)
-    this.ws.addEventListener('open', this.handleOpen)
-    this.ws.addEventListener('close', this.handleClose)
-    this.ws.addEventListener('message', this.handleMessage)
-    return this.ws
   }
 
   /**
@@ -209,7 +239,7 @@ export class WSClient {
 
   /**
    */
-  protected handleMessage = (event: MessageEvent) => {
+  protected handleMessage = async (event: MessageEvent) => {
     try {
       if (typeof event.data !== 'string') {
         throw new Error('Unsupported data type')
@@ -219,28 +249,25 @@ export class WSClient {
       const data: TResponse<Record<string, any>> = JSON.parse(event.data) || {}
       if (data.header) {
         const { uuid } = data.header
+        await this.modifyResponse(data, this.requests.get(uuid))
         const payload = data.payload || {}
-        let { status } = payload
-
-        if (data.error) {
-          status = 'error'
-          payload.error = data.error
-        }
+        const { status } = payload
 
         const error = ['error', 'fail'].includes(status) ? payload.error || 'System Error' : null
 
         const request = this.requests.get(uuid)
         const returnError = request && request.returnError
 
-        if (error && !returnError) {
+        if (error && returnError) {
           if (request) {
             const { header } = request
-            this.logger.error('WSClient.handleMessage error', {
+            this.logger.error('WSClient.handleMessage', {
               request: { header, payload: request.payload },
               response: { payload, header: data.header },
             })
 
-            if (returnError && data.header.type === 'response') {
+            if (data.header.type === 'response') {
+              this.processDebug(request)
               this.resolveRequest(data).catch(this.logger.error)
             } else {
               request.reject(new Error(error))
@@ -312,12 +339,23 @@ export class WSClient {
       this.ws.removeEventListener('open', this.handleOpen)
       this.ws.removeEventListener('close', this.handleClose)
       this.ws.removeEventListener('message', this.handleMessage)
+      if (this.dropRequestIntervalId) {
+        clearInterval(this.dropRequestIntervalId)
+      }
+
+      if (this.waitForSocketStateTimeoutId) {
+        clearTimeout(this.waitForSocketStateTimeoutId)
+      }
+
+      if (this.requestsQueueCheckTimerId) {
+        clearInterval(this.requestsQueueCheckTimerId)
+      }
     }
   }
 
   protected dropRequests() {
     if (this.requestTimeoutMS) {
-      setInterval(() => {
+      this.dropRequestIntervalId = setInterval(() => {
         for (const [uuid, request] of this.requests) {
           if (request.ttl && Date.now() >= request.ttl) {
             request.reject(new Error('Timeout'))
@@ -330,7 +368,7 @@ export class WSClient {
 
   protected waitForSocketState(socket: WebSocket, state: 0 | 1 | 2 | 3) {
     return new Promise((resolve, reject) => {
-      setTimeout(() => {
+      this.waitForSocketStateTimeoutId = setTimeout(() => {
         if (socket.readyState === state) {
           resolve(true)
         } else {

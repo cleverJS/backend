@@ -56,12 +56,12 @@ export class Condition {
     }
   }
 
-  public addSort(sort: string, dir: TSortDirection) {
+  public addSort(sort: string, dir: TSortDirection = 'asc') {
     this.sort.push({ sort, dir })
     return this
   }
 
-  public setSort(sort: string, dir: TSortDirection) {
+  public setSort(sort: string, dir: TSortDirection = 'asc') {
     this.sort = []
     return this.addSort(sort, dir)
   }

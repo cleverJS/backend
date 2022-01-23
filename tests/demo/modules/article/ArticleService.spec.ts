@@ -1,32 +1,12 @@
-import path from 'path'
-import { Knex, knex } from 'knex'
-import * as connections from '../../../../knexfile'
-import { ConditionDbParser } from '../../../../core/db/sql/condition/ConditionDbParser'
-import { EntityFactory } from '../../../../core/entity/EntityFactory'
 import { Condition, TConditionOperator } from '../../../../core/db/Condition'
 import { Paginator } from '../../../../core/utils/Paginator'
-import { ArticleResource } from '../../../../demo/modules/article/resource/ArticleResource'
-import { Article } from '../../../../demo/modules/article/Article'
-import { ArticleService } from '../../../../demo/modules/article/ArticleService'
-import { castArticle } from '../../../../demo/modules/article/helper'
-import { FSWrapper } from '../../../../core/utils/fsWrapper'
-import { logger } from '../../../../core/logger/logger'
-import { ILoggerConfig } from '../../../../core/logger/config'
-import { TransportWinston } from '../../../../core/logger/transport/TransportWinston'
-import { cacheContainer } from '../../../../demo/CacheContainer'
-
-const knexConfig = (connections as any)[process.env.NODE_ENV || 'development'] as Knex.Config
-const connectionRecord = knexConfig.connection as Knex.Sqlite3ConnectionConfig
-
-const runtimeDir = path.resolve(`${__dirname}/../runtime`)
-logger.setConfig({
-  debug: (process.env.APP_DEBUG || 'false') === 'true',
-  info: true,
-  warn: true,
-} as ILoggerConfig)
-logger.addTransport(new TransportWinston(runtimeDir))
+import { demoAppContainer } from '../../../setup/DemoAppContainer'
 
 describe('Test AbstractDBResource and AbstractService', () => {
+  const connection = demoAppContainer.connection
+  const service = demoAppContainer.serviceContainer.articleService
+  const resource = demoAppContainer.resourceContainer.articleResource
+
   const payload1 = {
     title: 'The Fundamentals of Mathematical Analysis I',
     author: 'G. M. Fikhtengolts',
@@ -42,13 +22,7 @@ describe('Test AbstractDBResource and AbstractService', () => {
     author: 'G. M. Fikhtengolts',
   }
 
-  const connection = knex(knexConfig)
-  const resource = new ArticleResource(connection, new ConditionDbParser(), new EntityFactory(Article, castArticle))
-  const service = new ArticleService(resource)
-
   beforeAll(async () => {
-    FSWrapper.removeSync(connectionRecord.filename)
-    FSWrapper.createFileSync(connectionRecord.filename)
     await connection.schema.createTable('article', (t) => {
       t.increments('id').unsigned().primary()
       t.string('title', 255)
@@ -63,8 +37,7 @@ describe('Test AbstractDBResource and AbstractService', () => {
   })
 
   afterAll(async () => {
-    FSWrapper.removeSync(connectionRecord.filename)
-    await cacheContainer.clear()
+    await demoAppContainer.destroy()()
   })
 
   test('should insert item', async () => {

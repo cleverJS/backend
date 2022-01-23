@@ -16,7 +16,7 @@ import { ILoggerConfig } from 'cleverJS/core/logger/config'
 import { TransportWinston } from 'cleverJS/core/logger/transport/TransportWinston'
 import { TransportConsole } from 'cleverJS/core/logger/transport/TransportConsole'
 
-const runtimeDir = path.resolve(`${__dirname}/../runtime`)
+const runtimeDir = path.resolve('./../runtime')
 
 // In config we may set which levels it should log or skip 
 

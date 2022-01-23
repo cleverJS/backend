@@ -1,14 +1,17 @@
 import { Knex } from 'knex'
 import path from 'path'
 import { ISettings } from './SettingsInterface'
-import * as connections from '../../knexfile'
+import connections from '../../knexfile'
 
 const knexConfig = (connections as any)[process.env.NODE_ENV || 'development'] as Knex.Config
 
+const dirname = path.resolve()
+const baseDir = dirname
+
 export const defaults: ISettings = {
-  baseDir: path.resolve(`${__dirname}/../`),
-  runtimeDir: path.resolve(`${__dirname}/../../runtime`),
-  runtimeTestDir: path.resolve(`${__dirname}/../../runtime/test`),
+  baseDir: path.resolve(`${baseDir}`),
+  runtimeDir: path.resolve(`${baseDir}/runtime`),
+  runtimeTestDir: path.resolve(`${baseDir}/runtime/test`),
 
   logger: {
     debug: false,
@@ -37,8 +40,8 @@ export const defaults: ISettings = {
 
   security: {
     jwtToken: {
-      privateKey: path.join(__dirname, './keys/default/rs256.key'),
-      publicKey: path.join(__dirname, './keys/default/rs256.pub.key'),
+      privateKey: path.join(baseDir, '/demo/configs/keys/default/rs256.key'),
+      publicKey: path.join(baseDir, '/demo/configs/keys/default/rs256.pub.key'),
       algorithm: 'RS256',
     },
   },

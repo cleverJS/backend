@@ -23,11 +23,4 @@ export class ArticleResource extends AbstractDBResource<Article> {
     `
     return this.connection.raw(query)
   }
-
-  public map(data: Record<string, any>): any {
-    if (this.primaryKey !== 'id' && data[this.primaryKey]) {
-      data.id = data[this.primaryKey]
-    }
-    return data
-  }
 }

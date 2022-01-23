@@ -1,10 +1,10 @@
+import * as fs from 'fs'
 import * as argon2 from 'argon2'
-import jwt, { VerifyErrors, VerifyOptions } from 'jsonwebtoken'
+import jwt, { VerifyOptions } from 'jsonwebtoken'
 import crypto from 'crypto'
 import { v4 as uuidV4 } from 'uuid'
 import { logger } from '../../../core/logger/logger'
 import { settings } from '../../configs'
-import * as fs from "fs";
 
 export interface ITokenInterface {
   data: {
@@ -69,25 +69,23 @@ export class SecurityHelper {
   public static async verifyToken(token: string, options?: VerifyOptions): Promise<ITokenInterface | null> {
     try {
       const key = fs.readFileSync(settings.security.jwtToken.publicKey, 'utf8')
-      return await new Promise((resolve, reject) =>
-        jwt.verify(token, key, options, (err: VerifyErrors | null, decoded?: Record<string, any>) => {
+      return await new Promise((resolve, reject) => {
+        jwt.verify(token, key, options, (err, decoded?) => {
           if (err) {
             if (err.name === 'TokenExpiredError') {
               logger.info(`Token has expired ${token}`)
             } else {
               logger.error(err)
             }
-            reject(err)
-            return
-          }
 
-          if (typeof decoded === 'object') {
+            reject(err)
+          } else if (typeof decoded === 'object') {
             resolve(decoded as ITokenInterface)
-            return
+          } else {
+            reject(null)
           }
-          reject(null)
         })
-      )
+      })
     } catch (e) {
       return null
     }

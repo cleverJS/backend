@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events'
 import TypedEmitter from 'typed-emitter'
-import WebSocket from 'ws'
+import WebSocket, { WebSocketServer } from 'ws'
 import { types } from 'util'
 import { v4 as uuidV4 } from 'uuid'
 import { Server, IncomingMessage } from 'http'
@@ -25,7 +25,7 @@ export interface IConnectionInfo {
 
 export type RequestHandler = (request: WSRequest, connectionInfo: IConnectionInfo, client: WebSocket) => Promise<Record<string, any>>
 
-interface IWSServerEvents {
+type IWSServerEvents = {
   [EVENT_CONNECT]: (client: WebSocket) => void
   [EVENT_DISCONNECT]: (connectionInfo: IConnectionInfo) => void
 }
@@ -40,7 +40,7 @@ export class WSServer {
   protected readonly handlers: Map<string, RequestHandler> = new Map()
 
   public constructor(config: IWSConfig, server?: Server) {
-    this.bus = new EventEmitter()
+    this.bus = new EventEmitter() as TypedEmitter<IWSServerEvents>
     this.keepAliveTimeout = config.keepalive || KEEP_ALIVE_DEFAULT
     this.ws = this.init(config, server)
   }
@@ -70,8 +70,13 @@ export class WSServer {
         if (client.readyState === WebSocket.OPEN) {
           client.send(response.toString())
         } else if (client.readyState === WebSocket.CLOSED || client.readyState === WebSocket.CLOSING) {
+          const info = this.connectionInfoMap.get(client)
           this.logger.warn('force closing')
-          this.connectionInfoMap.delete(client)
+          if (info) {
+            this.logger.warn(`clear connection ${JSON.stringify(info)}`)
+            this.connectionInfoMap.delete(client)
+          }
+
           client.terminate()
         } else {
           this.logger.error(new Error(`connection is not open: '${client.readyState}'`))
@@ -133,13 +138,10 @@ export class WSServer {
    * @param client
    */
   protected handleMessage(client: WebSocket): void {
-    client.on('message', async (message: string) => {
-      let requestObject: IWSRequest
+    client.on('message', async (message: any) => {
+      const requestObject: IWSRequest | null = this.requestMessageToObject(message)
 
-      try {
-        requestObject = JSON.parse(message)
-      } catch (e) {
-        this.logger.error('Request parse error:', e)
+      if (!requestObject) {
         return
       }
 
@@ -189,8 +191,12 @@ export class WSServer {
   }
 
   protected async sendError(client: WebSocket, message: string, requestUUID: string | number): Promise<void> {
-    const response = await WSResponse.create(requestUUID, {})
-    response.error = message
+    const payload = {
+      status: 'fail',
+      error: message,
+    }
+
+    const response = await WSResponse.create(requestUUID, payload)
     return this.send(client, response)
   }
 
@@ -221,9 +227,9 @@ export class WSServer {
     const { port, path } = config
     let ws: WebSocket.Server
     if (server) {
-      ws = new WebSocket.Server({ server, path })
+      ws = new WebSocketServer({ server, path })
     } else {
-      ws = new WebSocket.Server({ path, port, noServer: true })
+      ws = new WebSocketServer({ path, port, noServer: true })
     }
 
     this.logger.info(`started on ws://0.0.0.0:${port}${path}`)
@@ -283,6 +289,24 @@ export class WSServer {
   protected isAlive(client: WebSocket) {
     // @ts-ignore
     return client.keepAlive
+  }
+
+  protected requestMessageToObject(message: any) {
+    let requestObject: IWSRequest | null = null
+
+    try {
+      if (Buffer.isBuffer(message)) {
+        requestObject = JSON.parse(message.toString())
+      } else if (typeof message === 'string') {
+        requestObject = JSON.parse(message)
+      } else {
+        this.logger.error('Type of message unknown')
+      }
+    } catch (e) {
+      this.logger.error('Request parse error:', e)
+    }
+
+    return requestObject
   }
 
   public static async gracefulClose(client: WebSocket): Promise<void> {

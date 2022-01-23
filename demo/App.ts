@@ -1,4 +1,4 @@
-import { Knex, knex } from 'knex'
+import knex from 'knex'
 import cors from 'fastify-cors'
 import { EventEmitter } from 'events'
 import TypedEmitter from 'typed-emitter'
@@ -10,13 +10,14 @@ import { RouteContainer } from './RouteContainer'
 import { HttpServer } from '../core/http/HttpServer'
 import { loggerNamespace } from '../core/logger/logger'
 import { AppEvents } from './types/Events'
+import { cacheContainer } from './CacheContainer'
 
 export class App {
   protected readonly logger = loggerNamespace('App')
   protected readonly httpServer: HttpServer
-  protected readonly connection: Knex
+  protected readonly connection
   protected readonly wsServer: WSServer
-  protected readonly appEventBus: TypedEmitter<AppEvents> = new EventEmitter()
+  protected readonly appEventBus: TypedEmitter<AppEvents> = new EventEmitter() as TypedEmitter<AppEvents>
 
   public constructor(settings: ISettings) {
     this.httpServer = new HttpServer({ port: settings.websocket.port, host: 'localhost' })
@@ -24,7 +25,8 @@ export class App {
     const server = this.httpServer.getInstance()
     this.wsServer = new WSServer(settings.websocket, server)
 
-    this.connection = knex(settings.connection)
+    const config = settings.connection
+    this.connection = knex(config)
 
     const resourceContainer = new ResourceContainer(this.connection)
     const serviceContainer = new ServiceContainer(resourceContainer, this.appEventBus)
@@ -35,7 +37,7 @@ export class App {
     await this.httpServer.start()
     try {
       const rows = await this.connection.raw('SELECT 1 as result')
-      if (!rows || !rows.length || rows[0]['result'] !== 1) {
+      if (!rows || !rows.length || rows[0].result !== 1) {
         throw new Error()
       }
       this.logger.info('DB connection successful')
@@ -51,6 +53,7 @@ export class App {
     return async (): Promise<void> => {
       await this.wsServer.destroy()
       await this.httpServer.destroy()
+      await cacheContainer.clear()
       await new Promise((resolve) => {
         this.connection.destroy(() => {
           resolve(true)

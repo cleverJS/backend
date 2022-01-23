@@ -34,9 +34,9 @@ export abstract class AbstractElasticIndex {
       responseExists = await this.client.indices.exists({ index })
       if (!responseExists || !responseExists.body) {
         const indexParams = this.createIndexParams(index)
-        indexParams['index'] = index
+        indexParams.index = index
         const response = await this.client.indices.create(indexParams)
-        result = response && response.statusCode === 200 && response.body['acknowledged']
+        result = response && response.statusCode === 200 && response.body.acknowledged
 
         if (result && updateAlias) {
           await this.updateAlias(index)
@@ -55,7 +55,7 @@ export abstract class AbstractElasticIndex {
       const responseExists = await this.client.indices.exists({ index })
       if (responseExists && responseExists.body) {
         const responseDelete = await this.client.indices.delete({ index })
-        return responseDelete && responseDelete.statusCode === 200 && responseDelete.body['acknowledged']
+        return responseDelete && responseDelete.statusCode === 200 && responseDelete.body.acknowledged
       }
     } catch (e) {
       this.logger.error('delete index', e)
@@ -212,7 +212,7 @@ export abstract class AbstractElasticIndex {
 
       if (bulkResponse.items && bulkResponse.items.length) {
         for (const item of bulkResponse.items) {
-          result.push(item.index['_id'])
+          result.push(item.index._id)
         }
       }
     } catch (e) {
@@ -255,10 +255,10 @@ export abstract class AbstractElasticIndex {
     try {
       const { body } = await this.client.get(params, { ignore: [404] })
 
-      if (body && body['_id'] && body['_source']) {
+      if (body && body._id && body._source) {
         result = {
           id,
-          ...body['_source'],
+          ...body._source,
         }
       }
     } catch (e) {
@@ -269,8 +269,8 @@ export abstract class AbstractElasticIndex {
   }
 
   public async *searchDocumentBulk(params: Record<string, any>) {
-    params['index'] = this.alias
-    params['scroll'] = '10s'
+    params.index = this.alias
+    params.scroll = '10s'
 
     let response = await this.client.search(params)
 
@@ -285,12 +285,12 @@ export abstract class AbstractElasticIndex {
         yield hit
       }
 
-      if (!response.body['_scroll_id']) {
+      if (!response.body._scroll_id) {
         break
       }
 
       response = await this.client.scroll({
-        scroll_id: response.body['_scroll_id'],
+        scroll_id: response.body._scroll_id,
         scroll: params.scroll,
       })
     }

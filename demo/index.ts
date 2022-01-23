@@ -7,7 +7,7 @@ import { ILoggerConfig } from '../core/logger/config'
 import { TransportWinston } from '../core/logger/transport/TransportWinston'
 
 function initLogger() {
-  const runtimeDir = path.resolve(`${__dirname}/../runtime`)
+  const runtimeDir = path.resolve('./../runtime')
   logger.setConfig({
     debug: (process.env.APP_DEBUG || 'false') === 'true',
     info: true,

@@ -1,24 +1,18 @@
 import { UserService } from '../modules/user/UserService'
-import { UserControllerValidator } from './validators/UserControllerValidator'
-import { IProtectDependencies } from '../modules/security/auth/AuthService'
 import { IAppConnectionInfo } from '../types/WSConnection'
-import { AbstractController, IJSendResponse } from './AbstractController'
+import { IJSendResponse } from './AbstractController'
 import { WSServer } from '../../core/ws/WSServer'
 import { WSRequest } from '../../core/ws/WSRequest'
 import { MSG_ACCESS_DENIED } from '../configs/messages'
+import { AbstractCRUDController } from './AbstractCRUDController'
+import { EValidator } from './validators/enum/ValidatorNameList'
+import { controllerValidator } from './validators/ControllerValidator'
+import { UserControllerValidator } from './validators/UserControllerValidator'
 
-interface IDependencies extends IProtectDependencies {
-  userService: UserService
-  wsServer: WSServer
-}
-
-export class UserController extends AbstractController {
-  protected readonly deps!: IDependencies
-  protected validator: UserControllerValidator
-
-  public constructor(deps: IDependencies) {
-    super(deps)
-    this.validator = new UserControllerValidator()
+export class UserController extends AbstractCRUDController<UserService> {
+  public constructor(wsServer: WSServer, service: UserService) {
+    super(wsServer, service, 'user')
+    UserControllerValidator.init()
     this.init()
   }
 
@@ -29,7 +23,7 @@ export class UserController extends AbstractController {
       return this.responseError(MSG_ACCESS_DENIED)
     }
 
-    const validatorResult = await this.validator.validate('ValidatorIdExists', request.payload)
+    const validatorResult = await controllerValidator.validate(EValidator.idExists, request.payload)
 
     if (validatorResult !== true) {
       return this.responseFail(validatorResult)
@@ -37,13 +31,13 @@ export class UserController extends AbstractController {
 
     const { id } = request.payload
 
-    const result = await this.deps.userService.findById(id)
+    const result = await this.service.findById(id)
     return this.responseSuccess({
       item: result ? result.getNonSecureData() : null,
     })
   }
 
   protected init(): void {
-    this.deps.wsServer.onRequest('user', 'fetchById', this.actionFetchById)
+    this.wsServer.onRequest('user', 'fetchById', this.actionFetchById)
   }
 }

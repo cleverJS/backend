@@ -220,8 +220,8 @@ export class ArticleResource extends AbstractDBResource<Article> {
 Our [App.ts](../../demo/App.ts) should be changed in the following way:
 
 ```ts
-import { Knex, knex } from 'knex'
-import * as connections from '../knexfile'
+import knex, { Knex } from 'knex'
+import connections from '../knexfile'
 import cors from 'fastify-cors'
 import { HttpServer } from 'cleverJS/core/http/HttpServer'
 import { WSServer } from 'cleverJS/core/ws/WSServer'

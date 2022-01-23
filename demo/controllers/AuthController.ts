@@ -1,6 +1,6 @@
 import { types } from 'util'
 import { RouteHandlerMethod } from 'fastify'
-import { AbstractController, IJSendResponse, IProtectDependencies } from './AbstractController'
+import { AbstractController, IJSendResponse } from './AbstractController'
 import { HttpServer } from '../../core/http/HttpServer'
 import { UserService } from '../modules/user/UserService'
 import { AuthService, ITelegramPayload } from '../modules/security/auth/AuthService'
@@ -11,22 +11,21 @@ import { IAppConnectionInfo } from '../types/WSConnection'
 import { EUserRoles, User } from '../modules/user/User'
 import { MSG_ACCESS_DENIED, MSG_EXISTS } from '../configs/messages'
 import { loggerNamespace } from '../../core/logger/logger'
-
-interface IDependencies extends IProtectDependencies {
-  http: HttpServer
-  authService: AuthService
-  userService: UserService
-  wsServer: WSServer
-}
+import { EValidator } from './validators/enum/ValidatorNameList'
+import { controllerValidator } from './validators/ControllerValidator'
 
 export class AuthController extends AbstractController {
   protected readonly logger = loggerNamespace('AuthController')
-  protected readonly deps!: IDependencies
-  protected validator: AuthControllerValidator
+  protected http: HttpServer
+  protected authService: AuthService
+  protected userService: UserService
 
-  public constructor(deps: IDependencies) {
-    super(deps)
-    this.validator = new AuthControllerValidator()
+  public constructor(wsServer: WSServer, http: HttpServer, authService: AuthService, userService: UserService) {
+    super(wsServer)
+    this.http = http
+    this.authService = authService
+    this.userService = userService
+    AuthControllerValidator.init()
     this.init()
   }
 
@@ -40,7 +39,7 @@ export class AuthController extends AbstractController {
    * @param connection
    */
   public actionSingIn = async (request: WSRequest, connection: IAppConnectionInfo): Promise<IJSendResponse> => {
-    const validatorResult = await this.validator.validate('ValidatorSingIn', request.payload)
+    const validatorResult = await controllerValidator.validate(EValidator.authControllerValidatorSingIn, request.payload)
 
     if (validatorResult !== true) {
       return this.responseFail(validatorResult)
@@ -51,7 +50,7 @@ export class AuthController extends AbstractController {
     let accessToken: string
     let refreshToken: string
     try {
-      const signInResult = await this.deps.authService.signIn(login, password)
+      const signInResult = await this.authService.signIn(login, password)
       if (!signInResult) {
         return this.responseError(MSG_ACCESS_DENIED)
       }
@@ -92,7 +91,7 @@ export class AuthController extends AbstractController {
    * @param connection
    */
   public actionTelegram = async (request: WSRequest, connection: IAppConnectionInfo): Promise<IJSendResponse> => {
-    const validatorResult = await this.validator.validate('ValidatorTelegram', request.payload)
+    const validatorResult = await controllerValidator.validate(EValidator.authControllerValidatorTelegram, request.payload)
 
     if (validatorResult !== true) {
       return this.responseFail(validatorResult)
@@ -103,7 +102,7 @@ export class AuthController extends AbstractController {
     let refreshToken: string
     try {
       const payload = request.payload as ITelegramPayload
-      const signInResult = await this.deps.authService.signInTelegram(payload, true)
+      const signInResult = await this.authService.signInTelegram(payload, true)
       if (!signInResult) {
         return this.responseError(MSG_ACCESS_DENIED)
       }
@@ -137,7 +136,7 @@ export class AuthController extends AbstractController {
    * @param connection
    */
   public actionSingInByToken = async (request: WSRequest, connection: IAppConnectionInfo): Promise<IJSendResponse> => {
-    const validatorResult = await this.validator.validate('ValidatorSingInByToken', request.payload)
+    const validatorResult = await controllerValidator.validate(EValidator.authControllerValidatorSingInByToken, request.payload)
 
     if (validatorResult !== true) {
       return this.responseFail(validatorResult)
@@ -148,7 +147,7 @@ export class AuthController extends AbstractController {
 
     try {
       if (token) {
-        user = await this.deps.authService.authByToken(token)
+        user = await this.authService.authByToken(token)
         if (!user) {
           return this.responseError(MSG_ACCESS_DENIED)
         }
@@ -179,7 +178,7 @@ export class AuthController extends AbstractController {
    * @param connection
    */
   public actionRegistration = async (request: WSRequest, connection: IAppConnectionInfo): Promise<IJSendResponse> => {
-    const validatorResult = await this.validator.validate('ValidatorRegistration', request.payload)
+    const validatorResult = await controllerValidator.validate(EValidator.authControllerValidatorRegistration, request.payload)
 
     if (validatorResult !== true) {
       return this.responseFail(validatorResult)
@@ -190,7 +189,7 @@ export class AuthController extends AbstractController {
     let accessToken: string | null = null
     let refreshToken: string | null = null
     try {
-      const result = await this.deps.authService.registration(login, password)
+      const result = await this.authService.registration(login, password)
       if (result) {
         user = result.user
         accessToken = result.accessToken
@@ -232,7 +231,7 @@ export class AuthController extends AbstractController {
    * @param connection
    */
   public actionRefreshToken = async (request: WSRequest, connection: IAppConnectionInfo): Promise<IJSendResponse> => {
-    const validatorResult = await this.validator.validate('ValidatorRefreshToken', request.payload)
+    const validatorResult = await controllerValidator.validate(EValidator.authControllerValidatorRefreshToken, request.payload)
 
     if (validatorResult !== true) {
       return this.responseFail(validatorResult)
@@ -243,7 +242,7 @@ export class AuthController extends AbstractController {
     let refreshTokenNew: string | null = null
     let user: User | null = null
     try {
-      const result = await this.deps.authService.refreshToken(accessToken, refreshToken)
+      const result = await this.authService.refreshToken(accessToken, refreshToken)
       if (result) {
         user = result.user
         accessTokenNew = result.accessToken
@@ -275,7 +274,7 @@ export class AuthController extends AbstractController {
    * @param request
    */
   public actionForgot = async (request: WSRequest): Promise<IJSendResponse> => {
-    const validatorResult = await this.validator.validate('ValidatorForgot', request.payload)
+    const validatorResult = await controllerValidator.validate(EValidator.authControllerValidatorForgot, request.payload)
 
     if (validatorResult !== true) {
       return this.responseFail(validatorResult)
@@ -283,7 +282,7 @@ export class AuthController extends AbstractController {
 
     const { email } = request.payload
 
-    this.deps.authService.generateRestoreToken(email).catch(this.logger.error)
+    this.authService.generateRestoreToken(email).catch(this.logger.error)
 
     return this.responseSuccess({})
   }
@@ -298,7 +297,7 @@ export class AuthController extends AbstractController {
    * @param connection
    */
   public actionReset = async (request: WSRequest, connection: IAppConnectionInfo): Promise<IJSendResponse> => {
-    const validatorResult = await this.validator.validate('ValidatorReset', request.payload)
+    const validatorResult = await controllerValidator.validate(EValidator.authControllerValidatorReset, request.payload)
 
     if (validatorResult !== true) {
       return this.responseFail(validatorResult)
@@ -311,7 +310,7 @@ export class AuthController extends AbstractController {
     let refreshToken: string | null = null
 
     try {
-      const result = await this.deps.authService.restoreByToken(token, password)
+      const result = await this.authService.restoreByToken(token, password)
       if (result) {
         user = result.user
         accessToken = result.accessToken
@@ -353,7 +352,7 @@ export class AuthController extends AbstractController {
         }
       }
 
-      const signInResult = await this.deps.authService.signInGoogle(token)
+      const signInResult = await this.authService.signInGoogle(token)
       if (!signInResult) {
         return this.responseError(MSG_ACCESS_DENIED)
       }
@@ -402,21 +401,21 @@ export class AuthController extends AbstractController {
   }
 
   protected init(): void {
-    const instance = this.deps.http.getServer()
+    const instance = this.http.getServer()
     instance.get('/google/auth', this.actionGoogleAuth)
 
-    this.deps.wsServer.onRequest('auth', 'google', this.actionGoogle)
-    this.deps.wsServer.onRequest('auth', 'telegram', this.actionTelegram)
-    this.deps.wsServer.onRequest('auth', 'signin', this.actionSingIn)
-    this.deps.wsServer.onRequest('auth', 'token', this.actionSingInByToken)
-    this.deps.wsServer.onRequest('auth', 'registration', this.actionRegistration)
-    this.deps.wsServer.onRequest('auth', 'refresh', this.actionRefreshToken)
-    this.deps.wsServer.onRequest('auth', 'forgot', this.actionForgot)
-    this.deps.wsServer.onRequest('auth', 'reset', this.actionReset)
+    this.wsServer.onRequest('auth', 'google', this.actionGoogle)
+    this.wsServer.onRequest('auth', 'telegram', this.actionTelegram)
+    this.wsServer.onRequest('auth', 'signin', this.actionSingIn)
+    this.wsServer.onRequest('auth', 'token', this.actionSingInByToken)
+    this.wsServer.onRequest('auth', 'registration', this.actionRegistration)
+    this.wsServer.onRequest('auth', 'refresh', this.actionRefreshToken)
+    this.wsServer.onRequest('auth', 'forgot', this.actionForgot)
+    this.wsServer.onRequest('auth', 'reset', this.actionReset)
 
-    this.deps.wsServer.onDisconnect(async (connectionInfo?: IAppConnectionInfo) => {
+    this.wsServer.onDisconnect(async (connectionInfo?: IAppConnectionInfo) => {
       if (connectionInfo && connectionInfo.state.userId) {
-        this.deps.userService.updateLastVisitByUserId(connectionInfo.state.userId).catch(this.logger.error)
+        this.userService.updateLastVisitByUserId(connectionInfo.state.userId).catch(this.logger.error)
       }
     })
   }

@@ -1,3 +1,6 @@
+import { fileURLToPath } from 'url'
+import path from 'path'
+
 export const CORE_DEBUG = (process.env.CORE_DEBUG || 'false') === 'true'
 
 export const isInstanceOf = <T>(object: any, uniqueInstanceProperty: string): object is T => {
@@ -39,7 +42,7 @@ export function JSONStringifySafe(
   try {
     result = JSON.stringify(json, replacer, space)
   } catch (e) {
-    // Nothing todo
+    // Nothing to do
   }
 
   return result
@@ -104,4 +107,9 @@ export function getCircularReplacer() {
 
     return value
   }
+}
+
+export function currentDir(importMetaUrl: string) {
+  const currentFilename = fileURLToPath(importMetaUrl)
+  return path.dirname(currentFilename)
 }

@@ -1,12 +1,8 @@
-import path from 'path'
-import { Client } from '@elastic/elasticsearch'
 import { Index, IndicesCreate, Search } from '@elastic/elasticsearch/api/requestParams'
 import { AbstractElasticIndex } from '../../../core/db/elasticsearch/AbstractElasticIndex'
 import { logger } from '../../../core/logger/logger'
-import { ILoggerConfig } from '../../../core/logger/config'
-import { TransportWinston } from '../../../core/logger/transport/TransportWinston'
-import { settings } from '../../../demo/configs'
 import { sleep } from '../../../core/utils/sleep'
+import { demoAppContainer } from '../../setup/DemoAppContainer'
 
 class TestIndex extends AbstractElasticIndex {
   public alias = 'alias-test'
@@ -48,19 +44,13 @@ class TestIndex extends AbstractElasticIndex {
 }
 
 describe('Test AbstractElasticIndex', () => {
-  const runtimeDir = path.resolve(`${settings.runtimeDir}/tests`)
-  logger.setConfig({
-    debug: true,
-    info: true,
-    warn: true,
-  } as ILoggerConfig)
-  logger.addTransport(new TransportWinston(runtimeDir))
-
-  const client = new Client({
-    node: 'http://localhost:9200',
-  })
+  const client = demoAppContainer.elasticClient
 
   const index = new TestIndex(client)
+
+  beforeAll(async () => {
+    await demoAppContainer.run()
+  })
 
   beforeEach(async () => {
     await index.delete('cleverjs-test')
@@ -69,12 +59,7 @@ describe('Test AbstractElasticIndex', () => {
 
   afterAll(async () => {
     await index.delete('cleverjs-test')
-    await new Promise((resolve) => {
-      client.close(() => {
-        logger.info('Elastic connections closed')
-        resolve(true)
-      })
-    })
+    await demoAppContainer.destroy()()
   })
 
   it('should index document', async () => {
@@ -218,35 +203,35 @@ describe('Test AbstractElasticIndex', () => {
     })
   })
 
-  it('should produce version_conflict_engine_exception', async () => {
-    const params = {
-      id: null,
-      keyword: 'key1',
-      text: 'text1',
-      integer: 1,
-    }
-
-    const id = await index.save(params)
-
-    try {
-      const promises = []
-      for (let i = 0; i <= 100; i++) {
-        promises.push(
-          index.save({
-            ...params,
-            integer: i,
-            id,
-          })
-        )
-      }
-
-      await Promise.all(promises)
-    } catch (e) {
-      logger.error(e)
-    }
-
-    expect(true).toBeTruthy()
-  })
+  // it('should produce version_conflict_engine_exception', async () => {
+  //   const params = {
+  //     id: null,
+  //     keyword: 'key1',
+  //     text: 'text1',
+  //     integer: 1,
+  //   }
+  //
+  //   const id = await index.save(params)
+  //
+  //   try {
+  //     const promises = []
+  //     for (let i = 0; i <= 100; i++) {
+  //       promises.push(
+  //         index.save({
+  //           ...params,
+  //           integer: i,
+  //           id,
+  //         })
+  //       )
+  //     }
+  //
+  //     await Promise.all(promises)
+  //   } catch (e) {
+  //     logger.error(e)
+  //   }
+  //
+  //   expect(true).toBeTruthy()
+  // })
 
   it('should search_after', async () => {
     const items = []

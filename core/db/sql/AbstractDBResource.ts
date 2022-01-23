@@ -9,13 +9,13 @@ import { loggerNamespace } from '../../logger/logger'
 import { Paginator } from '../../utils/Paginator'
 
 export abstract class AbstractDBResource<E extends IEntity> extends AbstractResource<E> {
+  protected abstract table: string
   protected readonly logger = loggerNamespace(`AbstractDBResource:${this.constructor.name}`)
-  protected readonly connection: Knex
+  protected readonly connection: Knex<any, unknown[]>
   protected readonly conditionParser: ConditionDbParser
-  protected primaryKey = 'id'
-  protected table: string = ''
+  protected readonly primaryKey: string = 'id'
 
-  public constructor(connection: Knex, conditionParser: ConditionDbParser, entityFactory: IEntityFactory) {
+  public constructor(connection: Knex<any, unknown[]>, conditionParser: ConditionDbParser, entityFactory: IEntityFactory) {
     super(entityFactory)
     this.connection = connection
     this.conditionParser = conditionParser
@@ -40,16 +40,18 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
 
   public async findAll(condition?: Condition, pagination?: Paginator): Promise<E[]> {
     const rows = await this.findAllRaw(condition, pagination)
-    return this.createEntityList(rows)
+    return this.createEntityList(rows, false)
   }
 
   public async findAllRaw(condition?: Condition, pagination?: Paginator): Promise<any[]> {
     const queryBuilder: Knex.QueryBuilder = this.connection(this.table)
-    if (condition) {
-      this.conditionParser.parse(queryBuilder, condition)
-    }
-
     if (pagination) {
+      if (!condition) {
+        condition = new Condition(undefined, this.primaryKey, 'asc')
+      } else if (condition.getSort().length === 0) {
+        condition.setSort(this.primaryKey, 'asc')
+      }
+
       if (pagination.getLimit()) {
         queryBuilder.limit(pagination.getLimit())
       }
@@ -57,6 +59,10 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
       if (pagination.getOffset()) {
         queryBuilder.offset(pagination.getOffset())
       }
+    }
+
+    if (condition) {
+      this.conditionParser.parse(queryBuilder, condition)
     }
 
     let rows: any[] = []
@@ -199,16 +205,16 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     return response > 0
   }
 
-  public createEntity(data: unknown): E {
-    return this.entityFactory.create(data) as E
+  public createEntity(data: unknown, clone: boolean = true): E {
+    return <E>this.entityFactory.create(data, clone)
   }
 
-  public createEntityList(rows: any[]) {
+  public createEntityList(rows: any[], clone: boolean = true) {
     let result: E[] = []
 
     try {
       rows.forEach((row) => {
-        const entity = this.createEntity(this.map(row))
+        const entity = this.createEntity(this.map(row), clone)
         result.push(entity)
       })
     } catch (e) {
@@ -223,11 +229,12 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     if (this.primaryKey !== 'id' && data[this.primaryKey]) {
       data.id = data[this.primaryKey]
     }
+
     return data
   }
 
   public mapToDB(item: E): any {
-    const { id, [this.primaryKey]: primaryKey, ...data } = item.getData()
+    const { id, [this.primaryKey]: primaryKey, ...data } = item.getData(false)
     return data
   }
 }

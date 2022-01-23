@@ -1,10 +1,11 @@
 import { types } from 'util'
 import { AbstractEntity } from './AbstractEntity'
 import { loggerNamespace } from '../logger/logger'
-import { JSONStringifySafe } from '../utils/common'
+import { getCircularReplacer, JSONStringifySafe } from '../utils/common'
+import { Cloner } from '../utils/clone/Cloner'
 
 export interface IEntityFactory {
-  create(data: unknown): any
+  create(data: unknown, clone: boolean): any
 }
 
 export class EntityFactory<T extends Record<string, any>, E extends AbstractEntity<T>> implements IEntityFactory {
@@ -20,22 +21,27 @@ export class EntityFactory<T extends Record<string, any>, E extends AbstractEnti
   /**
    *
    * @param {unknown} data
+   * @param {boolean} shouldClone
    * @return {E} The new Entity object
    *
    * @throws {Error} e
    */
-  public create(data: unknown): E {
+  public create(data: unknown, shouldClone: boolean = true): E {
     const item = new this.EntityClass()
 
     try {
+      if (shouldClone) {
+        data = Cloner.getInstance().clone(data)
+      }
+
       if (this.cast) {
         data = this.cast(data)
       }
 
-      item.setData(data as T)
-    } catch (e) {
+      item.setData(<T>data, false)
+    } catch (e: any) {
       if (types.isNativeError(e)) {
-        this.logger.error(`Class [${this.EntityClass.name}]:`, e.message, JSONStringifySafe(data))
+        this.logger.error(`Class [${this.EntityClass.name}]:`, e.message, JSONStringifySafe(data, getCircularReplacer()))
       }
 
       throw e

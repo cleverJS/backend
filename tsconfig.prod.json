@@ -1,15 +1,14 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "display": "Node 16",
-
+  "display": "Node 14",
   "compilerOptions": {
     "target": "es2020",
     "module": "commonjs",
     "lib": ["es2020"],
     "allowJs": false,
-    "outDir": "./build",
+    "outDir": "./libs",
     "skipLibCheck": true,
-    "rootDir": ".",
+    "rootDir": "core",
     "removeComments": true,
     "isolatedModules": false,
     "strict": true,
@@ -32,6 +31,7 @@
     "declarationMap": true,
     "sourceMap": false,
     "noEmit": false,
+    "resolveJsonModule": true
   },
   "exclude": ["node_modules", "build", "core/**/*.spec.ts", "demo/**/*", "tmp", "tests/**/*.spec.ts", "knexfile.ts", "guide/**/*"],
   "include": ["core/**/*"],

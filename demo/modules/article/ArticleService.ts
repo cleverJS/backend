@@ -8,12 +8,12 @@ import { ArticleResource } from './resource/ArticleResource'
 import { cacheContainer } from '../../CacheContainer'
 import { Cache } from '../../../core/cache/Cache'
 
-export interface ArticleEvents {
+export type ArticleEvents = {
   new: (item: Article) => void
 }
 
 export class ArticleService extends AbstractService<Article, ArticleResource> {
-  public readonly eventEmitter: TypedEmitter<ArticleEvents> = new EventEmitter()
+  public readonly eventEmitter: TypedEmitter<ArticleEvents> = new EventEmitter() as TypedEmitter<ArticleEvents>
 
   public async findWithAuthor() {
     return this.resource.findWithAuthor()

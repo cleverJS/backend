@@ -36,7 +36,7 @@ export class CacheAdapterRedis extends CacheAdapterInterface {
       }
 
       if (ttl) {
-        multi.set(redisKey, data, { [ESetTTLMode.ex]: ttl || 0 })
+        multi.set(redisKey, data, { [ESetTTLMode.ex]: ttl })
       } else {
         multi.set(redisKey, data)
       }

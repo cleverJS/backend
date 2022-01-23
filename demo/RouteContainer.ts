@@ -5,6 +5,7 @@ import { ArticleWSController } from './controllers/ArticleWSController'
 import { ArticleHTTPController } from './controllers/ArticleHTTPController'
 import { AuthController } from './controllers/AuthController'
 import { initRoutes } from '../core/decorators/routes'
+import { UserController } from './controllers/UserController'
 
 export class RouteContainer {
   public constructor(services: ServiceContainer, wsServer: WSServer, http: HttpServer) {
@@ -14,17 +15,9 @@ export class RouteContainer {
   }
 
   protected initWS(services: ServiceContainer, wsServer: WSServer, http: HttpServer): void {
-    new AuthController({
-      wsServer,
-      http,
-      authService: services.authService,
-      userService: services.userService,
-    })
-
-    new ArticleWSController({
-      wsServer,
-      articleService: services.articleService,
-    })
+    new UserController(wsServer, services.userService)
+    new AuthController(wsServer, http, services.authService, services.userService)
+    new ArticleWSController(wsServer, services.articleService)
   }
 
   protected initHTTP(services: ServiceContainer, http: HttpServer): void {

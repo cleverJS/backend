@@ -1,7 +1,9 @@
-import winston, { format } from 'winston'
-import * as fs from 'fs'
+import winston from 'winston'
+import fs from 'fs'
 import { LogLevel, TransportInterface } from './TransportInterface'
 import { argsStringify } from '../../utils/common'
+
+const { format } = winston
 
 export class TransportWinston implements TransportInterface {
   protected readonly logger: winston.Logger
