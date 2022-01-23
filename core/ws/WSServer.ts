@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events'
 import TypedEmitter from 'typed-emitter'
-import WebSocket from 'ws'
+import WebSocket, { WebSocketServer } from 'ws'
 import { types } from 'util'
 import { v4 as uuidV4 } from 'uuid'
 import { Server, IncomingMessage } from 'http'
@@ -133,11 +133,18 @@ export class WSServer {
    * @param client
    */
   protected handleMessage(client: WebSocket): void {
-    client.on('message', async (message: string) => {
+    client.on('message', async (message: any) => {
       let requestObject: IWSRequest
 
       try {
-        requestObject = JSON.parse(message)
+        if (Buffer.isBuffer(message)) {
+          requestObject = JSON.parse(message.toString())
+        } else if (typeof message === 'string') {
+          requestObject = JSON.parse(message)
+        } else {
+          this.logger.error('Type of message unknown')
+          return
+        }
       } catch (e) {
         this.logger.error('Request parse error:', e)
         return
@@ -221,9 +228,9 @@ export class WSServer {
     const { port, path } = config
     let ws: WebSocket.Server
     if (server) {
-      ws = new WebSocket.Server({ server, path })
+      ws = new WebSocketServer({ server, path })
     } else {
-      ws = new WebSocket.Server({ path, port, noServer: true })
+      ws = new WebSocketServer({ path, port, noServer: true })
     }
 
     this.logger.info(`started on ws://0.0.0.0:${port}${path}`)

@@ -1,3 +1,7 @@
+import v8 from 'v8'
+import { fileURLToPath } from 'url'
+import path from 'path'
+
 export const CORE_DEBUG = (process.env.CORE_DEBUG || 'false') === 'true'
 
 export const isInstanceOf = <T>(object: any, uniqueInstanceProperty: string): object is T => {
@@ -39,7 +43,7 @@ export function JSONStringifySafe(
   try {
     result = JSON.stringify(json, replacer, space)
   } catch (e) {
-    // Nothing todo
+    // Nothing to do
   }
 
   return result
@@ -104,4 +108,17 @@ export function getCircularReplacer() {
 
     return value
   }
+}
+
+export function cloneV8<T>(data: T): T {
+  return v8.deserialize(v8.serialize(data))
+}
+
+export function cloneJSON<T>(data: T): T {
+  return JSON.parse(JSON.stringify(data))
+}
+
+export function currentDir(importMetaUrl: string) {
+  const currentFilename = fileURLToPath(importMetaUrl)
+  return path.dirname(currentFilename)
 }
