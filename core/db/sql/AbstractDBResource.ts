@@ -130,7 +130,12 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
       }
 
       if (result && result.length > 0) {
-        const [identificator] = result
+        let [identificator] = result
+
+        if (typeof identificator === 'object') {
+          identificator = identificator[this.primaryKey]
+        }
+
         return identificator
       }
     } catch (e) {

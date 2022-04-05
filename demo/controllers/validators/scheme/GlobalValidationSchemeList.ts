@@ -42,7 +42,7 @@ export class GlobalValidationSchemeList {
     return {
       page: { type: 'number', positive: true, integer: true, min: 1, optional: true },
       size: { type: 'number', positive: true, integer: true, min: 1, optional: true },
-      filter: conditionItemListScheme,
+      conditions: conditionItemListScheme,
       sort: {
         type: 'array',
         optional: true,
