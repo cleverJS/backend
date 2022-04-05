@@ -49,6 +49,7 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
       if (!condition) {
         condition = new Condition(undefined, this.primaryKey, 'asc')
       } else if (condition.getSort().length === 0) {
+        condition = condition.clone()
         condition.setSort(this.primaryKey, 'asc')
       }
 

@@ -8,6 +8,8 @@ import { AbstractDBResource } from '../../../core/db/sql/AbstractDBResource'
 import { ConditionDbParser } from '../../../core/db/sql/condition/ConditionDbParser'
 import { FSWrapper } from '../../../core/utils/fsWrapper'
 import { logger } from '../../../core/logger/logger'
+import { Condition, TConditionOperator } from '../../../core/db/Condition'
+import { Paginator } from '../../../core/utils/Paginator'
 
 interface TTest {
   id: string
@@ -40,7 +42,7 @@ const castTest2 = (data: unknown): TTest2 => {
 }
 
 describe('Test AbstractDBResource', () => {
-  const dbPath = path.resolve('./runtime/db2.sqlite')
+  const dbPath = path.resolve('./runtime/db.sqlite')
   const conditionDBParse = ConditionDbParser.getInstance()
 
   const connection = knex({
@@ -51,16 +53,28 @@ describe('Test AbstractDBResource', () => {
     useNullAsDefault: true,
   })
 
-  beforeEach(() => {
-    FSWrapper.createFileSync(dbPath)
+  beforeAll(async () => {
+    FSWrapper.removeSync(dbPath)
+    await connection.schema.createTable('article', (t) => {
+      t.increments('id').unsigned().primary()
+      t.string('title', 255)
+      t.string('author', 255)
+      t.string('content', 255)
+      t.boolean('isPublished').defaultTo(false)
+    })
+  })
+
+  beforeEach(async () => {
+    await connection.table('article').truncate()
+    // FSWrapper.createFileSync(dbPath)
   })
 
   afterEach(() => {
-    FSWrapper.removeSync(dbPath)
+    // FSWrapper.removeSync(dbPath)
   })
 
   afterAll(async () => {
-    FSWrapper.removeSync(dbPath)
+    // FSWrapper.removeSync(dbPath)
     await new Promise((resolve) => {
       connection.destroy(() => {
         logger.info('DB connections closed')
@@ -117,6 +131,16 @@ describe('Test AbstractDBResource', () => {
       title: 'test',
     }).toEqual(data2)
   })
+
+  it('should not change condition during findAllRaw', () => {
+    const factory = new EntityFactory(Test, castTest)
+
+    const resource = new TestResource(connection, conditionDBParse, factory)
+    const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: 'id', value: 1 }] })
+    expect(condition.getSort()).toHaveLength(0)
+    resource.findAllRaw(condition, new Paginator())
+    expect(condition.getSort()).toHaveLength(0)
+  })
 })
 
 class Test extends AbstractEntity<TTest> implements TTest {
@@ -129,12 +153,12 @@ class Test2 extends AbstractEntity<TTest> implements TTest2 {
 }
 
 class TestResource extends AbstractDBResource<Test> {
-  protected table: string = ''
+  protected table: string = 'article'
 }
 class Test2Resource extends AbstractDBResource<Test> {
   protected primaryKey = 'entryId'
-  protected table: string = ''
+  protected table: string = 'article'
 }
 class Test3Resource extends AbstractDBResource<Test2> {
-  protected table: string = ''
+  protected table: string = 'article'
 }
