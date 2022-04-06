@@ -178,7 +178,15 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
 
   public async batchInsertRaw(rows: Record<string, any>[], chunkSize?: number): Promise<string[] | number[] | any> {
     if (['pg', 'mssql', 'oracle'].includes(this.connection.client.config.client)) {
-      return this.connection.batchInsert(this.table, rows, chunkSize).returning(this.primaryKey)
+      const result = await this.connection.batchInsert(this.table, rows, chunkSize).returning(this.primaryKey)
+
+      return result.map((identificator) => {
+        if (typeof identificator === 'object') {
+          return identificator[this.primaryKey]
+        }
+
+        return identificator
+      })
     }
 
     return this.connection.batchInsert(this.table, rows, chunkSize)
