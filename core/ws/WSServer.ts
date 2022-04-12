@@ -23,7 +23,11 @@ export interface IConnectionInfo {
   state: any
 }
 
-export type RequestHandler = (request: WSRequest, connectionInfo: IConnectionInfo, client: WebSocket) => Promise<Record<string, any>>
+export type RequestHandler<T = Record<string, any>> = (
+  request: WSRequest<T>,
+  connectionInfo: IConnectionInfo,
+  client: WebSocket
+) => Promise<Record<string, any>>
 
 type IWSServerEvents = {
   [EVENT_CONNECT]: (client: WebSocket) => void
@@ -37,7 +41,7 @@ export class WSServer {
   protected readonly logger = loggerNamespace('WSServer')
   protected readonly keepAliveTimeout: number
   protected keepAliveTimer: NodeJS.Timer | null = null
-  protected readonly handlers: Map<string, RequestHandler> = new Map()
+  protected readonly handlers: Map<string, RequestHandler<any>> = new Map()
 
   public constructor(config: IWSConfig, server?: Server) {
     this.bus = new EventEmitter() as TypedEmitter<IWSServerEvents>
@@ -50,7 +54,7 @@ export class WSServer {
    * @param action
    * @param handler
    */
-  public onRequest(service: string, action: string, handler: RequestHandler): void {
+  public onRequest<T>(service: string, action: string, handler: RequestHandler<T>): void {
     const key = `${service}:${action}`
     this.handlers.set(key, handler)
   }

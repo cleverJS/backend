@@ -9,6 +9,10 @@ import { EValidator } from './validators/enum/ValidatorNameList'
 import { controllerValidator } from './validators/ControllerValidator'
 import { UserControllerValidator } from './validators/UserControllerValidator'
 
+interface IFetchRequest {
+  id: number
+}
+
 export class UserController extends AbstractCRUDController<UserService> {
   public constructor(wsServer: WSServer, service: UserService) {
     super(wsServer, service, 'user')
@@ -16,7 +20,7 @@ export class UserController extends AbstractCRUDController<UserService> {
     this.init()
   }
 
-  public actionFetchById = async (request: WSRequest, connection: IAppConnectionInfo): Promise<IJSendResponse> => {
+  public actionFetchByPostId = async (request: WSRequest<IFetchRequest>, connection: IAppConnectionInfo): Promise<IJSendResponse> => {
     const { read, write } = connection.state.permissions.user
 
     if (!(await this.isAuthorized(connection)) && !(read || write)) {
@@ -38,6 +42,6 @@ export class UserController extends AbstractCRUDController<UserService> {
   }
 
   protected init(): void {
-    this.wsServer.onRequest('user', 'fetchById', this.actionFetchById)
+    this.wsServer.onRequest<IFetchRequest>('user', 'fetchByPostId', this.actionFetchByPostId)
   }
 }

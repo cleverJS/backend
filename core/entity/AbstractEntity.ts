@@ -1,4 +1,5 @@
 import { Cloner } from '../utils/clone/Cloner'
+import { loggerNamespace } from '../logger/logger'
 
 export interface IEntity {
   id?: number | string | null
@@ -7,6 +8,7 @@ export interface IEntity {
 }
 
 export abstract class AbstractEntity<T extends Record<string, any>> implements IEntity {
+  protected readonly logger = loggerNamespace(`AbstractEntity:${this.constructor.name}`)
   public id?: number | string | null
 
   public setData(data: Partial<T>, shouldClone: boolean = true): void {
@@ -21,7 +23,7 @@ export abstract class AbstractEntity<T extends Record<string, any>> implements I
       if (key === 'id' || key in this) {
         properties[key] = data[key]
       } else {
-        throw new Error(`Attempt to assign non class property ${key}`)
+        this.logger.debug(`Non class property ${key}. Skipped`)
       }
     }
 
