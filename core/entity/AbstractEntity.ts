@@ -3,8 +3,8 @@ import { logger } from '../logger/logger'
 
 export interface IEntity {
   id?: number | string | null
-  setData(data: any, clone: boolean): void
-  getData(clone?: boolean): any
+  setData(data: any, shouldClone?: boolean): void
+  getData(shouldClone?: boolean): any
 }
 
 export abstract class AbstractEntity<T extends Record<string, any>> implements IEntity {
