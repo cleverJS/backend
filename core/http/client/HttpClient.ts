@@ -82,19 +82,30 @@ export class HttpClient {
     try {
       const { data } = await this.client({ ...config, ...this.extendedConfig })
       return data || {}
-    } catch (error) {
+    } catch (error: any) {
       const isAxiosError = (candidate: any): candidate is AxiosError => {
         return candidate.isAxiosError === true
       }
 
-      let message = ''
       if (isAxiosError(error)) {
-        message = error.response && error.response.data && error.response.data.message ? error.response.data.message : null
+        if (error.response) {
+          // The request was made and the server responded with a status code
+          // that falls out of the range of 2xx
+          logger.error(error.response.headers)
+          logger.error(error.response.status)
+          logger.error(error.response.data)
+        } else if (error.request) {
+          // The request was made but no response was received
+          // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+          // http.ClientRequest in node.js
+          logger.error(error.request)
+        } else {
+          // Something happened in setting up the request that triggered an Error
+          logger.error('Error', error.message)
+        }
       } else if (types.isNativeError(error)) {
-        message = error.message || ''
+        logger.error(error.message || error)
       }
-
-      logger.error(message || error)
 
       throw error
     }
