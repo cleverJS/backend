@@ -4,21 +4,21 @@ import { loggerNamespace } from '../logger/logger'
 import { IHttpServerConfig } from './config'
 
 export class HttpServer {
+  public readonly port: number = 5000
+  public readonly host: string = '0.0.0.0'
   protected readonly logger = loggerNamespace('HttpServer')
-  protected readonly server: FastifyInstance<Server, IncomingMessage, ServerResponse>
-  protected readonly port: number = 5000
-  protected readonly address: string = '0.0.0.0'
+  protected readonly instance: FastifyInstance<Server, IncomingMessage, ServerResponse>
 
   constructor(config: IHttpServerConfig) {
-    this.server = fastify({})
+    this.instance = fastify({})
     this.port = config.port
-    this.address = config.host
+    this.host = config.host
   }
 
   public async start(): Promise<void> {
     try {
-      await this.server.listen(this.port, this.address)
-      this.logger.info(`listening on ${this.address}:${this.port}`)
+      await this.instance.listen({ port: this.port, host: this.host })
+      this.logger.info(`listening on ${this.host}:${this.port}`)
     } catch (err) {
       this.logger.error(err)
       // eslint-disable-next-line no-process-exit
@@ -27,20 +27,15 @@ export class HttpServer {
   }
 
   public getServer(): FastifyInstance<Server, IncomingMessage, ServerResponse> {
-    return this.server
+    return this.instance
   }
 
   public getInstance(): Server {
-    return this.server.server
+    return this.instance.server
   }
 
   public async destroy(): Promise<void> {
-    const server = await this.getServer()
-    await new Promise((resolve) => {
-      server.close(() => {
-        resolve(true)
-      })
-    })
+    await this.getServer().close()
     this.logger.info('closed')
   }
 }

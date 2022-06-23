@@ -1,5 +1,17 @@
 import { Knex } from 'knex'
-import { Condition, TConditionOperator, IConditionItem, IConditionItemList, TConditionLogic, conditionOperatorNames } from '../../Condition'
+import {
+  Condition,
+  conditionOperatorNames,
+  IConditionItem,
+  IConditionItemList,
+  TConditionBetween,
+  TConditionIN,
+  TConditionLike,
+  TConditionLogic,
+  TConditionNull,
+  TConditionOperator,
+  TConditionSimple,
+} from '../../Condition'
 import { isInstanceOf } from '../../../utils/common'
 import { loggerNamespace } from '../../../logger/logger'
 import { ErrorCondition } from '../../errors/ErrorCondition'
@@ -95,6 +107,9 @@ export class ConditionDbParser {
       case TConditionOperator.BETWEEN:
         this.parseBetweenCondition(queryBuilder, condition, logic)
         break
+      case TConditionOperator.NOT_BETWEEN:
+        this.parseNotBetweenCondition(queryBuilder, condition, logic)
+        break
       case TConditionOperator.LIKE:
         this.parseLikeCondition(queryBuilder, condition, logic)
         break
@@ -118,7 +133,7 @@ export class ConditionDbParser {
     }
   }
 
-  protected parseInCondition(queryBuilder: Knex.QueryBuilder, condition: IConditionItem, logic: TConditionLogic): void {
+  protected parseInCondition(queryBuilder: Knex.QueryBuilder, condition: TConditionIN, logic: TConditionLogic): void {
     if (Array.isArray(condition.value)) {
       if (logic === 'and') {
         queryBuilder.whereIn(condition.field, condition.value)
@@ -128,7 +143,7 @@ export class ConditionDbParser {
     }
   }
 
-  protected parseNotInCondition(queryBuilder: Knex.QueryBuilder, condition: IConditionItem, logic: TConditionLogic): void {
+  protected parseNotInCondition(queryBuilder: Knex.QueryBuilder, condition: TConditionIN, logic: TConditionLogic): void {
     if (Array.isArray(condition.value)) {
       if (logic === 'and') {
         queryBuilder.whereNotIn(condition.field, condition.value)
@@ -138,20 +153,20 @@ export class ConditionDbParser {
     }
   }
 
-  protected parseLikeCondition(queryBuilder: Knex.QueryBuilder, condition: IConditionItem, logic: TConditionLogic): void {
+  protected parseLikeCondition(queryBuilder: Knex.QueryBuilder, condition: TConditionLike, logic: TConditionLogic): void {
     const { value, field } = condition
     if (value === undefined || value === null || value === '') {
       throw new ErrorCondition(`${conditionOperatorNames[condition.operator]} cannot have NULL, undefined or empty value`)
     }
 
     if (logic === 'and') {
-      queryBuilder.andWhere(field, 'like', value)
+      queryBuilder.andWhereLike(field, value)
     } else {
-      queryBuilder.orWhere(field, 'like', value)
+      queryBuilder.orWhereLike(field, value)
     }
   }
 
-  protected parseNotLikeCondition(queryBuilder: Knex.QueryBuilder, condition: IConditionItem, logic: TConditionLogic): void {
+  protected parseNotLikeCondition(queryBuilder: Knex.QueryBuilder, condition: TConditionLike, logic: TConditionLogic): void {
     const { value, field } = condition
     if (value === undefined || value === null || value === '') {
       throw new ErrorCondition(`${conditionOperatorNames[condition.operator]} cannot have NULL, undefined or empty value`)
@@ -164,7 +179,7 @@ export class ConditionDbParser {
     }
   }
 
-  protected parseBetweenCondition(queryBuilder: Knex.QueryBuilder, condition: IConditionItem, logic: TConditionLogic): void {
+  protected parseBetweenCondition(queryBuilder: Knex.QueryBuilder, condition: TConditionBetween, logic: TConditionLogic): void {
     if (Array.isArray(condition.value)) {
       if (logic === 'and') {
         queryBuilder.andWhereBetween(condition.field, [condition.value[0], condition.value[1]])
@@ -174,7 +189,17 @@ export class ConditionDbParser {
     }
   }
 
-  protected parseSimpleCondition(queryBuilder: Knex.QueryBuilder, exr: string, condition: IConditionItem, logic: TConditionLogic): void {
+  protected parseNotBetweenCondition(queryBuilder: Knex.QueryBuilder, condition: TConditionBetween, logic: TConditionLogic): void {
+    if (Array.isArray(condition.value)) {
+      if (logic === 'and') {
+        queryBuilder.andWhereNotBetween(condition.field, [condition.value[0], condition.value[1]])
+      } else {
+        queryBuilder.orWhereNotBetween(condition.field, [condition.value[0], condition.value[1]])
+      }
+    }
+  }
+
+  protected parseSimpleCondition(queryBuilder: Knex.QueryBuilder, exr: string, condition: TConditionSimple, logic: TConditionLogic): void {
     const { value, field } = condition
 
     if (value === undefined || value === null) {
@@ -188,7 +213,7 @@ export class ConditionDbParser {
     }
   }
 
-  protected parseNullCondition(queryBuilder: Knex.QueryBuilder, condition: IConditionItem, logic: TConditionLogic): void {
+  protected parseNullCondition(queryBuilder: Knex.QueryBuilder, condition: TConditionNull, logic: TConditionLogic): void {
     if (logic === 'and') {
       queryBuilder.whereNull(condition.field)
     } else {
@@ -196,7 +221,7 @@ export class ConditionDbParser {
     }
   }
 
-  protected parseIsNotNullCondition(queryBuilder: Knex.QueryBuilder, condition: IConditionItem, logic: TConditionLogic): void {
+  protected parseIsNotNullCondition(queryBuilder: Knex.QueryBuilder, condition: TConditionNull, logic: TConditionLogic): void {
     if (logic === 'and') {
       queryBuilder.whereNotNull(condition.field)
     } else {

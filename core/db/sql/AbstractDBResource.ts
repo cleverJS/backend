@@ -9,11 +9,11 @@ import { loggerNamespace } from '../../logger/logger'
 import { Paginator } from '../../utils/Paginator'
 
 export abstract class AbstractDBResource<E extends IEntity> extends AbstractResource<E> {
-  protected abstract table: string
   protected readonly logger = loggerNamespace(`AbstractDBResource:${this.constructor.name}`)
+  protected abstract readonly table: string
+  protected readonly primaryKey: string = 'id'
   protected readonly connection: Knex<any, unknown[]>
   protected readonly conditionParser: ConditionDbParser
-  protected readonly primaryKey: string = 'id'
 
   public constructor(connection: Knex<any, unknown[]>, conditionParser: ConditionDbParser, entityFactory: IEntityFactory) {
     super(entityFactory)

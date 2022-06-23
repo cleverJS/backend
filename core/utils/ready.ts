@@ -1,5 +1,5 @@
 export class Ready {
-  protected readonly promise: Promise<any>
+  protected promise: Promise<any>
 
   constructor() {
     this.promise = new Promise((resolve) => {

@@ -6,6 +6,7 @@ export enum TConditionOperator {
   LESS_OR_EQUALS,
   GREATER_OR_EQUALS,
   BETWEEN,
+  NOT_BETWEEN,
   LIKE,
   NOT_LIKE,
   IN,
@@ -22,12 +23,13 @@ export const conditionOperatorNames = {
   4: 'LESS_OR_EQUALS',
   5: 'GREATER_OR_EQUALS',
   6: 'BETWEEN',
-  7: 'LIKE',
-  8: 'NOT_LIKE',
-  9: 'IN',
-  10: 'NOT_IN',
-  11: 'IS_NULL',
-  12: 'IS_NOT_NULL',
+  7: 'NOT_BETWEEN',
+  8: 'LIKE',
+  9: 'NOT_LIKE',
+  10: 'IN',
+  11: 'NOT_IN',
+  12: 'IS_NULL',
+  13: 'IS_NOT_NULL',
 }
 
 export type TSortDirection = 'asc' | 'desc'
@@ -38,11 +40,42 @@ export interface IConditionItemList {
   conditions: (IConditionItem | IConditionItemList)[]
 }
 
-export interface IConditionItem {
-  operator: TConditionOperator
+export type TConditionSimple = {
+  operator:
+    | TConditionOperator.EQUALS
+    | TConditionOperator.NOT_EQUALS
+    | TConditionOperator.LESS_THAN
+    | TConditionOperator.GREATER_THAN
+    | TConditionOperator.LESS_OR_EQUALS
+    | TConditionOperator.GREATER_OR_EQUALS
   field: string
-  value?: string | number | string[] | number[]
+  value: string | number | Date
 }
+
+export type TConditionBetween = {
+  operator: TConditionOperator.BETWEEN | TConditionOperator.NOT_BETWEEN
+  field: string
+  value: string[] | number[] | Date[]
+}
+
+export type TConditionIN = {
+  operator: TConditionOperator.IN | TConditionOperator.NOT_IN
+  field: string
+  value: string[] | number[]
+}
+
+export type TConditionLike = {
+  operator: TConditionOperator.LIKE | TConditionOperator.NOT_LIKE
+  field: string
+  value: string | number | Date
+}
+
+export type TConditionNull = {
+  operator: TConditionOperator.IS_NULL | TConditionOperator.IS_NOT_NULL
+  field: string
+}
+
+export type IConditionItem = TConditionSimple | TConditionBetween | TConditionIN | TConditionLike | TConditionNull
 
 export class Condition {
   protected conditionItemList?: IConditionItemList

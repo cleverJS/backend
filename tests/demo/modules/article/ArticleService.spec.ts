@@ -1,6 +1,7 @@
 import { Condition, TConditionOperator } from '../../../../core/db/Condition'
 import { Paginator } from '../../../../core/utils/Paginator'
 import { demoAppContainer } from '../../../setup/DemoAppContainer'
+import { createArticleTable } from '../../../migrations/tables'
 
 describe('Test AbstractDBResource and AbstractService', () => {
   const connection = demoAppContainer.connection
@@ -23,13 +24,7 @@ describe('Test AbstractDBResource and AbstractService', () => {
   }
 
   beforeAll(async () => {
-    await connection.schema.createTable('article', (t) => {
-      t.increments('id').unsigned().primary()
-      t.string('title', 255)
-      t.string('author', 255)
-      t.string('content', 255)
-      t.boolean('isPublished').defaultTo(false)
-    })
+    await createArticleTable(connection)
   })
 
   beforeEach(async () => {
@@ -255,17 +250,21 @@ describe('Test AbstractDBResource and AbstractService', () => {
     const expectRaw = [
       {
         author: 'G. M. Fikhtengolts',
-        content: '',
+        content: null,
         id: 1,
         isPublished: 0,
         title: 'The Fundamentals of Mathematical Analysis I',
+        from: null,
+        to: null,
       },
       {
         author: 'G. M. Fikhtengolts',
-        content: '',
+        content: null,
         id: 2,
         isPublished: 0,
         title: 'The Fundamentals of Mathematical Analysis II',
+        from: null,
+        to: null,
       },
     ]
 
@@ -278,19 +277,32 @@ describe('Test AbstractDBResource and AbstractService', () => {
     paginator.setItemsPerPage(2)
 
     let dbItems = await service.listRaw(paginator)
+    dbItems = dbItems.map((i) => {
+      const { created, ...data } = i
+      return data
+    })
+
     expect(dbItems).toEqual(expectRaw)
     expect(paginator.getTotal()).toEqual(3)
 
     paginator.nextPage()
 
     dbItems = await service.listRaw(paginator)
+
+    dbItems = dbItems.map((i) => {
+      const { created, ...data } = i
+      return data
+    })
+
     expect(dbItems).toEqual([
       {
         author: 'G. M. Fikhtengolts',
-        content: '',
+        content: null,
         id: 3,
         isPublished: 0,
         title: 'The Fundamentals of Mathematical Analysis III',
+        from: null,
+        to: null,
       },
     ])
   })

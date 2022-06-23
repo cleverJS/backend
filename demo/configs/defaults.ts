@@ -1,9 +1,9 @@
-import { Knex } from 'knex'
 import path from 'path'
 import { ISettings } from './SettingsInterface'
-import connections from '../../knexfile'
+import connections, { EDBConfigKey } from '../../knexfile'
 
-const knexConfig = (connections as any)[process.env.NODE_ENV || 'development'] as Knex.Config
+const appConfigKey = (process.env.NODE_ENV || EDBConfigKey.development) as EDBConfigKey
+const appKnexConfig = connections[appConfigKey]
 
 const dirname = path.resolve()
 const baseDir = dirname
@@ -24,7 +24,7 @@ export const defaults: ISettings = {
     host: 'localhost',
   },
 
-  connection: knexConfig,
+  connection: appKnexConfig,
 
   websocket: {
     port: 8000,

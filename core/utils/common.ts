@@ -1,10 +1,15 @@
 import { fileURLToPath } from 'url'
 import path from 'path'
+import hrtime from 'pretty-hrtime'
 
 export const CORE_DEBUG = (process.env.CORE_DEBUG || 'false') === 'true'
 
 export const isInstanceOf = <T>(object: any, uniqueInstanceProperty: string): object is T => {
   return uniqueInstanceProperty in object
+}
+
+export const isInstanceOfByCondition = <T>(object: any, condition: (object: any) => boolean): object is T => {
+  return condition(object)
 }
 
 export function sliceLast<T>(items: T[], n: number): T[] {
@@ -109,7 +114,36 @@ export function getCircularReplacer() {
   }
 }
 
+export function chunkString(input: string, length: number) {
+  const numChunks = Math.ceil(input.length / length)
+  const chunks = new Array(numChunks)
+
+  for (let i = 0, j = 0; i < numChunks; ++i, j += length) {
+    chunks[i] = input.substring(j, j + length)
+  }
+
+  return chunks
+}
+
 export function currentDir(importMetaUrl: string) {
   const currentFilename = fileURLToPath(importMetaUrl)
   return path.dirname(currentFilename)
+}
+
+export async function onlyProduction<T>(callback: () => Promise<T | null>) {
+  if (process.env.NODE_ENV === 'production') {
+    return callback()
+  }
+
+  return null
+}
+
+export async function timer<T>(callback: () => Promise<T>, logger: any, message: string) {
+  const startCommand = process.hrtime()
+  const result = await callback()
+  const endCommand = process.hrtime(startCommand)
+  const wordsCommand = hrtime(endCommand)
+
+  logger.info(`[${wordsCommand}] ${message}`)
+  return result
 }

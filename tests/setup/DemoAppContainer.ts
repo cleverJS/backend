@@ -20,8 +20,8 @@ export class DemoAppContainer {
   public readonly connection
   public readonly resourceContainer: ResourceContainer
   public readonly serviceContainer: ServiceContainer
+  public readonly httpServer: HttpServer
   protected readonly logger = loggerNamespace('App')
-  protected readonly httpServer: HttpServer
   protected readonly appEventBus: TypedEmitter<AppEvents> = new EventEmitter() as TypedEmitter<AppEvents>
 
   public constructor(settings: ISettings) {

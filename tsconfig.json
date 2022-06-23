@@ -1,15 +1,15 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "display": "Node 14",
+  "display": "Node 16",
   "compilerOptions": {
     /* Basic Options */
     // "incremental": true,                   /* Enable incremental compilation */
-    "target": "es2020",
+    "target": "es2021",
     /* Specify ECMAScript target version: 'ES3' (default), 'ES5', 'ES2015', 'ES2016', 'ES2017', 'ES2018', 'ES2019' or 'ESNEXT'. */
     "module": "commonjs",
     /* Specify module code generation: 'none', 'commonjs', 'amd', 'system', 'umd', 'es2015', or 'ESNext'. */
     "lib": [
-      "es2020"
+      "es2021"
     ]
     /* Specify library files to be included in the compilation. */,
     "allowJs": false

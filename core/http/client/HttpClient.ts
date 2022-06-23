@@ -19,24 +19,24 @@ export class HttpClient {
     })
   }
 
-  public get(url: string, payload: Record<string, any> = {}, cancelObject?: RequestCancel) {
-    return this.do('GET', url, payload, cancelObject)
+  public get<T>(url: string, payload: Record<string, any> = {}, cancelObject?: RequestCancel) {
+    return this.do<T>('GET', url, payload, cancelObject)
   }
 
-  public post(url: string, payload: Record<string, any> = {}, cancelObject?: RequestCancel) {
-    return this.do('POST', url, payload, cancelObject)
+  public post<T>(url: string, payload: Record<string, any> = {}, cancelObject?: RequestCancel) {
+    return this.do<T>('POST', url, payload, cancelObject)
   }
 
-  public put(url: string, payload: Record<string, any> = {}, cancelObject?: RequestCancel) {
-    return this.do('PUT', url, payload, cancelObject)
+  public put<T>(url: string, payload: Record<string, any> = {}, cancelObject?: RequestCancel) {
+    return this.do<T>('PUT', url, payload, cancelObject)
   }
 
-  public patch(url: string, payload: Record<string, any> = {}, cancelObject?: RequestCancel) {
-    return this.do('PATCH', url, payload, cancelObject)
+  public patch<T>(url: string, payload: Record<string, any> = {}, cancelObject?: RequestCancel) {
+    return this.do<T>('PATCH', url, payload, cancelObject)
   }
 
-  public delete(url: string, payload: Record<string, any> = {}, cancelObject?: RequestCancel) {
-    return this.do('DELETE', url, payload, cancelObject)
+  public delete<T>(url: string, payload: Record<string, any> = {}, cancelObject?: RequestCancel) {
+    return this.do<T>('DELETE', url, payload, cancelObject)
   }
 
   public async download(url: string, destination: string, payload: Record<string, any> = {}, cancelObject?: RequestCancel) {
@@ -63,7 +63,7 @@ export class HttpClient {
     this.headers = headers
   }
 
-  protected async do(method: Method, url: string, payload: Record<string, any>, cancelObject?: RequestCancel): Promise<Record<string, any>> {
+  protected async do<T = Record<string, any>>(method: Method, url: string, payload: Record<string, any>, cancelObject?: RequestCancel): Promise<T> {
     const config: AxiosRequestConfig = {
       method,
       url,

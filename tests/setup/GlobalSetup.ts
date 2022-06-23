@@ -18,3 +18,4 @@ function initLogger() {
   } as ILoggerConfig)
   logger.addTransport(new TransportWinstonConsole())
 }
+

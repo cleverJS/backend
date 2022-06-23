@@ -1,5 +1,6 @@
-import { boolean, number, object, string } from 'yup'
+import { boolean, number, object, string, date } from 'yup'
 import { TArticle } from './Article'
+import { currentDateFunction } from '../../utils/common'
 
 const scheme = object()
   .defined()
@@ -7,7 +8,13 @@ const scheme = object()
     id: number().defined().nullable(true).default(null),
     title: string().defined().default(''),
     author: string().defined().default(''),
-    content: string().defined().default(''),
+    content: string().defined().nullable(true).default(null),
+    created: date()
+      .transform((castValue, originalValue) => {
+        return new Date(originalValue)
+      })
+      .defined()
+      .default(currentDateFunction),
     isPublished: boolean().defined().default(false),
   })
 

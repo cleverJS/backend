@@ -32,17 +32,18 @@ export abstract class AbstractCRUDController<T extends AbstractService<IEntity, 
       return this.responseAccessDenied()
     }
 
-    const validatorResult = await this.validateSavePayload()
+    const { payload } = request
+
+    const validatorResult = await this.validateSavePayload(payload)
 
     if (validatorResult !== true) {
       return this.responseFail(validatorResult)
     }
 
-    const { payload } = request
-
     let entity = null
     try {
       entity = this.service.createEntity(payload)
+      this.beforeSave(entity, connection)
       await this.service.save(entity)
     } catch (e) {
       this.logger.error(e)
@@ -67,8 +68,10 @@ export abstract class AbstractCRUDController<T extends AbstractService<IEntity, 
     }
 
     const { id } = request.payload
-    const item = await this.service.findById(id)
-    return this.responseSuccess({ item: item?.getData(false) || null })
+    const entity = await this.service.findById(id)
+    const item = entity ? await this.modifyIdResponse(entity) : null
+
+    return this.responseSuccess({ item })
   }
 
   protected actionFetchList = async (request: WSRequest, connection: IAppConnectionInfo): Promise<IJSendResponse> => {
@@ -95,8 +98,10 @@ export abstract class AbstractCRUDController<T extends AbstractService<IEntity, 
     paginator.setCurrentPage(page)
     paginator.setSkipTotal(skipTotal)
 
-    const items = await this.service.list(paginator, condition)
-    return this.responseSuccess({ items: items.map((i) => i.getData(false)), total: paginator.getTotal() })
+    const entities = await this.service.list(paginator, condition)
+    const items = await this.modifyListResponse(entities)
+
+    return this.responseSuccess({ items, total: paginator.getTotal() })
   }
 
   protected actionDelete = async (request: WSRequest, connection: IAppConnectionInfo): Promise<IJSendResponse> => {
@@ -119,9 +124,19 @@ export abstract class AbstractCRUDController<T extends AbstractService<IEntity, 
     return this.responseFail({})
   }
 
-  protected validateSavePayload(): ValidationError[] | true | Promise<ValidationError[] | true> {
+  protected validateSavePayload(payload: Record<string, any>): ValidationError[] | true | Promise<ValidationError[] | true> {
     return true
   }
+
+  protected async modifyIdResponse(entity: IEntity) {
+    return entity.getData(false)
+  }
+
+  protected async modifyListResponse(entities: IEntity[]) {
+    return entities.map((i) => i.getData(false))
+  }
+
+  protected beforeSave(entity: Record<string, any>, connection: IAppConnectionInfo) {}
 
   protected init(): void {
     this.wsServer.onRequest(this.controllerName, 'fetch-by-id', this.actionFetchById)

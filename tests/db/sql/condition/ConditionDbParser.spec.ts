@@ -1,17 +1,17 @@
 import knex from 'knex'
-import { ConditionDbParser } from '../../../../core/db/sql/condition/ConditionDbParser'
 import { Condition, TConditionOperator } from '../../../../core/db/Condition'
+import { ConditionDbParser } from '../../../../core/db/sql/condition/ConditionDbParser'
 
 describe('Test Conditions', () => {
   const conditionDBParse = ConditionDbParser.getInstance()
-  let condition1: Condition
-  let condition2: Condition
-  let condition3: Condition
-  let condition4: Condition
-  let condition5: Condition
+  const connection = knex({
+    client: 'sqlite3',
+    useNullAsDefault: true,
+  })
 
-  beforeEach(() => {
-    condition1 = new Condition({
+  it('should create a mysql or condition', () => {
+    let qb = connection.table('test')
+    const condition1 = new Condition({
       logic: 'or',
       conditions: [
         { operator: TConditionOperator.EQUALS, field: 'a', value: 1 },
@@ -19,7 +19,10 @@ describe('Test Conditions', () => {
       ],
     })
 
-    condition2 = new Condition({
+    conditionDBParse.parse(qb, condition1)
+    expect(qb.toQuery()).toEqual('select * from `test` where (`a` = 1 or `b` = 2)')
+
+    const condition2 = new Condition({
       logic: 'and',
       conditions: [
         { operator: TConditionOperator.EQUALS, field: 'a', value: 1 },
@@ -27,7 +30,11 @@ describe('Test Conditions', () => {
       ],
     })
 
-    condition3 = new Condition({
+    qb = connection.table('test')
+    conditionDBParse.parse(qb, condition2)
+    expect(qb.toQuery()).toEqual('select * from `test` where (`a` = 1 and `b` = 2)')
+
+    const condition3 = new Condition({
       logic: 'or',
       conditions: [
         {
@@ -48,12 +55,20 @@ describe('Test Conditions', () => {
       ],
     })
 
-    condition4 = new Condition({
+    qb = connection.table('test')
+    conditionDBParse.parse(qb, condition3)
+    expect(qb.toQuery()).toEqual('select * from `test` where ((`a` = 1 or `b` = 2) or (`c` = 1 and `d` = 2) or `e` = 1)')
+
+    const condition4 = new Condition({
       logic: 'and',
       conditions: [{ operator: TConditionOperator.EQUALS, field: 'a', value: 1 }],
     })
 
-    condition5 = new Condition({
+    qb = connection.table('test')
+    conditionDBParse.parse(qb, condition4)
+    expect(qb.toQuery()).toEqual('select * from `test` where (`a` = 1)')
+
+    const condition5 = new Condition({
       logic: 'and',
       conditions: [
         {
@@ -72,43 +87,24 @@ describe('Test Conditions', () => {
         },
       ],
     })
-  })
-
-  it('should create a mysql or condition', () => {
-    const parser = conditionDBParse
-    const connection = knex({
-      client: 'mysql',
-    })
-
-    let qb = connection.table('test')
-    parser.parse(qb, condition1)
-    expect(qb.toQuery()).toEqual('select * from `test` where (`a` = 1 or `b` = 2)')
 
     qb = connection.table('test')
-    parser.parse(qb, condition2)
-    expect(qb.toQuery()).toEqual('select * from `test` where (`a` = 1 and `b` = 2)')
-
-    qb = connection.table('test')
-    parser.parse(qb, condition3)
-    expect(qb.toQuery()).toEqual('select * from `test` where ((`a` = 1 or `b` = 2) or (`c` = 1 and `d` = 2) or `e` = 1)')
-
-    qb = connection.table('test')
-    parser.parse(qb, condition4)
-    expect(qb.toQuery()).toEqual('select * from `test` where (`a` = 1)')
-
-    qb = connection.table('test')
-    parser.parse(qb, condition5)
+    conditionDBParse.parse(qb, condition5)
     expect(qb.toQuery()).toEqual('select * from `test` where ((`a` = 1 or `b` = 2) and (`c` = 1 and `d` = 2))')
   })
 
   it('should add or condition after creation', () => {
-    const parser = conditionDBParse
-    const connection = knex({
-      client: 'mysql',
+    let qb = connection.table('test')
+
+    const condition1 = new Condition({
+      logic: 'or',
+      conditions: [
+        { operator: TConditionOperator.EQUALS, field: 'a', value: 1 },
+        { operator: TConditionOperator.EQUALS, field: 'b', value: 2 },
+      ],
     })
 
-    let qb = connection.table('test')
-    parser.parse(qb, condition1)
+    conditionDBParse.parse(qb, condition1)
     expect(qb.toQuery()).toEqual('select * from `test` where (`a` = 1 or `b` = 2)')
 
     condition1.addCondition({
@@ -120,18 +116,21 @@ describe('Test Conditions', () => {
     })
 
     qb = connection.table('test')
-    parser.parse(qb, condition1)
+    conditionDBParse.parse(qb, condition1)
     expect(qb.toQuery()).toEqual('select * from `test` where ((`a` = 1 or `b` = 2) and (`a` = 1 and `b` = 2))')
   })
 
   it('should add and condition after creation', () => {
-    const parser = conditionDBParse
-    const connection = knex({
-      client: 'mysql',
+    const condition1 = new Condition({
+      logic: 'or',
+      conditions: [
+        { operator: TConditionOperator.EQUALS, field: 'a', value: 1 },
+        { operator: TConditionOperator.EQUALS, field: 'b', value: 2 },
+      ],
     })
 
     let qb = connection.table('test')
-    parser.parse(qb, condition1)
+    conditionDBParse.parse(qb, condition1)
     expect(qb.toQuery()).toEqual('select * from `test` where (`a` = 1 or `b` = 2)')
 
     condition1.addCondition({
@@ -140,18 +139,21 @@ describe('Test Conditions', () => {
     })
 
     qb = connection.table('test')
-    parser.parse(qb, condition1)
+    conditionDBParse.parse(qb, condition1)
     expect(qb.toQuery()).toEqual('select * from `test` where ((`a` = 1 or `b` = 2) and (`c` = 1))')
   })
 
   it('should add and condition after creation 2', () => {
-    const parser = conditionDBParse
-    const connection = knex({
-      client: 'mysql',
+    const condition1 = new Condition({
+      logic: 'or',
+      conditions: [
+        { operator: TConditionOperator.EQUALS, field: 'a', value: 1 },
+        { operator: TConditionOperator.EQUALS, field: 'b', value: 2 },
+      ],
     })
 
     let qb = connection.table('test')
-    parser.parse(qb, condition1)
+    conditionDBParse.parse(qb, condition1)
     expect(qb.toQuery()).toEqual('select * from `test` where (`a` = 1 or `b` = 2)')
 
     condition1.addCondition({
@@ -167,38 +169,33 @@ describe('Test Conditions', () => {
     )
 
     qb = connection.table('test')
-    parser.parse(qb, condition1)
+    conditionDBParse.parse(qb, condition1)
     expect(qb.toQuery()).toEqual('select * from `test` where (((`a` = 1 or `b` = 2) and (`c` = 1)) or (`d` = 1))')
   })
 
   it('should add like', () => {
-    const parser = conditionDBParse
-    const connection = knex({
-      client: 'mysql',
-    })
-
     let qb = connection.table('test')
-    const condition1 = new Condition({ conditions: [{ operator: TConditionOperator.LIKE, field: 'a', value: '%test' }] })
+    const condition11 = new Condition({ conditions: [{ operator: TConditionOperator.LIKE, field: 'a', value: '%test' }] })
 
-    parser.parse(qb, condition1)
+    conditionDBParse.parse(qb, condition11)
     expect(qb.toQuery()).toEqual("select * from `test` where (`a` like '%test')")
 
     qb = connection.table('test')
-    const condition2 = new Condition({ conditions: [{ operator: TConditionOperator.LIKE, field: 'a', value: '%test%' }] })
+    const condition22 = new Condition({ conditions: [{ operator: TConditionOperator.LIKE, field: 'a', value: '%test%' }] })
 
-    parser.parse(qb, condition2)
+    conditionDBParse.parse(qb, condition22)
     expect(qb.toQuery()).toEqual("select * from `test` where (`a` like '%test%')")
 
     qb = connection.table('test')
-    const condition3 = new Condition({ conditions: [{ operator: TConditionOperator.NOT_LIKE, field: 'a', value: '%test%' }] })
+    const condition33 = new Condition({ conditions: [{ operator: TConditionOperator.NOT_LIKE, field: 'a', value: '%test%' }] })
 
-    parser.parse(qb, condition3)
+    conditionDBParse.parse(qb, condition33)
     expect(qb.toQuery()).toEqual("select * from `test` where (`a` not like '%test%')")
 
     qb = connection.table('test')
-    const condition4 = new Condition({ conditions: [{ operator: TConditionOperator.NOT_LIKE, field: 'a', value: 'test%' }] })
+    const condition44 = new Condition({ conditions: [{ operator: TConditionOperator.NOT_LIKE, field: 'a', value: 'test%' }] })
 
-    parser.parse(qb, condition4)
+    conditionDBParse.parse(qb, condition44)
     expect(qb.toQuery()).toEqual("select * from `test` where (`a` not like 'test%')")
   })
 
@@ -214,5 +211,18 @@ describe('Test Conditions', () => {
     expect(condition.getSort()).toEqual([{ sort: 'id', dir: 'asc' }])
     expect(conditionCloned.getSort()).toEqual([])
     expect(conditionCloned.getConditionItemList()?.conditions.length).toEqual(1)
+  })
+
+  it('should add RAW conditon', () => {
+    const qb = connection.table('test')
+    const condition = new Condition({
+      conditions: [
+        { operator: TConditionOperator.EQUALS, field: 'a', value: 1 },
+        { operator: TConditionOperator.RAW, value: 'CONTAINS([a], 1)' },
+      ],
+    })
+
+    conditionDBParse.parse(qb, condition)
+    expect(qb.toQuery()).toEqual('select * from `test` where (`a` = 1 and CONTAINS([a], 1))')
   })
 })

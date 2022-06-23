@@ -23,7 +23,7 @@ export class RouteContainer {
   protected initHTTP(services: ServiceContainer, http: HttpServer): void {
     new ArticleHTTPController({
       http,
-      articleService: services.articleService,
+      service: services.articleService,
     })
   }
 }

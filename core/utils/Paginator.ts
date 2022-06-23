@@ -23,7 +23,8 @@ export class Paginator {
     if (currentPage === 0) {
       currentPage = 1
     }
-    this.currentPage = currentPage
+
+    this.currentPage = currentPage || 1
   }
 
   public getItemsPerPage(): number {
@@ -31,7 +32,7 @@ export class Paginator {
   }
 
   public setItemsPerPage(value: number): void {
-    this.itemsPerPage = value
+    this.itemsPerPage = value || 5
   }
 
   public getTotal(): number {

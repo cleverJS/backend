@@ -10,23 +10,23 @@ export abstract class AbstractService<E extends IEntity, R extends AbstractResou
     this.resource = resource
   }
 
-  public findById(id: string | number): Promise<E | null> {
+  public async findById(id: string | number): Promise<E | null> {
     return this.resource.findById(id)
   }
 
-  public findOne(condition: Readonly<Condition>): Promise<E | null> {
+  public async findOne(condition: Readonly<Condition>): Promise<E | null> {
     return this.resource.findOne(condition)
   }
 
-  public findAll(condition?: Readonly<Condition>, paginator?: Readonly<Paginator>): Promise<E[]> {
+  public async findAll(condition?: Readonly<Condition>, paginator?: Readonly<Paginator>): Promise<E[]> {
     return this.resource.findAll(condition, paginator)
   }
 
-  public findAllRaw(condition?: Readonly<Condition>, paginator?: Readonly<Paginator>): Promise<any[]> {
+  public async findAllRaw(condition?: Readonly<Condition>, paginator?: Readonly<Paginator>): Promise<any[]> {
     return this.resource.findAllRaw(condition, paginator)
   }
 
-  public count(condition?: Readonly<Condition>): Promise<number | null> {
+  public async count(condition?: Readonly<Condition>): Promise<number | null> {
     return this.resource.count(condition)
   }
 
@@ -38,7 +38,7 @@ export abstract class AbstractService<E extends IEntity, R extends AbstractResou
     return this.resource.deleteAll(condition)
   }
 
-  public save(item: E): Promise<boolean> {
+  public async save(item: E): Promise<boolean> {
     return this.resource.save(item)
   }
 
@@ -82,7 +82,7 @@ export abstract class AbstractService<E extends IEntity, R extends AbstractResou
     return result
   }
 
-  public truncate(): Promise<any> {
+  public async truncate(): Promise<any> {
     return this.resource.truncate()
   }
 }

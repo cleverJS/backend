@@ -4,6 +4,7 @@ import { Article } from '../../../demo/modules/article/Article'
 import { WSServer } from '../../../core/ws/WSServer'
 import { WSClient } from '../../app/lib/WSClient'
 import { demoAppContainer } from '../../setup/DemoAppContainer'
+import { createArticleTable } from '../../migrations/tables'
 
 const WS_URL = 'ws://localhost:8000/ws'
 
@@ -13,27 +14,27 @@ describe('Test AbstractCRUDController', () => {
   const service = demoAppContainer.serviceContainer.articleService
   const wsClient = new WSClient(WS_URL, false)
 
+  const currentDate = new Date('2022-06-22T08:44:48.000Z')
+
   const payload1 = {
     title: 'The Fundamentals of Mathematical Analysis I',
     author: 'G. M. Fikhtengolts',
+    created: currentDate,
+    content: '',
   }
 
   const payload2 = {
     title: 'The Fundamentals of Mathematical Analysis II',
     author: 'G. M. Fikhtengolts',
+    created: currentDate,
+    content: '',
   }
 
   beforeAll(async () => {
     await demoAppContainer.run()
 
     await wsClient.connect()
-    await connection.schema.createTable('article', (t) => {
-      t.increments('id').unsigned().primary()
-      t.string('title', 255)
-      t.string('author', 255)
-      t.string('content', 255)
-      t.boolean('isPublished').defaultTo(false)
-    })
+    await createArticleTable(connection)
 
     new ArticleController(wsServer, service, 'test')
   })
@@ -44,6 +45,7 @@ describe('Test AbstractCRUDController', () => {
 
   afterAll(async () => {
     await wsClient.disconnect()
+    await connection.schema.dropTable('article')
     await demoAppContainer.destroy()()
   })
 
@@ -58,6 +60,7 @@ describe('Test AbstractCRUDController', () => {
       title: 'The Fundamentals of Mathematical Analysis I',
       author: 'G. M. Fikhtengolts',
       content: '',
+      created: currentDate,
       isPublished: false,
     })
   })
@@ -78,6 +81,7 @@ describe('Test AbstractCRUDController', () => {
       title: 'The Fundamentals of Mathematical Analysis II',
       author: 'G. M. Fikhtengolts',
       content: '',
+      created: currentDate,
       isPublished: false,
     })
   })
@@ -112,6 +116,7 @@ describe('Test AbstractCRUDController', () => {
       title: 'The Fundamentals of Mathematical Analysis I',
       author: 'G. M. Fikhtengolts',
       content: '',
+      created: '2022-06-22T08:44:48.000Z',
       isPublished: false,
     })
   })
@@ -137,6 +142,7 @@ describe('Test AbstractCRUDController', () => {
         title: 'The Fundamentals of Mathematical Analysis I',
         author: 'G. M. Fikhtengolts',
         content: '',
+        created: '2022-06-22T08:44:48.000Z',
         isPublished: false,
       },
       {
@@ -144,6 +150,7 @@ describe('Test AbstractCRUDController', () => {
         title: 'The Fundamentals of Mathematical Analysis II',
         author: 'G. M. Fikhtengolts',
         content: '',
+        created: '2022-06-22T08:44:48.000Z',
         isPublished: false,
       },
     ])

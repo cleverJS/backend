@@ -1,5 +1,5 @@
-import knex from 'knex'
-import cors from 'fastify-cors'
+import knex, { Knex } from 'knex'
+import cors from '@fastify/cors'
 import { EventEmitter } from 'events'
 import TypedEmitter from 'typed-emitter'
 import { WSServer } from '../core/ws/WSServer'
@@ -34,18 +34,8 @@ export class App {
   }
 
   public async run(): Promise<void> {
+    await this.checkConnection(this.connection, true)
     await this.httpServer.start()
-    try {
-      const rows = await this.connection.raw('SELECT 1 as result')
-      if (!rows || !rows.length || rows[0].result !== 1) {
-        throw new Error()
-      }
-      this.logger.info('DB connection successful')
-    } catch (e) {
-      this.logger.warn('Cannot connect to DB')
-      // eslint-disable-next-line no-process-exit
-      process.exit(1)
-    }
   }
 
   // This will be called on process finish and terminate http server
@@ -69,5 +59,26 @@ export class App {
       credentials: true,
       allowedHeaders: ['Access-Control-Allow-Origin', 'Access-Control-Allow-Headers', 'authorization', 'Content-Type'],
     })
+  }
+
+  private async checkConnection(connection: Knex, exitOnFail: boolean = true) {
+    const { server, port, database } = connection.client.config.connection
+    const serverString = `${server}:${port}:${database}`
+    try {
+      this.logger.info(`Connecting to ${serverString}`)
+      const rows = await connection.raw('SELECT 1 as result')
+      if (!rows || !rows.length || rows[0].result !== 1) {
+        this.logger.warn(`Connection to ${serverString} FAILED`)
+        if (exitOnFail) {
+          this.logger.error('Shutdown application')
+          // eslint-disable-next-line no-process-exit
+          process.exit(1)
+        }
+      } else {
+        this.logger.info(`Connection to ${serverString} SUCCESS`)
+      }
+    } catch (e) {
+      this.logger.error(`Connection to ${serverString} FAILED`)
+    }
   }
 }

@@ -6,7 +6,7 @@ import { Paginator } from '../../core/utils/Paginator'
 
 interface IDependencies {
   http: HttpServer
-  articleService: ArticleService
+  service: ArticleService
 }
 
 export class ArticleHTTPController {
@@ -21,7 +21,7 @@ export class ArticleHTTPController {
   protected actionReplace = async (request: FastifyRequest): Promise<Record<string, any>> => {
     const { text, author } = request.body as IReplaceBodyRequest
 
-    const result = this.deps.articleService.replaceAuthor(text, author)
+    const result = this.deps.service.replaceAuthor(text, author)
 
     return {
       success: true,
@@ -38,7 +38,7 @@ export class ArticleHTTPController {
     paginator.setItemsPerPage(itemsPerPage)
     paginator.setCurrentPage(page)
 
-    const result = await this.deps.articleService.fetchAuthorList(paginator)
+    const result = await this.deps.service.fetchAuthorList(paginator)
 
     return {
       success: true,
@@ -55,7 +55,7 @@ export class ArticleHTTPController {
     paginator.setItemsPerPage(itemsPerPage)
     paginator.setCurrentPage(page)
 
-    const result = await this.deps.articleService.list(paginator)
+    const result = await this.deps.service.list(paginator)
 
     return {
       success: true,
