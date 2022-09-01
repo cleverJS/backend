@@ -1,5 +1,5 @@
-import { User } from '../User'
 import { AbstractDBResource } from '../../../../core/db/sql/AbstractDBResource'
+import { User } from '../User'
 
 export enum UserResourceColumns {
   idColumn = 'id',

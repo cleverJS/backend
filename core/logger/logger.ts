@@ -1,6 +1,7 @@
 import { v4 as uuidV4 } from 'uuid'
-import { LogLevel, TransportInterface } from './transport/TransportInterface'
+
 import { ILoggerConfig } from './config'
+import { LogLevel, TransportInterface } from './transport/TransportInterface'
 
 class Logger {
   protected config?: ILoggerConfig

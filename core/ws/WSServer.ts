@@ -1,14 +1,16 @@
 import { EventEmitter } from 'events'
+import { IncomingMessage, Server } from 'http'
 import TypedEmitter from 'typed-emitter'
-import WebSocket, { WebSocketServer } from 'ws'
 import { types } from 'util'
 import { v4 as uuidV4 } from 'uuid'
-import { Server, IncomingMessage } from 'http'
-import { IWSRequest, WSRequest } from './WSRequest'
-import { WSResponse } from './WSResponse'
+import WebSocket, { WebSocketServer } from 'ws'
+
 import { loggerNamespace } from '../logger/logger'
+
 import { IWSConfig } from './config'
 import { wsRequestValidator } from './validator/WSRequestValidator'
+import { IWSRequest, WSRequest } from './WSRequest'
+import { WSResponse } from './WSResponse'
 
 export const WS_DEBUG = (process.env.WS_DEBUG || 'false') === 'true'
 

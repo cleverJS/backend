@@ -1,6 +1,7 @@
-import { CacheAdapterInterface } from './CacheAdapterInterface'
 import { ESetTTLMode, Redis } from '../../db/redis/Redis'
 import { loggerNamespace } from '../../logger/logger'
+
+import { CacheAdapterInterface } from './CacheAdapterInterface'
 
 const PREFIX = process.env.REDIS_CACHE_PREFIX || 'cache'
 

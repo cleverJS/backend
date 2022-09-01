@@ -1,10 +1,12 @@
 import path from 'path'
-import { App } from './App'
-import { logger } from '../core/logger/logger'
-import { destroy } from '../core/utils/destroy'
-import { settings } from './configs'
+
 import { ILoggerConfig } from '../core/logger/config'
+import { logger } from '../core/logger/logger'
 import { TransportWinston } from '../core/logger/transport/TransportWinston'
+import { destroy } from '../core/utils/destroy'
+
+import { App } from './App'
+import { settings } from './configs'
 
 function initLogger() {
   const runtimeDir = path.resolve('./../runtime')

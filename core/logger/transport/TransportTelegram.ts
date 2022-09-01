@@ -1,6 +1,7 @@
-import { LogLevel, TransportInterface } from './TransportInterface'
-import { TelegramMessenger } from '../../utils/telegram'
 import { argsStringify } from '../../utils/common'
+import { TelegramMessenger } from '../../utils/telegram'
+
+import { LogLevel, TransportInterface } from './TransportInterface'
 
 export class TransportTelegram implements TransportInterface {
   protected messenger: TelegramMessenger

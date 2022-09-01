@@ -1,4 +1,5 @@
 import { boolean, number, object, string } from 'yup'
+
 import { AbstractEntity } from '../../core/entity/AbstractEntity'
 
 export interface ITest extends Object {
@@ -13,9 +14,17 @@ const scheme = object()
   .shape({
     id: number().defined().default(0),
     title: string().defined().default(''),
-    active: boolean().defined().default(false),
+    active: boolean().transform(convertToBoolean).defined().default(false),
     object: object().defined().default({}),
   })
+
+function convertToBoolean(v: any) {
+  if (typeof v !== 'boolean') {
+    return v === 1
+  }
+
+  return v
+}
 
 export const castTest = (data: unknown): ITest => {
   return scheme.noUnknown().cast(data)

@@ -1,12 +1,14 @@
-import TypedEmitter from 'typed-emitter'
 import { EventEmitter } from 'events'
+import TypedEmitter from 'typed-emitter'
+
 import { AbstractService } from '../../../core/AbstractService'
-import { Condition, TConditionOperator } from '../../../core/db/Condition'
-import { Article } from './Article'
-import { Paginator } from '../../../core/utils/Paginator'
-import { ArticleResource } from './resource/ArticleResource'
-import { cacheContainer } from '../../CacheContainer'
 import { Cache } from '../../../core/cache/Cache'
+import { Condition, TConditionOperator } from '../../../core/db/Condition'
+import { Paginator } from '../../../core/utils/Paginator'
+import { cacheContainer } from '../../CacheContainer'
+
+import { Article } from './Article'
+import { ArticleResource } from './resource/ArticleResource'
 
 export type ArticleEvents = {
   new: (item: Article) => void

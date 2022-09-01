@@ -1,6 +1,8 @@
 import fastify, { FastifyInstance } from 'fastify'
-import { Server, IncomingMessage, ServerResponse } from 'http'
+import { IncomingMessage, Server, ServerResponse } from 'http'
+
 import { loggerNamespace } from '../logger/logger'
+
 import { IHttpServerConfig } from './config'
 
 export class HttpServer {

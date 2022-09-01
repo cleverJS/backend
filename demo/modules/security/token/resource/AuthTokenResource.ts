@@ -1,5 +1,5 @@
-import { AuthToken } from '../AuthToken'
 import { AbstractDBResource } from '../../../../../core/db/sql/AbstractDBResource'
+import { AuthToken } from '../AuthToken'
 
 export enum AuthTokenResourceColumns {
   idColumn = 'id',

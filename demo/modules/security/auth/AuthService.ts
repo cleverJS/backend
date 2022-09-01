@@ -1,14 +1,15 @@
 import crypto from 'crypto'
-import TypedEmitter from 'typed-emitter'
 import { OAuth2Client } from 'google-auth-library'
-import { UserService } from '../../user/UserService'
-import { AuthTokenService } from '../token/AuthTokenService'
-import { User } from '../../user/User'
+import TypedEmitter from 'typed-emitter'
+
 import { logger } from '../../../../core/logger/logger'
-import { SecurityHelper } from '../SecurityHelper'
 import { settings } from '../../../configs'
 import { MSG_INVALID_TOKEN } from '../../../configs/messages'
 import { AppEvents } from '../../../types/Events'
+import { User } from '../../user/User'
+import { UserService } from '../../user/UserService'
+import { SecurityHelper } from '../SecurityHelper'
+import { AuthTokenService } from '../token/AuthTokenService'
 
 export interface IProtectDependencies {
   userService: UserService

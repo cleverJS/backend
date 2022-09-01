@@ -1,4 +1,5 @@
 import { Index, IndicesCreate, Search } from '@elastic/elasticsearch/api/requestParams'
+
 import { AbstractElasticIndex } from '../../../core/db/elasticsearch/AbstractElasticIndex'
 import { logger } from '../../../core/logger/logger'
 import { sleep } from '../../../core/utils/sleep'

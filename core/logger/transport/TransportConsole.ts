@@ -1,4 +1,4 @@
-import { TransportInterface, LogLevel } from './TransportInterface'
+import { LogLevel, TransportInterface } from './TransportInterface'
 
 export class TransportConsole implements TransportInterface {
   /**

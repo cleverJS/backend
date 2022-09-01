@@ -64,9 +64,34 @@ export class ArticleWSController extends AbstractCRUDController<ArticleService> 
 
   @route('article', 'test')
   public actionTest = async (request: WSRequest, connection: IAppConnectionInfo): Promise<Record<string, any>> => {
+    const promises = []
+    for (let i = 0; i < 30; i++) {
+      promises.push(this.test(i))
+    }
+
     return {
       success: true,
     }
+  }
+
+  protected async test(i: number) {
+    let count = await this.service.count()
+    this.logger.debug(count)
+
+    this.logger.info(i)
+    await this.service.save(
+      this.service.createEntity({
+        title: `title ${i}`,
+        author: `title ${i}`,
+        content: `title ${i}`,
+        created: new Date(),
+        isPublished: true,
+      })
+    )
+    await sleep(1000)
+
+    count = await this.service.count()
+    this.logger.debug(count)
   }
 
   @route('article', 'subscribe')

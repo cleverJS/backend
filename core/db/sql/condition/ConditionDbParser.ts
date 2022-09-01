@@ -1,4 +1,7 @@
 import { Knex } from 'knex'
+
+import { loggerNamespace } from '../../../logger/logger'
+import { isInstanceOf } from '../../../utils/common'
 import {
   Condition,
   conditionOperatorNames,
@@ -12,8 +15,6 @@ import {
   TConditionOperator,
   TConditionSimple,
 } from '../../Condition'
-import { isInstanceOf } from '../../../utils/common'
-import { loggerNamespace } from '../../../logger/logger'
 import { ErrorCondition } from '../../errors/ErrorCondition'
 
 interface IConditionOptions {

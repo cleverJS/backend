@@ -1,5 +1,5 @@
-import { controllerValidator } from '../../../../demo/controllers/validators/ControllerValidator'
 import { TConditionOperator } from '../../../../core/db/Condition'
+import { controllerValidator } from '../../../../demo/controllers/validators/ControllerValidator'
 import { EValidator } from '../../../../demo/controllers/validators/enum/ValidatorNameList'
 import { GlobalControllerValidator } from '../../../../demo/controllers/validators/GlobalControllerValidator'
 

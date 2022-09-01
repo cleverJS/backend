@@ -1,5 +1,6 @@
-import { IndicesCreate } from '@elastic/elasticsearch/api/requestParams'
 import { ApiResponse } from '@elastic/elasticsearch'
+import { IndicesCreate } from '@elastic/elasticsearch/api/requestParams'
+
 import { AbstractElasticIndex } from '../../../../core/db/elasticsearch/AbstractElasticIndex'
 
 export interface ArticleIndexData {

@@ -1,5 +1,5 @@
-import { Cloner } from '../utils/clone/Cloner'
 import { logger } from '../logger/logger'
+import { Cloner } from '../utils/clone/Cloner'
 
 export interface IEntity {
   id?: number | string | null

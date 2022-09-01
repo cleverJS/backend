@@ -1,5 +1,7 @@
 import { createClient } from 'redis'
+
 import { loggerNamespace } from '../../logger/logger'
+
 import { IRedisConfig } from './config'
 
 /**

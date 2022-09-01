@@ -1,4 +1,5 @@
 import { date, number, object, string } from 'yup'
+
 import { TAuthToken } from './AuthToken'
 
 const scheme = object()

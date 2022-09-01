@@ -1,14 +1,19 @@
 import { Condition, TConditionOperator } from '../../../../core/db/Condition'
 import { Paginator } from '../../../../core/utils/Paginator'
-import { demoAppContainer } from '../../../setup/DemoAppContainer'
+import { TArticle } from '../../../../demo/modules/article/Article'
 import { createArticleTable } from '../../../migrations/tables'
+import { demoAppContainer } from '../../../setup/DemoAppContainer'
 
 describe('Test AbstractDBResource and AbstractService', () => {
   const connection = demoAppContainer.connection
   const service = demoAppContainer.serviceContainer.articleService
   const resource = demoAppContainer.resourceContainer.articleResource
 
-  const payload1 = {
+  const payload1: TArticle = {
+    id: null,
+    content: null,
+    created: null,
+    isPublished: false,
     title: 'The Fundamentals of Mathematical Analysis I',
     author: 'G. M. Fikhtengolts',
   }
@@ -141,7 +146,10 @@ describe('Test AbstractDBResource and AbstractService', () => {
     await service.save(item)
 
     item.title = 'The Fundamentals of Mathematical Analysis II'
-    await service.save(item)
+    const result = await service.save(item)
+
+    expect(result).toBeTruthy()
+
     let dbItem
     if (item.id) {
       dbItem = await service.findById(item.id)
@@ -166,6 +174,13 @@ describe('Test AbstractDBResource and AbstractService', () => {
       dbItem = await service.findById(item.id)
     }
     expect(dbItem?.title).toEqual('The Fundamentals of Mathematical Analysis II')
+  })
+
+  test('should return false if item cannot be updated', async () => {
+    const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: 'id', value: 9999 }] })
+    const result = await resource.update(condition, { title: '111' })
+
+    expect(result).toBeFalsy()
   })
 
   test('should batchInsert', async () => {

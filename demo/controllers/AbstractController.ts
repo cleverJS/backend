@@ -1,9 +1,10 @@
 import { types } from 'util'
+
+import { WSServer } from '../../core/ws/WSServer'
 import { settings } from '../configs'
 import { MSG_ACCESS_DENIED } from '../configs/messages'
-import { IAppConnectionInfo } from '../types/WSConnection'
 import { SecurityHelper } from '../modules/security/SecurityHelper'
-import { WSServer } from '../../core/ws/WSServer'
+import { IAppConnectionInfo } from '../types/WSConnection'
 
 export interface IJSendResponse {
   status: 'success' | 'error' | 'fail'

@@ -1,7 +1,8 @@
 import { AbstractResource } from './db/AbstractResource'
-import { IEntity } from './entity/AbstractEntity'
 import { Condition } from './db/Condition'
+import { IEntity } from './entity/AbstractEntity'
 import { Paginator } from './utils/Paginator'
+import { TEntityFrom } from './utils/types'
 
 export abstract class AbstractService<E extends IEntity, R extends AbstractResource<E>> {
   protected resource: R
@@ -42,7 +43,7 @@ export abstract class AbstractService<E extends IEntity, R extends AbstractResou
     return this.resource.save(item)
   }
 
-  public createEntity(data: Partial<E>, clone: boolean = true): E {
+  public createEntity(data: Partial<TEntityFrom<E>>, clone: boolean = true): E {
     return this.resource.createEntity(data, clone)
   }
 

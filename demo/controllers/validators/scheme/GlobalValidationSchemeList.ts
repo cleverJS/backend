@@ -1,4 +1,5 @@
 import { ValidationSchema } from 'fastest-validator'
+
 import { TConditionOperator } from '../../../../core/db/Condition'
 
 export class GlobalValidationSchemeList {

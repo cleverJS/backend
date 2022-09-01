@@ -7,6 +7,7 @@ import { ConditionDbParser } from './condition/ConditionDbParser'
 import { IEntityFactory } from '../../entity/EntityFactory'
 import { loggerNamespace } from '../../logger/logger'
 import { Paginator } from '../../utils/Paginator'
+import { TEntityFrom } from '../../utils/types'
 
 export abstract class AbstractDBResource<E extends IEntity> extends AbstractResource<E> {
   protected readonly logger = loggerNamespace(`AbstractDBResource:${this.constructor.name}`)
@@ -43,8 +44,13 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     return this.createEntityList(rows, false)
   }
 
-  public async findAllRaw(condition?: Condition, pagination?: Paginator): Promise<any[]> {
+  public async findAllRaw<T = any>(condition?: Condition, pagination?: Paginator, select?: string[]): Promise<T[]> {
     const queryBuilder: Knex.QueryBuilder = this.connection(this.table)
+
+    if (select) {
+      queryBuilder.select(select)
+    }
+
     if (pagination) {
       if (!condition) {
         condition = new Condition(undefined, this.primaryKey, 'asc')
@@ -219,7 +225,7 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     return response > 0
   }
 
-  public createEntity(data: unknown, clone: boolean = true): E {
+  public createEntity(data: Partial<TEntityFrom<E>>, clone: boolean = true): E {
     return <E>this.entityFactory.create(data, clone)
   }
 

@@ -1,10 +1,10 @@
-import { AbstractCRUDController } from '../../../demo/controllers/AbstractCRUDController'
-import { ArticleService } from '../../../demo/modules/article/ArticleService'
-import { Article } from '../../../demo/modules/article/Article'
+import { WSClient } from '../../../core/ws/WSClient'
 import { WSServer } from '../../../core/ws/WSServer'
-import { WSClient } from '../../app/lib/WSClient'
-import { demoAppContainer } from '../../setup/DemoAppContainer'
+import { AbstractCRUDController } from '../../../demo/controllers/AbstractCRUDController'
+import { Article } from '../../../demo/modules/article/Article'
+import { ArticleService } from '../../../demo/modules/article/ArticleService'
 import { createArticleTable } from '../../migrations/tables'
+import { demoAppContainer } from '../../setup/DemoAppContainer'
 
 const WS_URL = 'ws://localhost:8000/ws'
 

@@ -1,5 +1,6 @@
-import { CacheAdapterInterface } from './CacheAdapterInterface'
 import { loggerNamespace } from '../../logger/logger'
+
+import { CacheAdapterInterface } from './CacheAdapterInterface'
 
 export class CacheAdapterRuntime extends CacheAdapterInterface {
   protected readonly logger = loggerNamespace('CacheAdapterRuntime')

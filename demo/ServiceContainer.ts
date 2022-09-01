@@ -1,12 +1,13 @@
 import TypedEmitter from 'typed-emitter'
-import { ResourceContainer } from './ResourceContainer'
+
+import { settings } from './configs'
 import { ArticleService } from './modules/article/ArticleService'
+import { FileService } from './modules/file/FileService'
+import { AuthService } from './modules/security/auth/AuthService'
 import { AuthTokenService } from './modules/security/token/AuthTokenService'
 import { UserService } from './modules/user/UserService'
-import { AuthService } from './modules/security/auth/AuthService'
+import { ResourceContainer } from './ResourceContainer'
 import { AppEvents } from './types/Events'
-import { FileService } from './modules/file/FileService'
-import { settings } from './configs'
 
 export class ServiceContainer {
   public readonly articleService: ArticleService

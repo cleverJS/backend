@@ -1,10 +1,11 @@
 import { AbstractService } from '../../../core/AbstractService'
-import { EUserRoles, User } from './User'
-import { UserResource, UserResourceColumns } from './resource/UserResource'
 import { Condition, TConditionOperator } from '../../../core/db/Condition'
-import { SecurityHelper } from '../security/SecurityHelper'
-import { castUser } from './helper'
 import { EntityFactory } from '../../../core/entity/EntityFactory'
+import { SecurityHelper } from '../security/SecurityHelper'
+
+import { castUser } from './helper'
+import { UserResource, UserResourceColumns } from './resource/UserResource'
+import { EUserRoles, User } from './User'
 
 export class UserService extends AbstractService<User, UserResource> {
   public findByRestoreToken(token: string): Promise<User | null> {

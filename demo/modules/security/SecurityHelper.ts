@@ -1,8 +1,9 @@
-import * as fs from 'fs'
 import * as argon2 from 'argon2'
-import jwt, { VerifyOptions } from 'jsonwebtoken'
 import crypto from 'crypto'
+import * as fs from 'fs'
+import jwt, { VerifyOptions } from 'jsonwebtoken'
 import { v4 as uuidV4 } from 'uuid'
+
 import { logger } from '../../../core/logger/logger'
 import { settings } from '../../configs'
 

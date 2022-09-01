@@ -1,6 +1,8 @@
-import { boolean, number, object, string, date } from 'yup'
-import { TArticle } from './Article'
+import { boolean, date, number, object, string } from 'yup'
+
 import { currentDateFunction } from '../../utils/common'
+
+import { TArticle } from './Article'
 
 const scheme = object()
   .defined()

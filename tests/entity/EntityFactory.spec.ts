@@ -1,4 +1,5 @@
 import { EntityFactory } from '../../core/entity/EntityFactory'
+
 import { castTest, Test } from './Test'
 
 describe('Test EntityFactory', () => {
@@ -8,7 +9,7 @@ describe('Test EntityFactory', () => {
     const payload = {
       id: 1,
       title: 'test',
-      active: 1,
+      active: true,
       something: 'strange',
       complex: {
         title: 'ComplexTitle',

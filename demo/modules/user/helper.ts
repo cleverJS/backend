@@ -1,4 +1,5 @@
 import { boolean, date, number, object, string } from 'yup'
+
 import { EUserRoles, TUser } from './User'
 
 const scheme = object()

@@ -1,4 +1,5 @@
 import knex from 'knex'
+
 import { Condition, TConditionOperator } from '../../../../core/db/Condition'
 import { ConditionDbParser } from '../../../../core/db/sql/condition/ConditionDbParser'
 
@@ -211,18 +212,5 @@ describe('Test Conditions', () => {
     expect(condition.getSort()).toEqual([{ sort: 'id', dir: 'asc' }])
     expect(conditionCloned.getSort()).toEqual([])
     expect(conditionCloned.getConditionItemList()?.conditions.length).toEqual(1)
-  })
-
-  it('should add RAW conditon', () => {
-    const qb = connection.table('test')
-    const condition = new Condition({
-      conditions: [
-        { operator: TConditionOperator.EQUALS, field: 'a', value: 1 },
-        { operator: TConditionOperator.RAW, value: 'CONTAINS([a], 1)' },
-      ],
-    })
-
-    conditionDBParse.parse(qb, condition)
-    expect(qb.toQuery()).toEqual('select * from `test` where (`a` = 1 and CONTAINS([a], 1))')
   })
 })

@@ -1,8 +1,10 @@
-import { types } from 'util'
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, Canceler, CancelToken, Method } from 'axios'
 import fs from 'fs'
-import { RequestCancel } from './RequestCancel'
+import { types } from 'util'
+
 import { logger } from '../../logger/logger'
+
+import { RequestCancel } from './RequestCancel'
 
 axios.defaults.withCredentials = true
 

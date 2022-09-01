@@ -1,4 +1,5 @@
-import Validator, { SyncCheckFunction, AsyncCheckFunction, ValidationError, ValidationSchema } from 'fastest-validator'
+import Validator, { AsyncCheckFunction, SyncCheckFunction, ValidationError, ValidationSchema } from 'fastest-validator'
+
 import { EValidator } from './enum/ValidatorNameList'
 
 export type IValidator = SyncCheckFunction | AsyncCheckFunction

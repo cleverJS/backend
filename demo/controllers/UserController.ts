@@ -1,12 +1,13 @@
+import { WSRequest } from '../../core/ws/WSRequest'
+import { WSServer } from '../../core/ws/WSServer'
+import { MSG_ACCESS_DENIED } from '../configs/messages'
 import { UserService } from '../modules/user/UserService'
 import { IAppConnectionInfo } from '../types/WSConnection'
+
 import { IJSendResponse } from './AbstractController'
-import { WSServer } from '../../core/ws/WSServer'
-import { WSRequest } from '../../core/ws/WSRequest'
-import { MSG_ACCESS_DENIED } from '../configs/messages'
 import { AbstractCRUDController } from './AbstractCRUDController'
-import { EValidator } from './validators/enum/ValidatorNameList'
 import { controllerValidator } from './validators/ControllerValidator'
+import { EValidator } from './validators/enum/ValidatorNameList'
 import { UserControllerValidator } from './validators/UserControllerValidator'
 
 interface IFetchRequest {

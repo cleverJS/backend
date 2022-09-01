@@ -1,7 +1,8 @@
 import { Client } from '@elastic/elasticsearch'
-import { ArticleIndex, ArticleIndexData } from '../../../../../demo/modules/article/index/ArticleIndex'
-import { settings } from '../../../../../demo/configs'
+
 import { logger } from '../../../../../core/logger/logger'
+import { settings } from '../../../../../demo/configs'
+import { ArticleIndex, ArticleIndexData } from '../../../../../demo/modules/article/index/ArticleIndex'
 
 describe('Test ArticleIndex', () => {
   const indexName = 'demo-article'

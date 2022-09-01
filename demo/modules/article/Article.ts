@@ -6,7 +6,7 @@ export type TArticle = {
   title: string
   author: string
   content: string | null
-  created: Date
+  created: Date | null
   isPublished: boolean
 }
 
@@ -15,6 +15,6 @@ export class Article extends AbstractEntity<TArticle> implements TArticle {
   public title = ''
   public author = ''
   public content: string | null = null
-  public created: Date = currentDateFunction()
+  public created: Date | null = currentDateFunction()
   public isPublished = false
 }

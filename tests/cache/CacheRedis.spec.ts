@@ -1,8 +1,8 @@
-import { Cache } from '../../core/cache/Cache'
 import { CacheAdapterNull } from '../../core/cache/adapters/CacheAdapterNull'
-import { sleep } from '../../core/utils/sleep'
 import { CacheAdapterRedis } from '../../core/cache/adapters/CacheAdapterRedis'
+import { Cache } from '../../core/cache/Cache'
 import { Redis } from '../../core/db/redis/Redis'
+import { sleep } from '../../core/utils/sleep'
 
 describe('Test Cache Redis', () => {
   const redis = new Redis({

@@ -1,6 +1,7 @@
 import * as process from 'process'
-import { Cache } from '../core/cache/Cache'
+
 import { CacheAdapterRuntime } from '../core/cache/adapters/CacheAdapterRuntime'
+import { Cache } from '../core/cache/Cache'
 import { logger } from '../core/logger/logger'
 
 class CacheContainer {

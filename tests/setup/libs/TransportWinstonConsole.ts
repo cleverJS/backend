@@ -1,4 +1,5 @@
 import winston, { format } from 'winston'
+
 import { LogLevel, TransportInterface } from '../../../core/logger/transport/TransportInterface'
 import { argsStringify } from '../../../core/utils/common'
 

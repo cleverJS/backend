@@ -1,8 +1,9 @@
 import { FastifyRequest } from 'fastify'
-import { loggerNamespace } from '../../core/logger/logger'
+
 import { HttpServer } from '../../core/http/HttpServer'
-import { ArticleService } from '../modules/article/ArticleService'
+import { loggerNamespace } from '../../core/logger/logger'
 import { Paginator } from '../../core/utils/Paginator'
+import { ArticleService } from '../modules/article/ArticleService'
 
 interface IDependencies {
   http: HttpServer

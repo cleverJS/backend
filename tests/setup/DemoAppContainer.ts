@@ -1,17 +1,18 @@
+import { Client } from '@elastic/elasticsearch'
+import { EventEmitter } from 'events'
 import knex, { Knex } from 'knex'
 import TypedEmitter from 'typed-emitter'
-import { EventEmitter } from 'events'
-import { Client } from '@elastic/elasticsearch'
-import { logger, loggerNamespace } from '../../core/logger/logger'
+
 import { HttpServer } from '../../core/http/HttpServer'
+import { logger, loggerNamespace } from '../../core/logger/logger'
+import { FSWrapper } from '../../core/utils/fsWrapper'
 import { WSServer } from '../../core/ws/WSServer'
-import { AppEvents } from '../../demo/types/Events'
+import { cacheContainer } from '../../demo/CacheContainer'
+import { settings as demoSettings } from '../../demo/configs'
 import { ISettings } from '../../demo/configs/SettingsInterface'
 import { ResourceContainer } from '../../demo/ResourceContainer'
 import { ServiceContainer } from '../../demo/ServiceContainer'
-import { settings as demoSettings } from '../../demo/configs'
-import { FSWrapper } from '../../core/utils/fsWrapper'
-import { cacheContainer } from '../../demo/CacheContainer'
+import { AppEvents } from '../../demo/types/Events'
 
 export class DemoAppContainer {
   public readonly wsServer: WSServer
@@ -33,7 +34,7 @@ export class DemoAppContainer {
     this.wsServer = new WSServer(settings.websocket, server)
 
     this.connectionConfig = settings.connection.connection as Knex.Sqlite3ConnectionConfig
-    this.createDatabase(this.connectionConfig.filename)
+    // this.createDatabase(this.connectionConfig.filename)
 
     this.connection = knex(settings.connection)
 

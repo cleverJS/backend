@@ -1,16 +1,18 @@
-import knex, { Knex } from 'knex'
 import cors from '@fastify/cors'
 import { EventEmitter } from 'events'
+import knex, { Knex } from 'knex'
 import TypedEmitter from 'typed-emitter'
-import { WSServer } from '../core/ws/WSServer'
-import { ISettings } from './configs/SettingsInterface'
-import { ResourceContainer } from './ResourceContainer'
-import { ServiceContainer } from './ServiceContainer'
-import { RouteContainer } from './RouteContainer'
+
 import { HttpServer } from '../core/http/HttpServer'
 import { loggerNamespace } from '../core/logger/logger'
-import { AppEvents } from './types/Events'
+import { WSServer } from '../core/ws/WSServer'
+
 import { cacheContainer } from './CacheContainer'
+import { ISettings } from './configs/SettingsInterface'
+import { ResourceContainer } from './ResourceContainer'
+import { RouteContainer } from './RouteContainer'
+import { ServiceContainer } from './ServiceContainer'
+import { AppEvents } from './types/Events'
 
 export class App {
   protected readonly logger = loggerNamespace('App')

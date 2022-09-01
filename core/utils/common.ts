@@ -1,15 +1,19 @@
-import { fileURLToPath } from 'url'
 import path from 'path'
 import hrtime from 'pretty-hrtime'
+import { fileURLToPath } from 'url'
 
 export const CORE_DEBUG = (process.env.CORE_DEBUG || 'false') === 'true'
 
-export const isInstanceOf = <T>(object: any, uniqueInstanceProperty: string): object is T => {
-  return uniqueInstanceProperty in object
+export const isInstanceOf = <T>(object: any, condition: string | ((object: any) => boolean)): object is T => {
+  if (typeof condition === 'string') {
+    return condition in object
+  }
+
+  return condition(object)
 }
 
 export const isInstanceOfByCondition = <T>(object: any, condition: (object: any) => boolean): object is T => {
-  return condition(object)
+  return isInstanceOf<T>(object, condition)
 }
 
 export function sliceLast<T>(items: T[], n: number): T[] {

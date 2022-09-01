@@ -1,8 +1,9 @@
-import WebSocket, { CloseEvent, ErrorEvent, Event, MessageEvent } from 'ws'
-import { v4 as uuid4 } from 'uuid'
 import { EventEmitter } from 'events'
-import { loggerNamespace } from '../../../core/logger/logger'
-import { Ready } from '../../../core/utils/ready'
+import { v4 as uuid4 } from 'uuid'
+import WebSocket, { CloseEvent, ErrorEvent, Event, MessageEvent } from 'ws'
+
+import { loggerNamespace } from '../logger/logger'
+import { Ready } from '../utils/ready'
 
 export const EVENT_OPEN = 'event_open'
 export const EVENT_RECONNECT = 'event_reconnect'
@@ -27,7 +28,7 @@ interface IResponseHeader {
   type?: ResponseType
 }
 
-export interface TResult<T extends Record<string, any>> {
+export interface TResult<T = Record<string, any>> {
   status: 'success' | 'error' | 'fail'
   data: T
   error?: string

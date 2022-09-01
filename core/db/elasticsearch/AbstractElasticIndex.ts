@@ -1,17 +1,18 @@
 import { Client } from '@elastic/elasticsearch'
-import { ApiResponse, TransportRequestOptions } from '@elastic/elasticsearch/lib/Transport'
 import {
-  UpdateByQuery,
-  DeleteByQuery,
-  Msearch,
-  Update,
-  Search,
+  Bulk,
   Count,
   Delete,
+  DeleteByQuery,
   Index,
-  Bulk,
   IndicesCreate,
+  Msearch,
+  Search,
+  Update,
+  UpdateByQuery,
 } from '@elastic/elasticsearch/api/requestParams'
+import { ApiResponse, TransportRequestOptions } from '@elastic/elasticsearch/lib/Transport'
+
 import { loggerNamespace } from '../../logger/logger'
 
 export interface IndexData {

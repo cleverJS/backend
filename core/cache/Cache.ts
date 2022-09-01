@@ -1,6 +1,7 @@
+import { loggerNamespace } from '../logger/logger'
+
 import { CacheAdapterInterface } from './adapters/CacheAdapterInterface'
 import { CacheAdapterNull } from './adapters/CacheAdapterNull'
-import { loggerNamespace } from '../logger/logger'
 
 export class Cache implements CacheAdapterInterface {
   public static TTL_1MIN = 60

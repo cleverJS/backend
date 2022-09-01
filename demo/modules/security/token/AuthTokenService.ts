@@ -1,7 +1,8 @@
-import { AuthToken } from './AuthToken'
-import { AuthTokenResource, AuthTokenResourceColumns } from './resource/AuthTokenResource'
 import { AbstractService } from '../../../../core/AbstractService'
 import { Condition, TConditionOperator } from '../../../../core/db/Condition'
+
+import { AuthToken } from './AuthToken'
+import { AuthTokenResource, AuthTokenResourceColumns } from './resource/AuthTokenResource'
 
 export class AuthTokenService extends AbstractService<AuthToken, AuthTokenResource> {
   public findByUserId(userId: number): Promise<AuthToken | null> {

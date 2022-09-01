@@ -1,5 +1,5 @@
-import { EValidator } from './enum/ValidatorNameList'
 import { controllerValidator } from './ControllerValidator'
+import { EValidator } from './enum/ValidatorNameList'
 
 export class AuthControllerValidator {
   private static instance: AuthControllerValidator

@@ -1,18 +1,20 @@
-import { types } from 'util'
 import { RouteHandlerMethod } from 'fastify'
-import { AbstractController, IJSendResponse } from './AbstractController'
+import { types } from 'util'
+
 import { HttpServer } from '../../core/http/HttpServer'
-import { UserService } from '../modules/user/UserService'
-import { AuthService, ITelegramPayload } from '../modules/security/auth/AuthService'
-import { WSServer } from '../../core/ws/WSServer'
-import { AuthControllerValidator } from './validators/AuthControllerValidator'
-import { WSRequest } from '../../core/ws/WSRequest'
-import { IAppConnectionInfo } from '../types/WSConnection'
-import { EUserRoles, User } from '../modules/user/User'
-import { MSG_ACCESS_DENIED, MSG_EXISTS } from '../configs/messages'
 import { loggerNamespace } from '../../core/logger/logger'
-import { EValidator } from './validators/enum/ValidatorNameList'
+import { WSRequest } from '../../core/ws/WSRequest'
+import { WSServer } from '../../core/ws/WSServer'
+import { MSG_ACCESS_DENIED, MSG_EXISTS } from '../configs/messages'
+import { AuthService, ITelegramPayload } from '../modules/security/auth/AuthService'
+import { EUserRoles, User } from '../modules/user/User'
+import { UserService } from '../modules/user/UserService'
+import { IAppConnectionInfo } from '../types/WSConnection'
+
+import { AbstractController, IJSendResponse } from './AbstractController'
+import { AuthControllerValidator } from './validators/AuthControllerValidator'
 import { controllerValidator } from './validators/ControllerValidator'
+import { EValidator } from './validators/enum/ValidatorNameList'
 
 export class AuthController extends AbstractController {
   protected readonly logger = loggerNamespace('AuthController')

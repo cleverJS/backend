@@ -1,4 +1,5 @@
 import Validator, { AsyncCheckFunction, SyncCheckFunction } from 'fastest-validator'
+
 import { WSRequest } from '../WSRequest'
 
 class WSRequestValidator {

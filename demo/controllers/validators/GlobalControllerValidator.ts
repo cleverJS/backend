@@ -1,6 +1,6 @@
-import { GlobalValidationSchemeList } from './scheme/GlobalValidationSchemeList'
-import { EValidator } from './enum/ValidatorNameList'
 import { controllerValidator } from './ControllerValidator'
+import { EValidator } from './enum/ValidatorNameList'
+import { GlobalValidationSchemeList } from './scheme/GlobalValidationSchemeList'
 
 export class GlobalControllerValidator {
   private static instance: GlobalControllerValidator

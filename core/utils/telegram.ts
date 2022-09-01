@@ -1,6 +1,8 @@
 import { Telegraf } from 'telegraf'
-import { chunkString } from './common'
+
 import { loggerNamespace } from '../logger/logger'
+
+import { chunkString } from './common'
 
 export class TelegramMessenger {
   protected logger = loggerNamespace('TelegramMessenger')

@@ -1,7 +1,7 @@
-import { Cache } from '../../core/cache/Cache'
 import { CacheAdapterNull } from '../../core/cache/adapters/CacheAdapterNull'
-import { sleep } from '../../core/utils/sleep'
 import { CacheAdapterRuntime } from '../../core/cache/adapters/CacheAdapterRuntime'
+import { Cache } from '../../core/cache/Cache'
+import { sleep } from '../../core/utils/sleep'
 
 describe('Test Cache Runtime', () => {
   let cacheAdapter = new CacheAdapterRuntime()

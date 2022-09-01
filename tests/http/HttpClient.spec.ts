@@ -1,8 +1,8 @@
 import { HttpClient } from '../../core/http/client/HttpClient'
-import { demoAppContainer } from '../setup/DemoAppContainer'
-import { TArticle } from '../../demo/modules/article/Article'
 import { ArticleHTTPController } from '../../demo/controllers/ArticleHTTPController'
+import { TArticle } from '../../demo/modules/article/Article'
 import { createArticleTable } from '../migrations/tables'
+import { demoAppContainer } from '../setup/DemoAppContainer'
 
 describe('Test HttpClient', () => {
   const httpServer = demoAppContainer.httpServer

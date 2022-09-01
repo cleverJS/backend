@@ -1,11 +1,12 @@
-import { ServiceContainer } from './ServiceContainer'
-import { WSServer } from '../core/ws/WSServer'
-import { HttpServer } from '../core/http/HttpServer'
-import { ArticleWSController } from './controllers/ArticleWSController'
-import { ArticleHTTPController } from './controllers/ArticleHTTPController'
-import { AuthController } from './controllers/AuthController'
 import { initRoutes } from '../core/decorators/routes'
+import { HttpServer } from '../core/http/HttpServer'
+import { WSServer } from '../core/ws/WSServer'
+
+import { ArticleHTTPController } from './controllers/ArticleHTTPController'
+import { ArticleWSController } from './controllers/ArticleWSController'
+import { AuthController } from './controllers/AuthController'
 import { UserController } from './controllers/UserController'
+import { ServiceContainer } from './ServiceContainer'
 
 export class RouteContainer {
   public constructor(services: ServiceContainer, wsServer: WSServer, http: HttpServer) {

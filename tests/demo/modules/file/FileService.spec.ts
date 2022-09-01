@@ -1,6 +1,8 @@
 import fs from 'fs'
-import { FileService } from '../../../../demo/modules/file/FileService'
+
 import { settings } from '../../../../demo/configs'
+import { FileService } from '../../../../demo/modules/file/FileService'
+import { createFileTable } from '../../../migrations/tables'
 import { demoAppContainer } from '../../../setup/DemoAppContainer'
 
 describe('Test FileService', () => {
@@ -13,18 +15,7 @@ describe('Test FileService', () => {
 
   beforeAll(async () => {
     fs.rmSync(`${runtimeDir}/usr`, { recursive: true, force: true })
-    await connection.schema.createTable('file', (t) => {
-      t.increments('id').unsigned().primary()
-      t.string('code', 255)
-      t.string('name', 255)
-      t.string('mime', 255)
-      t.string('baseDir', 255)
-      t.string('sort')
-      t.jsonb('data')
-      t.integer('url', 255)
-      t.dateTime('createdAt')
-      t.dateTime('updatedAt')
-    })
+    await createFileTable(connection)
   })
 
   beforeEach(async () => {

@@ -1,4 +1,5 @@
 import { Knex } from 'knex'
+
 import { EntityFactory } from '../../../../core/entity/EntityFactory'
 import { Author, TAuthor } from '../Author'
 

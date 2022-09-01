@@ -1,6 +1,8 @@
 import path from 'path'
-import { ISettings } from './SettingsInterface'
+
 import connections, { EDBConfigKey } from '../../knexfile'
+
+import { ISettings } from './SettingsInterface'
 
 const appConfigKey = (process.env.NODE_ENV || EDBConfigKey.development) as EDBConfigKey
 const appKnexConfig = connections[appConfigKey]
