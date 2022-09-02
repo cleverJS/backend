@@ -40,11 +40,15 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
   }
 
   public async findAll(condition?: Condition, pagination?: Paginator): Promise<E[]> {
-    const rows = await this.findAllRaw(condition, pagination)
+    const rows = await this.findAllRaw<TEntityFrom<E>>(condition, pagination)
     return this.createEntityList(rows, false)
   }
 
-  public async findAllRaw<T = any>(condition?: Condition, pagination?: Paginator, select?: string[]): Promise<T[]> {
+  public async findAllRaw<T extends Record<string, any> = Record<string, any>>(
+    condition?: Condition,
+    pagination?: Paginator,
+    select?: string[]
+  ): Promise<T[]> {
     const queryBuilder: Knex.QueryBuilder = this.connection(this.table)
 
     if (select) {
@@ -72,7 +76,7 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
       this.conditionParser.parse(queryBuilder, condition)
     }
 
-    let rows: any[] = []
+    let rows: T[] = []
     try {
       rows = await queryBuilder.select()
     } catch (e) {
@@ -86,7 +90,7 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     return rows
   }
 
-  public async count(condition?: Readonly<Condition>): Promise<number | null> {
+  public async count(condition?: Readonly<Condition>): Promise<number> {
     let conditionClone: Condition | undefined
     if (condition) {
       conditionClone = condition.clone()
@@ -229,7 +233,7 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     return <E>this.entityFactory.create(data, clone)
   }
 
-  public createEntityList(rows: any[], clone: boolean = true) {
+  public createEntityList(rows: Partial<TEntityFrom<E>>[], clone: boolean = true) {
     let result: E[] = []
 
     try {

@@ -321,4 +321,25 @@ describe('Test AbstractDBResource and AbstractService', () => {
       },
     ])
   })
+
+  test('should listRaw with chosen select only', async () => {
+    const item1 = service.createEntity(payload1)
+    const item2 = service.createEntity(payload2)
+    const item3 = service.createEntity(payload3)
+    await Promise.all([service.save(item1), service.save(item2), service.save(item3)])
+
+    const paginator = new Paginator()
+    paginator.setItemsPerPage(2)
+
+    let dbItems = await service.listRaw<{ title: string }>(paginator, undefined, ['title'])
+
+    expect(dbItems).toEqual([{ title: 'The Fundamentals of Mathematical Analysis I' }, { title: 'The Fundamentals of Mathematical Analysis II' }])
+    expect(paginator.getTotal()).toEqual(3)
+
+    paginator.nextPage()
+
+    dbItems = await service.listRaw<{ title: string }>(paginator, undefined, ['title'])
+
+    expect(dbItems).toEqual([{ title: 'The Fundamentals of Mathematical Analysis III' }])
+  })
 })

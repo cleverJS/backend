@@ -181,6 +181,20 @@ describe('Test AbstractDBResource', () => {
     resource.findAllRaw(condition, new Paginator())
     expect(condition.getSort()).toHaveLength(0)
   })
+
+  it('should return chosen select', async () => {
+    const factory = new EntityFactory(Test, castTest)
+
+    const resource = new TestResource(connection, conditionDBParse, factory)
+
+    await resource.insert({ id: 1, title: 'test' })
+
+    const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: 'id', value: 1 }] })
+
+    const [item] = await resource.findAllRaw<{ title: string }>(condition, new Paginator(), ['title'])
+
+    expect({ title: 'test' }).toEqual(item)
+  })
 })
 
 class Test extends AbstractEntity<TTest> implements TTest {

@@ -23,11 +23,15 @@ export abstract class AbstractService<E extends IEntity, R extends AbstractResou
     return this.resource.findAll(condition, paginator)
   }
 
-  public async findAllRaw(condition?: Readonly<Condition>, paginator?: Readonly<Paginator>): Promise<any[]> {
-    return this.resource.findAllRaw(condition, paginator)
+  public async findAllRaw<T extends Record<string, any> = Record<string, any>>(
+    condition?: Readonly<Condition>,
+    paginator?: Readonly<Paginator>,
+    select?: string[]
+  ): Promise<T[]> {
+    return this.resource.findAllRaw<T>(condition, paginator, select)
   }
 
-  public async count(condition?: Readonly<Condition>): Promise<number | null> {
+  public async count(condition?: Readonly<Condition>): Promise<number> {
     return this.resource.count(condition)
   }
 
@@ -65,14 +69,18 @@ export abstract class AbstractService<E extends IEntity, R extends AbstractResou
     return result
   }
 
-  public async listRaw(paginator: Readonly<Paginator>, condition?: Readonly<Condition>): Promise<Record<string, any>[]> {
+  public async listRaw<T extends Record<string, any> = Record<string, any>>(
+    paginator: Readonly<Paginator>,
+    condition?: Readonly<Condition>,
+    select?: string[]
+  ): Promise<T[]> {
     const total = paginator.getTotal()
     let totalPromise
     if (!total && !paginator.isSkipTotal()) {
       totalPromise = this.count(condition)
     }
 
-    const resultPromise = this.findAllRaw(condition, paginator)
+    const resultPromise = this.findAllRaw<T>(condition, paginator, select)
 
     const [result, totalNext] = await Promise.all([resultPromise, totalPromise])
 
@@ -80,7 +88,7 @@ export abstract class AbstractService<E extends IEntity, R extends AbstractResou
       paginator.setTotal(totalNext || 0)
     }
 
-    return result
+    return result as T[]
   }
 
   public async truncate(): Promise<any> {
