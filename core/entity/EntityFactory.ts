@@ -5,15 +5,15 @@ import { getCircularReplacer, JSONStringifySafe } from '../utils/common'
 import { Cloner } from '../utils/clone/Cloner'
 
 export interface IEntityFactory {
-  create(data: unknown, clone: boolean): any
+  create(data: unknown, clone: boolean): Promise<any>
 }
 
 export class EntityFactory<T extends Record<string, any>, E extends AbstractEntity<T>> implements IEntityFactory {
   protected logger = loggerNamespace('EntityFactory')
   protected EntityClass: new () => E
-  protected readonly cast?: (data: unknown) => T
+  protected readonly cast?: (data: unknown) => Promise<T>
 
-  public constructor(EntityClass: new () => E, cast?: (data: unknown) => T) {
+  public constructor(EntityClass: new () => E, cast?: (data: unknown) => Promise<T>) {
     this.EntityClass = EntityClass
     this.cast = cast
   }
@@ -26,7 +26,7 @@ export class EntityFactory<T extends Record<string, any>, E extends AbstractEnti
    *
    * @throws {Error} e
    */
-  public create(data: unknown, shouldClone: boolean = true): E {
+  public async create(data: unknown, shouldClone: boolean = true): Promise<E> {
     const item = new this.EntityClass()
 
     try {
@@ -35,7 +35,7 @@ export class EntityFactory<T extends Record<string, any>, E extends AbstractEnti
       }
 
       if (this.cast) {
-        data = this.cast(data)
+        data = await this.cast(data)
       }
 
       item.setData(<T>data, false)

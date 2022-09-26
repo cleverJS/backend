@@ -69,7 +69,7 @@ export class UserService extends AbstractService<User, UserResource> {
     const entityFactory = new EntityFactory(User, castUser)
 
     const currentDate = new Date()
-    user = entityFactory.create({
+    user = await entityFactory.create({
       salt,
       login,
       firstName,

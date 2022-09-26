@@ -20,6 +20,6 @@ const scheme = object()
     isPublished: boolean().defined().default(false),
   })
 
-export const castArticle = (data: unknown): TArticle => {
-  return scheme.noUnknown().cast(data)
+export const castArticle = (data: unknown): Promise<TArticle> => {
+  return scheme.noUnknown().validate(data)
 }

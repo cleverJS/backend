@@ -1,6 +1,7 @@
 import { boolean, number, object, string } from 'yup'
 
 import { AbstractEntity } from '../../core/entity/AbstractEntity'
+import { capitalize, convertToBoolean } from '../../core/utils/common'
 
 export interface ITest extends Object {
   id: number
@@ -13,21 +14,13 @@ const scheme = object()
   .defined()
   .shape({
     id: number().defined().default(0),
-    title: string().defined().default(''),
+    title: string().transform(capitalize).required(),
     active: boolean().transform(convertToBoolean).defined().default(false),
     object: object().defined().default({}),
   })
 
-function convertToBoolean(v: any) {
-  if (typeof v !== 'boolean') {
-    return v === 1
-  }
-
-  return v
-}
-
-export const castTest = (data: unknown): ITest => {
-  return scheme.noUnknown().cast(data)
+export const castTest = async (data: unknown): Promise<ITest> => {
+  return scheme.noUnknown().validate(data)
 }
 
 export class Test extends AbstractEntity<ITest> implements ITest {

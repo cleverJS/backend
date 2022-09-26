@@ -2,6 +2,8 @@ import path from 'path'
 import hrtime from 'pretty-hrtime'
 import { fileURLToPath } from 'url'
 
+import { stringifiedObject } from './regexp'
+
 export const CORE_DEBUG = (process.env.CORE_DEBUG || 'false') === 'true'
 
 export const isInstanceOf = <T>(object: any, condition: string | ((object: any) => boolean)): object is T => {
@@ -150,4 +152,70 @@ export async function timer<T>(callback: () => Promise<T>, logger: any, message:
 
   logger.info(`[${wordsCommand}] ${message}`)
   return result
+}
+
+export function argsCount(...args: any[]) {
+  return args.reduce((prev, current, index) => {
+    if (current) {
+      prev++
+    }
+
+    return prev
+  }, 0)
+}
+
+export const capitalize = (s: string) => {
+  if (typeof s !== 'string') return ''
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
+
+export function convertToBoolean(v: any) {
+  if (typeof v !== 'boolean') {
+    const valueNumber = Number(v)
+    if (!Number.isNaN(valueNumber)) {
+      return valueNumber === 1
+    }
+
+    if (typeof v === 'string') {
+      const lowerCase = v.toLowerCase()
+      if (['yes', 'no'].includes(lowerCase)) {
+        return true
+      }
+
+      if (['no', 'n'].includes(lowerCase)) {
+        return true
+      }
+    }
+
+    return false
+  }
+
+  return v
+}
+
+export function isStringifiedObject(string: string) {
+  let result = false
+  const match = string.match(stringifiedObject)
+  if (match && match[0]) {
+    result = true
+  }
+
+  return result
+}
+
+export function prepareSQLIn(items: (string | number)[]) {
+  let result = null
+  if (typeof items[0] === 'number') {
+    result = items.join(',')
+  }
+
+  if (typeof items[0] === 'string') {
+    result = `'${items.join("','")}'`
+  }
+
+  return result
+}
+
+export function removeEmpty(obj: Record<string, string | number | undefined | null>) {
+  return Object.fromEntries(Object.entries(obj).filter(([_, v]) => v !== null && v !== '' && v !== undefined))
 }

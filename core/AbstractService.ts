@@ -47,7 +47,7 @@ export abstract class AbstractService<E extends IEntity, R extends AbstractResou
     return this.resource.save(item)
   }
 
-  public createEntity(data: Partial<TEntityFrom<E>>, clone: boolean = true): E {
+  public createEntity(data: Partial<TEntityFrom<E>>, clone: boolean = true): Promise<E> {
     return this.resource.createEntity(data, clone)
   }
 

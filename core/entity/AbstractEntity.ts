@@ -8,7 +8,6 @@ export interface IEntity {
 }
 
 export abstract class AbstractEntity<T extends Record<string, any>> implements IEntity {
-  // protected readonly logger = loggerNamespace(`AbstractEntity:${this.constructor.name}`)
   public id?: number | string | null
 
   public setData(data: Partial<T>, shouldClone: boolean = true): void {
@@ -22,7 +21,7 @@ export abstract class AbstractEntity<T extends Record<string, any>> implements I
 
       if (key === 'id' || key in this) {
         properties[key] = data[key]
-      } else {
+      } else if (process.env.CORE_DEBUG) {
         logger.debug(`[AbstractEntity:${this.constructor.name}] Non class property ${key}. Skipped`)
       }
     }

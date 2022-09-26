@@ -87,9 +87,9 @@ export class FileService {
     const destinationPath = `${this.baseDir}${url}`
     await this.copyFileToDestination(pathOrUrl, destinationPath)
 
-    let item
+    let item: File | null = null
     try {
-      item = this.resource.createEntity({
+      item = await this.resource.createEntity({
         code,
         mime,
         url,
@@ -188,11 +188,11 @@ export class FileService {
   }
 
   protected async httpGet(url: string): Promise<IncomingMessage> {
-    return new Promise((resolve, reject) =>
+    return new Promise((resolve, reject) => {
       http.get(url, (res) => {
         resolve(res)
       })
-    )
+    })
   }
 
   protected async httpsGet(url: string): Promise<IncomingMessage> {

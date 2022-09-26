@@ -1,4 +1,5 @@
 {
+  "root": true,
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "project": "./tsconfig.json",
@@ -84,26 +85,16 @@
     "security/detect-non-literal-fs-filename": 0,
     "dot-notation": 0,
     "optimize-regex/optimize-regex": "warn",
-    "quotes": [
-      "warn",
-      "single"
-    ],
-    "no-useless-escape": [
-      "off"
-    ],
-    "no-console": [
-      "error"
-    ],
+    "quotes": ["warn", "single"],
+    "no-useless-escape": ["off"],
+    "no-console": ["error"],
     "no-underscore-dangle": [
       "error",
       {
         "allow": ["_id", "_source", "_scroll_id", "_validator"]
       }
     ],
-    "linebreak-style": [
-      "error",
-      "unix"
-    ],
+    "linebreak-style": ["error", "unix"],
     // Allow typescript style imports
     "node/no-unsupported-features/es-syntax": [
       "error",
@@ -140,7 +131,5 @@
       }
     }
   ],
-  "ignorePatterns": [
-    "**/node_modules/**/*"
-  ]
+  "ignorePatterns": ["**/node_modules/**/*"]
 }

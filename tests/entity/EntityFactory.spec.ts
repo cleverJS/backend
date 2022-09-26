@@ -3,12 +3,33 @@ import { EntityFactory } from '../../core/entity/EntityFactory'
 import { castTest, Test } from './Test'
 
 describe('Test EntityFactory', () => {
-  it('should create a model', () => {
+  it('should create a model with non empty title', async () => {
+    const factory = new EntityFactory(Test, castTest)
+
+    const payload = {
+      id: '1',
+      title: 'the Fundamentals of Mathematical Analysis I',
+      active: 1,
+    }
+
+    const item = await factory.create(payload)
+
+    const data = item.getData()
+
+    expect({
+      id: 1,
+      title: 'The Fundamentals of Mathematical Analysis I',
+      object: {},
+      active: true,
+    }).toEqual(data)
+  })
+
+  it('should create a model', async () => {
     const factory = new EntityFactory(Test, castTest)
 
     const payload = {
       id: 1,
-      title: 'test',
+      title: 'The Fundamentals of Mathematical Analysis I',
       active: true,
       something: 'strange',
       complex: {
@@ -16,7 +37,7 @@ describe('Test EntityFactory', () => {
       },
     }
 
-    const item = factory.create(payload)
+    const item = await factory.create(payload)
 
     item.setIsModified(true)
     expect(item.isModified()).toBeTruthy()
@@ -28,39 +49,39 @@ describe('Test EntityFactory', () => {
 
     expect({
       id: 1,
-      title: 'test',
+      title: 'The Fundamentals of Mathematical Analysis I',
       object: {},
       active: true,
     }).toEqual(data)
   })
 
-  it('Test Entity set partial data', () => {
+  it('Test Entity set partial data', async () => {
     const factory = new EntityFactory(Test, castTest)
-    const item = factory.create({
+    const item = await factory.create({
       id: 1,
-      title: 'test',
+      title: 'The Fundamentals of Mathematical Analysis I',
     })
 
     expect(item).toEqual({
       id: 1,
-      title: 'test',
+      title: 'The Fundamentals of Mathematical Analysis I',
       object: {},
       active: false,
     })
 
     item.setData({
-      title: 'test2',
+      title: 'The Fundamentals of Mathematical Analysis II',
     })
 
     expect(item).toEqual({
       id: 1,
-      title: 'test2',
+      title: 'The Fundamentals of Mathematical Analysis II',
       object: {},
       active: false,
     })
   })
 
-  it('should clone payload on entity creation', () => {
+  it('should clone payload on entity creation', async () => {
     const factory = new EntityFactory(Test, castTest)
 
     const payload = {
@@ -72,12 +93,12 @@ describe('Test EntityFactory', () => {
       },
     }
 
-    const item = factory.create(payload)
+    const item = await factory.create(payload)
     payload.object.id = 3
 
     expect({
       id: 1,
-      title: 'test',
+      title: 'Test',
       active: true,
       object: {
         id: 2,

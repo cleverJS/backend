@@ -298,7 +298,7 @@ export class AuthService {
     const decryptedRefreshToken = SecurityHelper.decodeToken(refreshToken)
 
     const ttl = new Date(decryptedRefreshToken.exp)
-    const token = this.deps.authTokenService.createEntity({
+    const token = await this.deps.authTokenService.createEntity({
       ttl,
       refreshToken,
       userId,

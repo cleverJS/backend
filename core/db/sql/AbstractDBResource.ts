@@ -229,24 +229,24 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     return response > 0
   }
 
-  public createEntity(data: Partial<TEntityFrom<E>>, clone: boolean = true): E {
-    return <E>this.entityFactory.create(data, clone)
+  public createEntity(data: Partial<TEntityFrom<E>>, clone: boolean = true): Promise<E> {
+    return <Promise<E>>this.entityFactory.create(data, clone)
   }
 
-  public createEntityList(rows: Partial<TEntityFrom<E>>[], clone: boolean = true) {
-    let result: E[] = []
+  public async createEntityList(rows: Partial<TEntityFrom<E>>[], clone: boolean = true) {
+    let result: Promise<E>[] = []
 
     try {
-      rows.forEach((row) => {
+      for (const row of rows) {
         const entity = this.createEntity(this.map(row), clone)
         result.push(entity)
-      })
+      }
     } catch (e) {
       this.logger.warn('createEntityList was interrupted because validation unsatisfying record was received')
       result = []
     }
 
-    return result
+    return Promise.all(result)
   }
 
   public map(data: Record<string, any>): any {

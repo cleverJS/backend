@@ -38,8 +38,8 @@ const scheme = object()
       .default(currentDateFunction),
   })
 
-const castTest = (data: unknown): TTest => {
-  return scheme.noUnknown().cast(data)
+const castTest = (data: unknown): Promise<TTest> => {
+  return scheme.noUnknown().validate(data)
 }
 
 const scheme2 = object()
@@ -52,8 +52,8 @@ interface TTest2 {
   title: string
 }
 
-const castTest2 = (data: unknown): TTest2 => {
-  return scheme2.noUnknown().cast(data)
+const castTest2 = (data: unknown): Promise<TTest2> => {
+  return scheme2.noUnknown().validate(data)
 }
 
 describe('Test AbstractDBResource', () => {
@@ -95,7 +95,7 @@ describe('Test AbstractDBResource', () => {
     startDate.setMinutes(59)
     startDate.setSeconds(59)
 
-    const item = factory.create({
+    const item = await factory.create({
       title: 'test',
       from: startDate,
       to: endDate,
@@ -121,9 +121,9 @@ describe('Test AbstractDBResource', () => {
     expect(result).toHaveLength(1)
   })
 
-  it('should', () => {
+  it('should', async () => {
     const factory = new EntityFactory(Test, castTest)
-    const item = factory.create({
+    const item = await factory.create({
       id: '1',
       title: 'test',
     })
@@ -160,7 +160,7 @@ describe('Test AbstractDBResource', () => {
     }).toEqual(dataDB2)
 
     const factory2 = new EntityFactory(Test2, castTest2)
-    const item2 = factory.create({
+    const item2 = await factory.create({
       title: 'test',
     })
     const resource3 = new Test3Resource(connection, conditionDBParse, factory2)

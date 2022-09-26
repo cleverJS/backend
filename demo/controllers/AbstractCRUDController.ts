@@ -44,7 +44,7 @@ export abstract class AbstractCRUDController<T extends AbstractService<IEntity, 
 
     let entity = null
     try {
-      entity = this.service.createEntity(payload)
+      entity = await this.service.createEntity(payload)
       this.beforeSave(entity, connection)
       await this.service.save(entity)
     } catch (e) {

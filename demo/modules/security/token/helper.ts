@@ -14,6 +14,6 @@ const scheme = object()
     updatedAt: date().defined().default(new Date()),
   })
 
-export function castAuthToken(data: unknown): TAuthToken {
-  return scheme.noUnknown().cast(data)
+export function castAuthToken(data: unknown): Promise<TAuthToken> {
+  return scheme.noUnknown().validate(data)
 }

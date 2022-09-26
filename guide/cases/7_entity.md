@@ -51,8 +51,8 @@ const scheme = object()
     isPublished: boolean().defined().default(false),
   })
 
-export const castArticle = (data: unknown): TArticle => {
-  return scheme.noUnknown().cast(data)
+export const castArticle = (data: unknown): Promise<TArticle> => {
+  return scheme.noUnknown().validate(data)
 }
 ```
 
@@ -66,7 +66,7 @@ const data = {
 }
 
 const factory = new EntityFactory(Article, castArticle)
-const entity = factory.create(data)
+const entity = await factory.create(data)
 ```
 
 However, [yup](https://github.com/jquense/yup) is optional, and it could be replaced with anything

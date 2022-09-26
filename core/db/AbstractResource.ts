@@ -29,7 +29,7 @@ export abstract class AbstractResource<E extends IEntity> {
   public abstract batchInsert(item: E[], chunkSize?: number): Promise<string[] | number[] | any>
   public abstract batchInsertRaw(rows: Partial<TEntityFrom<E>>[], chunkSize?: number): Promise<string[] | number[] | any>
   public abstract truncate(): Promise<any>
-  public abstract createEntity(data: Partial<TEntityFrom<E>>, clone: boolean): E
+  public abstract createEntity(data: Partial<TEntityFrom<E>>, clone: boolean): Promise<E>
   public abstract map(data: Record<string, any>): any
   public abstract mapToDB(item: E): any
 }

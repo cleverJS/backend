@@ -24,6 +24,6 @@ const scheme = object()
     updatedAt: date().defined().default(new Date()),
   })
 
-export function castUser(data: unknown): TUser {
-  return scheme.noUnknown().cast(data)
+export function castUser(data: unknown): Promise<TUser> {
+  return scheme.noUnknown().validate(data)
 }

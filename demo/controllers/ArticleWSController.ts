@@ -80,7 +80,7 @@ export class ArticleWSController extends AbstractCRUDController<ArticleService> 
 
     this.logger.info(i)
     await this.service.save(
-      this.service.createEntity({
+      await this.service.createEntity({
         title: `title ${i}`,
         author: `title ${i}`,
         content: `title ${i}`,

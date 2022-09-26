@@ -41,14 +41,14 @@ describe('Test AbstractDBResource and AbstractService', () => {
   })
 
   test('should insert item', async () => {
-    const item = service.createEntity(payload1)
+    const item = await service.createEntity(payload1)
 
     await service.save(item)
     expect(item.id).toEqual(1)
   })
 
   test('should findById', async () => {
-    const item = service.createEntity(payload1)
+    const item = await service.createEntity(payload1)
     await service.save(item)
 
     let dbItem
@@ -59,7 +59,7 @@ describe('Test AbstractDBResource and AbstractService', () => {
   })
 
   test('should findById 2', async () => {
-    const item = service.createEntity(payload1)
+    const item = await service.createEntity(payload1)
 
     item.author = ''
     await service.save(item)
@@ -72,9 +72,9 @@ describe('Test AbstractDBResource and AbstractService', () => {
   })
 
   test('should findAll', async () => {
-    const item1 = service.createEntity(payload1)
-    const item2 = service.createEntity(payload2)
-    const item3 = service.createEntity(payload3)
+    const item1 = await service.createEntity(payload1)
+    const item2 = await service.createEntity(payload2)
+    const item3 = await service.createEntity(payload3)
     await Promise.all([service.save(item1), service.save(item2), service.save(item3)])
 
     const condition = new Condition({
@@ -88,9 +88,9 @@ describe('Test AbstractDBResource and AbstractService', () => {
   })
 
   test('should findAll with pagination', async () => {
-    const item1 = service.createEntity(payload1)
-    const item2 = service.createEntity(payload2)
-    const item3 = service.createEntity(payload3)
+    const item1 = await service.createEntity(payload1)
+    const item2 = await service.createEntity(payload2)
+    const item3 = await service.createEntity(payload3)
     await Promise.all([service.save(item1), service.save(item2), service.save(item3)])
 
     const paginator = new Paginator()
@@ -106,7 +106,7 @@ describe('Test AbstractDBResource and AbstractService', () => {
   })
 
   test('should delete', async () => {
-    const item = service.createEntity(payload1)
+    const item = await service.createEntity(payload1)
     await service.save(item)
 
     let dbItem
@@ -118,9 +118,9 @@ describe('Test AbstractDBResource and AbstractService', () => {
   })
 
   test('should deleteAll', async () => {
-    const item1 = service.createEntity(payload1)
-    const item2 = service.createEntity(payload2)
-    const item3 = service.createEntity(payload3)
+    const item1 = await service.createEntity(payload1)
+    const item2 = await service.createEntity(payload2)
+    const item3 = await service.createEntity(payload3)
     await Promise.all([service.save(item1), service.save(item2), service.save(item3)])
 
     const condition = new Condition({
@@ -133,7 +133,7 @@ describe('Test AbstractDBResource and AbstractService', () => {
   })
 
   test('should truncate', async () => {
-    const item = service.createEntity(payload1)
+    const item = await service.createEntity(payload1)
     await service.save(item)
     await service.truncate()
     const dbItems = await service.findAll()
@@ -141,7 +141,7 @@ describe('Test AbstractDBResource and AbstractService', () => {
   })
 
   test('should update item', async () => {
-    const item = service.createEntity(payload1)
+    const item = await service.createEntity(payload1)
 
     await service.save(item)
 
@@ -158,7 +158,7 @@ describe('Test AbstractDBResource and AbstractService', () => {
   })
 
   test('should remove primary key on update item', async () => {
-    const item = service.createEntity(payload1)
+    const item = await service.createEntity(payload1)
 
     await service.save(item)
 
@@ -184,9 +184,9 @@ describe('Test AbstractDBResource and AbstractService', () => {
   })
 
   test('should batchInsert', async () => {
-    const item1 = service.createEntity(payload1)
-    const item2 = service.createEntity(payload2)
-    const item3 = service.createEntity(payload3)
+    const item1 = await service.createEntity(payload1)
+    const item2 = await service.createEntity(payload2)
+    const item3 = await service.createEntity(payload3)
 
     await resource.batchInsert([item1, item2, item3])
 
@@ -195,9 +195,9 @@ describe('Test AbstractDBResource and AbstractService', () => {
   })
 
   test('should remove id on batchInsert', async () => {
-    const item1 = service.createEntity({ ...payload1, id: 1 })
-    const item2 = service.createEntity({ ...payload2, id: 2 })
-    const item3 = service.createEntity({ ...payload3, id: 3 })
+    const item1 = await service.createEntity({ ...payload1, id: 1 })
+    const item2 = await service.createEntity({ ...payload2, id: 2 })
+    const item3 = await service.createEntity({ ...payload3, id: 3 })
 
     await resource.batchInsert([item1, item2, item3])
 
@@ -206,9 +206,9 @@ describe('Test AbstractDBResource and AbstractService', () => {
   })
 
   test('should batchInsert with chunk size', async () => {
-    const item1 = service.createEntity(payload1)
-    const item2 = service.createEntity(payload2)
-    const item3 = service.createEntity(payload3)
+    const item1 = await service.createEntity(payload1)
+    const item2 = await service.createEntity(payload2)
+    const item3 = await service.createEntity(payload3)
 
     await resource.batchInsert([item1, item2, item3], 1)
 
@@ -217,9 +217,9 @@ describe('Test AbstractDBResource and AbstractService', () => {
   })
 
   test('should count', async () => {
-    const item1 = service.createEntity(payload1)
-    const item2 = service.createEntity(payload2)
-    const item3 = service.createEntity(payload3)
+    const item1 = await service.createEntity(payload1)
+    const item2 = await service.createEntity(payload2)
+    const item3 = await service.createEntity(payload3)
 
     await resource.batchInsert([item1, item2, item3])
 
@@ -228,9 +228,9 @@ describe('Test AbstractDBResource and AbstractService', () => {
   })
 
   test('should count with condition', async () => {
-    const item1 = service.createEntity(payload1)
-    const item2 = service.createEntity(payload2)
-    const item3 = service.createEntity(payload3)
+    const item1 = await service.createEntity(payload1)
+    const item2 = await service.createEntity(payload2)
+    const item3 = await service.createEntity(payload3)
 
     await resource.batchInsert([item1, item2, item3])
 
@@ -243,9 +243,9 @@ describe('Test AbstractDBResource and AbstractService', () => {
   })
 
   test('should list', async () => {
-    const item1 = service.createEntity(payload1)
-    const item2 = service.createEntity(payload2)
-    const item3 = service.createEntity(payload3)
+    const item1 = await service.createEntity(payload1)
+    const item2 = await service.createEntity(payload2)
+    const item3 = await service.createEntity(payload3)
     await Promise.all([service.save(item1), service.save(item2), service.save(item3)])
 
     const paginator = new Paginator()
@@ -283,9 +283,9 @@ describe('Test AbstractDBResource and AbstractService', () => {
       },
     ]
 
-    const item1 = service.createEntity(payload1)
-    const item2 = service.createEntity(payload2)
-    const item3 = service.createEntity(payload3)
+    const item1 = await service.createEntity(payload1)
+    const item2 = await service.createEntity(payload2)
+    const item3 = await service.createEntity(payload3)
     await Promise.all([service.save(item1), service.save(item2), service.save(item3)])
 
     const paginator = new Paginator()
@@ -323,9 +323,9 @@ describe('Test AbstractDBResource and AbstractService', () => {
   })
 
   test('should listRaw with chosen select only', async () => {
-    const item1 = service.createEntity(payload1)
-    const item2 = service.createEntity(payload2)
-    const item3 = service.createEntity(payload3)
+    const item1 = await service.createEntity(payload1)
+    const item2 = await service.createEntity(payload2)
+    const item3 = await service.createEntity(payload3)
     await Promise.all([service.save(item1), service.save(item2), service.save(item3)])
 
     const paginator = new Paginator()

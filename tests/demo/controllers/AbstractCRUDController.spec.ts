@@ -66,7 +66,7 @@ describe('Test AbstractCRUDController', () => {
   })
 
   it('should update record', async () => {
-    let item: Article | null = service.createEntity(payload1)
+    let item: Article | null = await service.createEntity(payload1)
 
     await service.save(item)
     expect(item.id).toEqual(1)
@@ -87,7 +87,7 @@ describe('Test AbstractCRUDController', () => {
   })
 
   it('should delete record', async () => {
-    let item: Article | null = service.createEntity(payload1)
+    let item: Article | null = await service.createEntity(payload1)
 
     await service.save(item)
     expect(item.id).toEqual(1)
@@ -103,7 +103,7 @@ describe('Test AbstractCRUDController', () => {
   })
 
   it('should fetch record by id', async () => {
-    const item: Article | null = service.createEntity(payload1)
+    const item: Article | null = await service.createEntity(payload1)
 
     await service.save(item)
     expect(item.id).toEqual(1)
@@ -122,12 +122,12 @@ describe('Test AbstractCRUDController', () => {
   })
 
   it('should fetch records', async () => {
-    const item: Article | null = service.createEntity(payload1)
+    const item: Article | null = await service.createEntity(payload1)
 
     await service.save(item)
     expect(item.id).toEqual(1)
 
-    const item2: Article | null = service.createEntity(payload2)
+    const item2: Article | null = await service.createEntity(payload2)
 
     await service.save(item2)
     expect(item2.id).toEqual(2)

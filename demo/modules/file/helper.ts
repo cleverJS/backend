@@ -17,6 +17,6 @@ const scheme = object()
     updatedAt: date().default(new Date()).defined(),
   })
 
-export const castFile = (data: unknown): TFile => {
-  return scheme.noUnknown().cast(data)
+export const castFile = (data: unknown): Promise<TFile> => {
+  return scheme.noUnknown().validate(data)
 }
