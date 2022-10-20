@@ -57,7 +57,7 @@ export abstract class AbstractService<E extends IEntity, R extends AbstractResou
     }
 
     const data = item.getData()
-    const { [this.resource.getPrimaryKey()]: ident, ...impersonalData } = data
+    const { id, [this.resource.getPrimaryKey()]: ident, ...impersonalData } = data
 
     if (entity) {
       entity.setData(impersonalData)
