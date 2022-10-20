@@ -378,4 +378,43 @@ describe('Test AbstractDBResource and AbstractService', () => {
     expect(dbItem.title).toEqual(payload2.title)
     expect(dbItem.author).toEqual(payload2.author)
   })
+
+  test('should upsert item by condition', async () => {
+    const item = await service.createEntity(payload1)
+
+    await service.upsert(item)
+
+    let dbItem
+    if (item.id) {
+      dbItem = await service.findById(item.id)
+    }
+
+    if (!dbItem) {
+      throw new Error()
+    }
+
+    expect(dbItem.id).toEqual(1)
+    expect(dbItem.title).toEqual(payload1.title)
+    expect(dbItem.author).toEqual(payload1.author)
+
+    const item2 = await service.createEntity({ ...payload2, id: null })
+
+    const condition = new Condition({
+      conditions: [{ operator: TConditionOperator.EQUALS, field: 'title', value: 'The Fundamentals of Mathematical Analysis I' }],
+    })
+
+    await service.upsert(item2, condition)
+
+    if (item.id) {
+      dbItem = await service.findById(item.id)
+    }
+
+    if (!dbItem) {
+      throw new Error()
+    }
+
+    expect(dbItem.id).toEqual(1)
+    expect(dbItem.title).toEqual(payload2.title)
+    expect(dbItem.author).toEqual(payload2.author)
+  })
 })

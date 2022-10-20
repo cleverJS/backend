@@ -11,7 +11,6 @@ import { TEntityFrom } from '../../utils/types'
 
 export abstract class AbstractDBResource<E extends IEntity> extends AbstractResource<E> {
   protected readonly logger = loggerNamespace(`AbstractDBResource:${this.constructor.name}`)
-  protected abstract readonly table: string
   protected readonly primaryKey: string = 'id'
   protected readonly connection: Knex<any, unknown[]>
   protected readonly conditionParser: ConditionDbParser

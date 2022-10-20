@@ -6,6 +6,9 @@ import { TEntityFrom } from '../utils/types'
 import { Condition } from './Condition'
 
 export abstract class AbstractResource<E extends IEntity> {
+  protected abstract readonly primaryKey: string
+  protected abstract readonly table: string
+
   protected entityFactory: IEntityFactory
 
   protected constructor(entityFactory: IEntityFactory) {
@@ -32,4 +35,8 @@ export abstract class AbstractResource<E extends IEntity> {
   public abstract createEntity(data: Partial<TEntityFrom<E>>, clone: boolean): Promise<E>
   public abstract map(data: Record<string, any>): any
   public abstract mapToDB(item: E): any
+
+  public getPrimaryKey() {
+    return this.primaryKey
+  }
 }
