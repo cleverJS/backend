@@ -1,6 +1,7 @@
 syntax: glob
 .DS_Store
 .idea
+.fleet
 .env
 node_modules
 libs

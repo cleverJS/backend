@@ -47,6 +47,32 @@ export abstract class AbstractService<E extends IEntity, R extends AbstractResou
     return this.resource.save(item)
   }
 
+  public async upsert(item: E, condition?: Condition): Promise<boolean> {
+    let entity
+
+    if (condition) {
+      entity = await this.findOne(condition)
+    } else if (item.id) {
+      entity = await this.findById(item.id)
+    }
+
+    const data = item.getData()
+
+    if (entity) {
+      entity.setData(data)
+    } else {
+      entity = item
+    }
+
+    const result = await this.save(entity)
+
+    if (result) {
+      item.setData(entity.getData(false))
+    }
+
+    return result
+  }
+
   public createEntity(data: Partial<TEntityFrom<E>>, clone: boolean = true): Promise<E> {
     return this.resource.createEntity(data, clone)
   }

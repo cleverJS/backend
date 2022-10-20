@@ -144,6 +144,14 @@ export async function onlyProduction<T>(callback: () => Promise<T | null>) {
   return null
 }
 
+export async function notDevelopment<T>(callback: () => Promise<T | null>) {
+  if (process.env.NODE_ENV === 'development') {
+    return callback()
+  }
+
+  return null
+}
+
 export async function timer<T>(callback: () => Promise<T>, logger: any, message: string) {
   const startCommand = process.hrtime()
   const result = await callback()
@@ -191,6 +199,10 @@ export function convertToBoolean(v: any) {
   }
 
   return v
+}
+
+export function convertNullishToEmpty(v: any) {
+  return v === null || v === undefined ? '' : v.trim()
 }
 
 export function isStringifiedObject(string: string) {

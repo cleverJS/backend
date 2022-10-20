@@ -1,7 +1,7 @@
 import { boolean, number, object, string } from 'yup'
 
 import { AbstractEntity } from '../../core/entity/AbstractEntity'
-import { capitalize, convertToBoolean } from '../../core/utils/common'
+import { capitalize, convertNullishToEmpty, convertToBoolean } from '../../core/utils/common'
 
 export interface ITest extends Object {
   id: number
@@ -15,6 +15,7 @@ const scheme = object()
   .shape({
     id: number().defined().default(0),
     title: string().transform(capitalize).required(),
+    body: string().transform(convertNullishToEmpty).default(''),
     active: boolean().transform(convertToBoolean).defined().default(false),
     object: object().defined().default({}),
   })
@@ -26,6 +27,7 @@ export const castTest = async (data: unknown): Promise<ITest> => {
 export class Test extends AbstractEntity<ITest> implements ITest {
   public id = 0
   public title = ''
+  public body = ''
   public active = false
   public object = {}
 

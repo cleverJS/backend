@@ -19,6 +19,7 @@ describe('Test EntityFactory', () => {
     expect({
       id: 1,
       title: 'The Fundamentals of Mathematical Analysis I',
+      body: '',
       object: {},
       active: true,
     }).toEqual(data)
@@ -50,6 +51,7 @@ describe('Test EntityFactory', () => {
     expect({
       id: 1,
       title: 'The Fundamentals of Mathematical Analysis I',
+      body: '',
       object: {},
       active: true,
     }).toEqual(data)
@@ -65,6 +67,7 @@ describe('Test EntityFactory', () => {
     expect(item).toEqual({
       id: 1,
       title: 'The Fundamentals of Mathematical Analysis I',
+      body: '',
       object: {},
       active: false,
     })
@@ -76,6 +79,7 @@ describe('Test EntityFactory', () => {
     expect(item).toEqual({
       id: 1,
       title: 'The Fundamentals of Mathematical Analysis II',
+      body: '',
       object: {},
       active: false,
     })
@@ -87,6 +91,7 @@ describe('Test EntityFactory', () => {
     const payload = {
       id: 1,
       title: 'test',
+      body: '',
       active: 1,
       object: {
         id: 2,
@@ -99,10 +104,54 @@ describe('Test EntityFactory', () => {
     expect({
       id: 1,
       title: 'Test',
+      body: '',
       active: true,
       object: {
         id: 2,
       },
+    }).toEqual(item.getData())
+  })
+
+  it('should convert nullish (null) to empty', async () => {
+    const factory = new EntityFactory(Test, castTest)
+
+    const payload = {
+      id: 1,
+      title: 'test',
+      body: null,
+      active: 1,
+      object: {},
+    }
+
+    const item = await factory.create(payload)
+
+    expect({
+      id: 1,
+      title: 'Test',
+      body: '',
+      active: true,
+      object: {},
+    }).toEqual(item.getData())
+  })
+
+  it('should convert nullish (undefined) to empty', async () => {
+    const factory = new EntityFactory(Test, castTest)
+
+    const payload = {
+      id: 1,
+      title: 'test',
+      active: 1,
+      object: {},
+    }
+
+    const item = await factory.create(payload)
+
+    expect({
+      id: 1,
+      title: 'Test',
+      body: '',
+      active: true,
+      object: {},
     }).toEqual(item.getData())
   })
 })

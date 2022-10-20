@@ -342,4 +342,40 @@ describe('Test AbstractDBResource and AbstractService', () => {
 
     expect(dbItems).toEqual([{ title: 'The Fundamentals of Mathematical Analysis III' }])
   })
+
+  test('should upsert item', async () => {
+    const item = await service.createEntity(payload1)
+
+    await service.upsert(item)
+
+    let dbItem
+    if (item.id) {
+      dbItem = await service.findById(item.id)
+    }
+
+    if (!dbItem) {
+      throw new Error()
+    }
+
+    expect(dbItem.id).toEqual(1)
+    expect(dbItem.title).toEqual(payload1.title)
+    expect(dbItem.author).toEqual(payload1.author)
+
+    const item2 = await service.createEntity(payload2)
+
+    item2.id = item.id
+    await service.upsert(item2)
+
+    if (item.id) {
+      dbItem = await service.findById(item.id)
+    }
+
+    if (!dbItem) {
+      throw new Error()
+    }
+
+    expect(dbItem.id).toEqual(1)
+    expect(dbItem.title).toEqual(payload2.title)
+    expect(dbItem.author).toEqual(payload2.author)
+  })
 })
