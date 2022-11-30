@@ -4,6 +4,11 @@ import { TArticle } from '../../../../demo/modules/article/Article'
 import { createArticleTable } from '../../../migrations/tables'
 import { demoAppContainer } from '../../../setup/DemoAppContainer'
 
+const TITLE_I = 'The Fundamentals of Mathematical Analysis I'
+const TITLE_II = 'The Fundamentals of Mathematical Analysis II'
+const TITLE_III = 'The Fundamentals of Mathematical Analysis III'
+const AUTHOR_I = 'G. M. Fikhtengolts'
+
 describe('Test AbstractDBResource and AbstractService', () => {
   const connection = demoAppContainer.connection
   const service = demoAppContainer.serviceContainer.articleService
@@ -14,18 +19,18 @@ describe('Test AbstractDBResource and AbstractService', () => {
     content: null,
     created: null,
     isPublished: false,
-    title: 'The Fundamentals of Mathematical Analysis I',
-    author: 'G. M. Fikhtengolts',
+    title: TITLE_I,
+    author: AUTHOR_I,
   }
 
   const payload2 = {
-    title: 'The Fundamentals of Mathematical Analysis II',
-    author: 'G. M. Fikhtengolts',
+    title: TITLE_II,
+    author: AUTHOR_I,
   }
 
   const payload3 = {
-    title: 'The Fundamentals of Mathematical Analysis III',
-    author: 'G. M. Fikhtengolts',
+    title: TITLE_III,
+    author: AUTHOR_I,
   }
 
   beforeAll(async () => {
@@ -78,7 +83,7 @@ describe('Test AbstractDBResource and AbstractService', () => {
     await Promise.all([service.save(item1), service.save(item2), service.save(item3)])
 
     const condition = new Condition({
-      conditions: [{ operator: TConditionOperator.EQUALS, field: 'title', value: 'The Fundamentals of Mathematical Analysis II' }],
+      conditions: [{ operator: TConditionOperator.EQUALS, field: 'title', value: TITLE_II }],
     })
     const dbItem = await service.findOne(condition)
     expect(item2).toEqual(dbItem)
@@ -124,7 +129,7 @@ describe('Test AbstractDBResource and AbstractService', () => {
     await Promise.all([service.save(item1), service.save(item2), service.save(item3)])
 
     const condition = new Condition({
-      conditions: [{ operator: TConditionOperator.EQUALS, field: 'title', value: 'The Fundamentals of Mathematical Analysis II' }],
+      conditions: [{ operator: TConditionOperator.EQUALS, field: 'title', value: TITLE_II }],
     })
 
     await service.deleteAll(condition)
@@ -145,7 +150,7 @@ describe('Test AbstractDBResource and AbstractService', () => {
 
     await service.save(item)
 
-    item.title = 'The Fundamentals of Mathematical Analysis II'
+    item.title = TITLE_II
     const result = await service.save(item)
 
     expect(result).toBeTruthy()
@@ -154,7 +159,7 @@ describe('Test AbstractDBResource and AbstractService', () => {
     if (item.id) {
       dbItem = await service.findById(item.id)
     }
-    expect(dbItem?.title).toEqual('The Fundamentals of Mathematical Analysis II')
+    expect(dbItem?.title).toEqual(TITLE_II)
   })
 
   test('should remove primary key on update item', async () => {
@@ -162,7 +167,7 @@ describe('Test AbstractDBResource and AbstractService', () => {
 
     await service.save(item)
 
-    item.title = 'The Fundamentals of Mathematical Analysis II'
+    item.title = TITLE_II
 
     if (item.id) {
       const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: 'id', value: item.id }] })
@@ -173,7 +178,7 @@ describe('Test AbstractDBResource and AbstractService', () => {
     if (item.id) {
       dbItem = await service.findById(item.id)
     }
-    expect(dbItem?.title).toEqual('The Fundamentals of Mathematical Analysis II')
+    expect(dbItem?.title).toEqual(TITLE_II)
   })
 
   test('should return false if item cannot be updated', async () => {
@@ -235,7 +240,7 @@ describe('Test AbstractDBResource and AbstractService', () => {
     await resource.batchInsert([item1, item2, item3])
 
     const condition = new Condition({
-      conditions: [{ operator: TConditionOperator.EQUALS, field: 'title', value: 'The Fundamentals of Mathematical Analysis II' }],
+      conditions: [{ operator: TConditionOperator.EQUALS, field: 'title', value: TITLE_II }],
     })
 
     const count = await service.count(condition)
@@ -264,20 +269,20 @@ describe('Test AbstractDBResource and AbstractService', () => {
   test('should listRaw', async () => {
     const expectRaw = [
       {
-        author: 'G. M. Fikhtengolts',
+        author: AUTHOR_I,
         content: null,
         id: 1,
         isPublished: 0,
-        title: 'The Fundamentals of Mathematical Analysis I',
+        title: TITLE_I,
         from: null,
         to: null,
       },
       {
-        author: 'G. M. Fikhtengolts',
+        author: AUTHOR_I,
         content: null,
         id: 2,
         isPublished: 0,
-        title: 'The Fundamentals of Mathematical Analysis II',
+        title: TITLE_II,
         from: null,
         to: null,
       },
@@ -311,11 +316,11 @@ describe('Test AbstractDBResource and AbstractService', () => {
 
     expect(dbItems).toEqual([
       {
-        author: 'G. M. Fikhtengolts',
+        author: AUTHOR_I,
         content: null,
         id: 3,
         isPublished: 0,
-        title: 'The Fundamentals of Mathematical Analysis III',
+        title: TITLE_III,
         from: null,
         to: null,
       },
@@ -333,14 +338,14 @@ describe('Test AbstractDBResource and AbstractService', () => {
 
     let dbItems = await service.listRaw<{ title: string }>(paginator, undefined, ['title'])
 
-    expect(dbItems).toEqual([{ title: 'The Fundamentals of Mathematical Analysis I' }, { title: 'The Fundamentals of Mathematical Analysis II' }])
+    expect(dbItems).toEqual([{ title: TITLE_I }, { title: TITLE_II }])
     expect(paginator.getTotal()).toEqual(3)
 
     paginator.nextPage()
 
     dbItems = await service.listRaw<{ title: string }>(paginator, undefined, ['title'])
 
-    expect(dbItems).toEqual([{ title: 'The Fundamentals of Mathematical Analysis III' }])
+    expect(dbItems).toEqual([{ title: TITLE_III }])
   })
 
   test('should upsert item', async () => {
@@ -400,7 +405,7 @@ describe('Test AbstractDBResource and AbstractService', () => {
     const item2 = await service.createEntity({ ...payload2, id: null })
 
     const condition = new Condition({
-      conditions: [{ operator: TConditionOperator.EQUALS, field: 'title', value: 'The Fundamentals of Mathematical Analysis I' }],
+      conditions: [{ operator: TConditionOperator.EQUALS, field: 'title', value: TITLE_I }],
     })
 
     await service.upsert(item2, condition)

@@ -17,7 +17,10 @@ export default async (): Promise<Config.InitialOptions> => {
     // testEnvironment: 'jest-environment-node',
     verbose: true,
     testMatch: ['**/*.spec.ts'],
+    // modulePathIgnorePatterns: ["directoryNameToIgnore"]
     testPathIgnorePatterns: [
+      '<rootDir>/tests/db/elasticsearch/',
+      '<rootDir>/tests/demo/modules/article/index/',
       '<rootDir>/node_modules/',
       '<rootDir>/build/',
       '<rootDir>/tmp/',
@@ -29,6 +32,6 @@ export default async (): Promise<Config.InitialOptions> => {
     moduleDirectories: ['node_modules', 'core'],
     moduleFileExtensions: ['js', 'ts', 'json'],
     coverageDirectory: './runtime/coverage',
-    setupFilesAfterEnv: ['<rootDir>/tests/setup/GlobalSetup.ts'],
+    setupFilesAfterEnv: ['jest-extended/all', '<rootDir>/tests/setup/GlobalSetup.ts'],
   }
 }

@@ -1,9 +1,10 @@
+import { Buffer } from 'buffer'
 import { boolean, number, object, string } from 'yup'
 
 import { AbstractEntity } from '../../core/entity/AbstractEntity'
 import { capitalize, convertNullishToEmpty, convertToBoolean } from '../../core/utils/common'
 
-export interface ITest extends Object {
+export interface ITestEntity extends Object {
   id: number
   title: string
   active: boolean
@@ -20,16 +21,18 @@ const scheme = object()
     object: object().defined().default({}),
   })
 
-export const castTest = async (data: unknown): Promise<ITest> => {
+export const castTestEntity = async (data: unknown): Promise<ITestEntity> => {
   return scheme.noUnknown().validate(data)
 }
 
-export class Test extends AbstractEntity<ITest> implements ITest {
-  public id = 0
-  public title = ''
-  public body = ''
-  public active = false
+export class TestEntity extends AbstractEntity<ITestEntity> implements ITestEntity {
+  public id: number = 0
+  public title: string = ''
+  public body: string = ''
+  public active: boolean = false
+  public date: Date = new Date('2022-11-30T11:37:25.708Z')
   public object = {}
+  public buffer = Buffer.from('ABC')
 
   #modified: boolean = false
 

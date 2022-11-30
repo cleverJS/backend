@@ -63,7 +63,7 @@ export class AuthService {
     payload: ITelegramPayload,
     checkExpiration: boolean = false
   ): Promise<{ user: User; accessToken: string; refreshToken: string } | null> {
-    const isValid = await this.validateTelegramHash(payload, checkExpiration)
+    const isValid = this.validateTelegramHash(payload, checkExpiration)
 
     if (!isValid) {
       return null
@@ -261,7 +261,7 @@ export class AuthService {
       throw new Error('No id')
     }
 
-    user.restoreToken = await SecurityHelper.generateToken(
+    user.restoreToken = SecurityHelper.generateToken(
       {
         login: email,
         id: user.id,

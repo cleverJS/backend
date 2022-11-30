@@ -4,31 +4,31 @@ import { IEntity } from './entity/AbstractEntity'
 import { Paginator } from './utils/Paginator'
 import { TEntityFrom } from './utils/types'
 
-export abstract class AbstractService<E extends IEntity, R extends AbstractResource<E>> {
-  protected resource: R
+export abstract class AbstractService<GEntity extends IEntity, GResource extends AbstractResource<GEntity>> {
+  protected resource: GResource
 
-  public constructor(resource: R) {
+  public constructor(resource: GResource) {
     this.resource = resource
   }
 
-  public async findById(id: string | number): Promise<E | null> {
+  public async findById(id: string | number): Promise<GEntity | null> {
     return this.resource.findById(id)
   }
 
-  public async findOne(condition: Readonly<Condition>): Promise<E | null> {
+  public async findOne(condition: Readonly<Condition>): Promise<GEntity | null> {
     return this.resource.findOne(condition)
   }
 
-  public async findAll(condition?: Readonly<Condition>, paginator?: Readonly<Paginator>): Promise<E[]> {
+  public async findAll(condition?: Readonly<Condition>, paginator?: Readonly<Paginator>): Promise<GEntity[]> {
     return this.resource.findAll(condition, paginator)
   }
 
-  public async findAllRaw<T extends Record<string, any> = Record<string, any>>(
+  public async findAllRaw<GRaw extends Record<string, any> = Record<string, any>>(
     condition?: Readonly<Condition>,
     paginator?: Readonly<Paginator>,
     select?: string[]
-  ): Promise<T[]> {
-    return this.resource.findAllRaw<T>(condition, paginator, select)
+  ): Promise<GRaw[]> {
+    return this.resource.findAllRaw<GRaw>(condition, paginator, select)
   }
 
   public async count(condition?: Readonly<Condition>): Promise<number> {
@@ -43,11 +43,11 @@ export abstract class AbstractService<E extends IEntity, R extends AbstractResou
     return this.resource.deleteAll(condition)
   }
 
-  public async save(item: E): Promise<boolean> {
+  public async save(item: GEntity): Promise<boolean> {
     return this.resource.save(item)
   }
 
-  public async upsert(item: E, condition?: Condition): Promise<boolean> {
+  public async upsert(item: GEntity, condition?: Condition): Promise<boolean> {
     let entity
 
     if (condition) {
@@ -57,7 +57,8 @@ export abstract class AbstractService<E extends IEntity, R extends AbstractResou
     }
 
     const data = item.getData()
-    const { id, [this.resource.getPrimaryKey()]: ident, ...impersonalData } = data
+    const primaryKey = this.resource.getPrimaryKey()
+    const { id, [primaryKey]: ident, ...impersonalData } = data
 
     if (entity) {
       entity.setData(impersonalData)
@@ -74,11 +75,11 @@ export abstract class AbstractService<E extends IEntity, R extends AbstractResou
     return result
   }
 
-  public createEntity(data: Partial<TEntityFrom<E>>, clone: boolean = true): Promise<E> {
+  public createEntity(data: Partial<TEntityFrom<GEntity>>, clone: boolean = true): Promise<GEntity> {
     return this.resource.createEntity(data, clone)
   }
 
-  public async list(paginator: Readonly<Paginator>, condition?: Readonly<Condition>): Promise<E[]> {
+  public async list(paginator: Readonly<Paginator>, condition?: Readonly<Condition>): Promise<GEntity[]> {
     const total = paginator.getTotal()
     let totalPromise
     if (!total && !paginator.isSkipTotal()) {

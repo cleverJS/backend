@@ -2,11 +2,8 @@
   "semi": false,
   "singleQuote": true,
   "trailingComma": "es5",
-  "importOrder": [
-    "<THIRD_PARTY_MODULES>",
-    "^../",
-    "^./"
-  ],
+  "importOrderParserPlugins": ["typescript", "decorators-legacy"],
+  "importOrder": ["<THIRD_PARTY_MODULES>", "^../", "^./"],
   "endOfLine": "auto",
   "importOrderSeparation": true,
   "importOrderSortSpecifiers": true,

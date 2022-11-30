@@ -65,8 +65,8 @@ export class FileService {
     })
 
     return new Promise((resolve) => {
-      writeStream.on('close', () => {
-        const item = this.createFileFromPath(tmpFile, newFileName, mime, code, sort, data)
+      writeStream.on('close', async () => {
+        const item = await this.createFileFromPath(tmpFile, newFileName, mime, code, sort, data)
         resolve(item)
       })
     })

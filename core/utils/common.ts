@@ -2,7 +2,7 @@ import path from 'path'
 import hrtime from 'pretty-hrtime'
 import { fileURLToPath } from 'url'
 
-import { stringifiedObject } from './regexp'
+import { isoDateRegex, stringifiedObject } from './regexp'
 
 export const CORE_DEBUG = (process.env.CORE_DEBUG || 'false') === 'true'
 
@@ -70,7 +70,7 @@ export function formatBytes(bytes: number): string {
   const absBytes = Math.abs(bytes)
   // return bytes if less than a KB
   if (absBytes < kiloBytes) return `${bytes} Bytes`
-  // return KB if less than a MB
+  // return KB if less than an MB
   if (absBytes < megaBytes) return `${(bytes / kiloBytes).toFixed(decimal)} KB`
   // return MB if less than a GB
   if (absBytes < gigaBytes) return `${(bytes / megaBytes).toFixed(decimal)} MB`
@@ -230,4 +230,29 @@ export function prepareSQLIn(items: (string | number)[]) {
 
 export function removeEmpty(obj: Record<string, string | number | undefined | null>) {
   return Object.fromEntries(Object.entries(obj).filter(([_, v]) => v !== null && v !== '' && v !== undefined))
+}
+
+export const currentDateFunction = () => new Date()
+
+export type ValueOf<T> = T[keyof T]
+
+export function removeSpaces(input: string) {
+  if (input) {
+    input = input.replace(/\s/g, '')
+  }
+
+  return input
+}
+
+export function isISODate(value: string) {
+  return isoDateRegex.exec(value)
+}
+
+export function parseDate(value: any) {
+  let result = value
+  if (typeof value === 'string' && isISODate(value)) {
+    result = new Date(value)
+  }
+
+  return result
 }

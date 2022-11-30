@@ -12,50 +12,6 @@ import { Paginator } from '../../../core/utils/Paginator'
 import { currentDateFunction } from '../../../demo/utils/common'
 import connections, { EDBConfigKey } from '../../../knexfile'
 
-interface TTest {
-  id: number
-  title: string
-  from: Date | null
-  to: Date | null
-}
-
-const scheme = object()
-  .defined()
-  .shape({
-    id: number().defined().default(0),
-    title: string().defined().default(''),
-    from: date()
-      .transform((castValue, originalValue) => {
-        return new Date(originalValue)
-      })
-      .defined()
-      .default(currentDateFunction),
-    to: date()
-      .transform((castValue, originalValue) => {
-        return new Date(originalValue)
-      })
-      .defined()
-      .default(currentDateFunction),
-  })
-
-const castTest = (data: unknown): Promise<TTest> => {
-  return scheme.noUnknown().validate(data)
-}
-
-const scheme2 = object()
-  .required()
-  .shape({
-    title: string().defined().default(''),
-  })
-
-interface TTest2 {
-  title: string
-}
-
-const castTest2 = (data: unknown): Promise<TTest2> => {
-  return scheme2.noUnknown().validate(data)
-}
-
 describe('Test AbstractDBResource', () => {
   const conditionDBParse = ConditionDbParser.getInstance()
   const appKnexConfig = connections[EDBConfigKey.memory]
@@ -65,6 +21,7 @@ describe('Test AbstractDBResource', () => {
     await connection.schema.createTable('test', (t) => {
       t.increments('id').unsigned().primary()
       t.string('title', 255)
+      t.string('modifiedBy', 255)
       t.datetime('from')
       t.datetime('to')
     })
@@ -134,7 +91,7 @@ describe('Test AbstractDBResource', () => {
 
     const objectProperties = Object.keys(data).sort()
 
-    expect(objectProperties).toEqual(['from', 'title', 'to'].sort())
+    expect(objectProperties).toIncludeAllMembers(['from', 'modifiedBy', 'title', 'to'])
 
     const dataDB = resource.map({
       id: '1',
@@ -169,7 +126,7 @@ describe('Test AbstractDBResource', () => {
 
     const objectProperties2 = Object.keys(data2).sort()
 
-    expect(objectProperties2).toEqual(['from', 'title', 'to'].sort())
+    expect(objectProperties2).toIncludeAllMembers(['from', 'modifiedBy', 'title', 'to'])
   })
 
   it('should not change condition during findAllRaw', () => {
@@ -195,6 +152,21 @@ describe('Test AbstractDBResource', () => {
 
     expect({ title: 'test' }).toEqual(item)
   })
+
+  it('should change referenced object during mapToDB', async () => {
+    const factory = new EntityFactory(Test, castTest)
+    const item = await factory.create({
+      id: '1',
+      title: 'test',
+    })
+
+    expect(item.getData().modifiedBy).toBeNull()
+
+    const resource = new TestResource(connection, conditionDBParse, factory)
+    await resource.save(item)
+
+    expect(item.getData().modifiedBy).toEqual('Modifier')
+  })
 })
 
 class Test extends AbstractEntity<TTest> implements TTest {
@@ -202,6 +174,7 @@ class Test extends AbstractEntity<TTest> implements TTest {
   public title = ''
   public from = null
   public to = null
+  public modifiedBy = null
 }
 
 class Test2 extends AbstractEntity<TTest> implements TTest2 {
@@ -210,6 +183,14 @@ class Test2 extends AbstractEntity<TTest> implements TTest2 {
 
 class TestResource extends AbstractDBResource<Test> {
   protected table: string = 'test'
+
+  mapToDB(item: Test): any {
+    const data = super.mapToDB(item)
+
+    data.modifiedBy = 'Modifier'
+
+    return data
+  }
 }
 class Test2Resource extends AbstractDBResource<Test> {
   protected primaryKey = 'entryId'
@@ -217,4 +198,50 @@ class Test2Resource extends AbstractDBResource<Test> {
 }
 class Test3Resource extends AbstractDBResource<Test2> {
   protected table: string = 'test'
+}
+
+interface TTest {
+  id: number
+  title: string
+  from: Date | null
+  to: Date | null
+  modifiedBy: string | null
+}
+
+const scheme = object()
+  .defined()
+  .shape({
+    id: number().defined().default(0),
+    title: string().defined().default(''),
+    modifiedBy: string().nullable().defined().default(null),
+    from: date()
+      .transform((castValue, originalValue) => {
+        return new Date(originalValue)
+      })
+      .defined()
+      .default(currentDateFunction),
+    to: date()
+      .transform((castValue, originalValue) => {
+        return new Date(originalValue)
+      })
+      .defined()
+      .default(currentDateFunction),
+  })
+
+const castTest = (data: unknown): Promise<TTest> => {
+  return scheme.noUnknown().validate(data)
+}
+
+const scheme2 = object()
+  .required()
+  .shape({
+    title: string().defined().default(''),
+  })
+
+interface TTest2 {
+  title: string
+}
+
+const castTest2 = (data: unknown): Promise<TTest2> => {
+  return scheme2.noUnknown().validate(data)
 }

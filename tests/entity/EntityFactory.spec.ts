@@ -1,14 +1,19 @@
+import { Buffer } from 'buffer'
+
 import { EntityFactory } from '../../core/entity/EntityFactory'
 
-import { castTest, Test } from './Test'
+import { castTestEntity, TestEntity } from './TestEntity'
+
+const TEST_ENTITY_DATE = new Date('2022-11-30T11:37:25.708Z')
+const TITLE_I = 'The Fundamentals of Mathematical Analysis I'
 
 describe('Test EntityFactory', () => {
   it('should create a model with non empty title', async () => {
-    const factory = new EntityFactory(Test, castTest)
+    const factory = new EntityFactory(TestEntity, castTestEntity)
 
     const payload = {
       id: '1',
-      title: 'the Fundamentals of Mathematical Analysis I',
+      title: TITLE_I,
       active: 1,
     }
 
@@ -16,21 +21,23 @@ describe('Test EntityFactory', () => {
 
     const data = item.getData()
 
-    expect({
+    expect(data).toEqual({
       id: 1,
-      title: 'The Fundamentals of Mathematical Analysis I',
+      title: TITLE_I,
       body: '',
       object: {},
       active: true,
-    }).toEqual(data)
+      buffer: Buffer.from('ABC'),
+      date: TEST_ENTITY_DATE,
+    })
   })
 
   it('should create a model', async () => {
-    const factory = new EntityFactory(Test, castTest)
+    const factory = new EntityFactory(TestEntity, castTestEntity)
 
     const payload = {
       id: 1,
-      title: 'The Fundamentals of Mathematical Analysis I',
+      title: TITLE_I,
       active: true,
       something: 'strange',
       complex: {
@@ -48,28 +55,32 @@ describe('Test EntityFactory', () => {
 
     const data = item.getData()
 
-    expect({
+    expect(data).toEqual({
       id: 1,
-      title: 'The Fundamentals of Mathematical Analysis I',
+      title: TITLE_I,
       body: '',
       object: {},
       active: true,
-    }).toEqual(data)
+      buffer: Buffer.from('ABC'),
+      date: TEST_ENTITY_DATE,
+    })
   })
 
   it('Test Entity set partial data', async () => {
-    const factory = new EntityFactory(Test, castTest)
+    const factory = new EntityFactory(TestEntity, castTestEntity)
     const item = await factory.create({
       id: 1,
-      title: 'The Fundamentals of Mathematical Analysis I',
+      title: TITLE_I,
     })
 
     expect(item).toEqual({
       id: 1,
-      title: 'The Fundamentals of Mathematical Analysis I',
+      title: TITLE_I,
       body: '',
       object: {},
       active: false,
+      buffer: Buffer.from('ABC'),
+      date: TEST_ENTITY_DATE,
     })
 
     item.setData({
@@ -82,11 +93,13 @@ describe('Test EntityFactory', () => {
       body: '',
       object: {},
       active: false,
+      buffer: Buffer.from('ABC'),
+      date: TEST_ENTITY_DATE,
     })
   })
 
   it('should clone payload on entity creation', async () => {
-    const factory = new EntityFactory(Test, castTest)
+    const factory = new EntityFactory(TestEntity, castTestEntity)
 
     const payload = {
       id: 1,
@@ -101,7 +114,7 @@ describe('Test EntityFactory', () => {
     const item = await factory.create(payload)
     payload.object.id = 3
 
-    expect({
+    expect(item.getData()).toEqual({
       id: 1,
       title: 'Test',
       body: '',
@@ -109,11 +122,13 @@ describe('Test EntityFactory', () => {
       object: {
         id: 2,
       },
-    }).toEqual(item.getData())
+      buffer: Buffer.from('ABC'),
+      date: TEST_ENTITY_DATE,
+    })
   })
 
   it('should convert nullish (null) to empty', async () => {
-    const factory = new EntityFactory(Test, castTest)
+    const factory = new EntityFactory(TestEntity, castTestEntity)
 
     const payload = {
       id: 1,
@@ -125,17 +140,19 @@ describe('Test EntityFactory', () => {
 
     const item = await factory.create(payload)
 
-    expect({
+    expect(item.getData()).toEqual({
       id: 1,
       title: 'Test',
       body: '',
       active: true,
       object: {},
-    }).toEqual(item.getData())
+      buffer: Buffer.from('ABC'),
+      date: TEST_ENTITY_DATE,
+    })
   })
 
   it('should convert nullish (undefined) to empty', async () => {
-    const factory = new EntityFactory(Test, castTest)
+    const factory = new EntityFactory(TestEntity, castTestEntity)
 
     const payload = {
       id: 1,
@@ -146,12 +163,14 @@ describe('Test EntityFactory', () => {
 
     const item = await factory.create(payload)
 
-    expect({
+    expect(item.getData()).toEqual({
       id: 1,
       title: 'Test',
       body: '',
       active: true,
       object: {},
-    }).toEqual(item.getData())
+      buffer: Buffer.from('ABC'),
+      date: TEST_ENTITY_DATE,
+    })
   })
 })

@@ -54,7 +54,7 @@ describe('Test FileService', () => {
 
     const item = await service.createFileFromContent(content, 'larry.gif', null, 'code1', 110, { some: 'data' })
 
-    expect(item).not.toBeUndefined()
+    expect(item).toBeTruthy()
 
     if (!item) {
       throw new Error('No item')
@@ -74,7 +74,7 @@ describe('Test FileService', () => {
       await service.delete(item.id)
     }
 
-    expect(fs.existsSync(item.getFilePath())).not.toBeTruthy()
+    expect(fs.existsSync(item.getFilePath())).not.toBeTrue()
   })
 
   it('should create file from stream', async () => {

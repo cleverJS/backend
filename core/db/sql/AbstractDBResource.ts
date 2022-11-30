@@ -1,13 +1,15 @@
-import { types } from 'util'
 import { Knex } from 'knex'
+import { types } from 'util'
+
 import { IEntity } from '../../entity/AbstractEntity'
-import { AbstractResource } from '../AbstractResource'
-import { Condition, TConditionOperator } from '../Condition'
-import { ConditionDbParser } from './condition/ConditionDbParser'
 import { IEntityFactory } from '../../entity/EntityFactory'
 import { loggerNamespace } from '../../logger/logger'
 import { Paginator } from '../../utils/Paginator'
 import { TEntityFrom } from '../../utils/types'
+import { AbstractResource } from '../AbstractResource'
+import { Condition, TConditionOperator } from '../Condition'
+
+import { ConditionDbParser } from './condition/ConditionDbParser'
 
 export abstract class AbstractDBResource<E extends IEntity> extends AbstractResource<E> {
   protected readonly logger = loggerNamespace(`AbstractDBResource:${this.constructor.name}`)
@@ -54,22 +56,8 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
       queryBuilder.select(select)
     }
 
-    if (pagination) {
-      if (!condition) {
-        condition = new Condition(undefined, this.primaryKey, 'asc')
-      } else if (condition.getSort().length === 0) {
-        condition = condition.clone()
-        condition.setSort(this.primaryKey, 'asc')
-      }
-
-      if (pagination.getLimit()) {
-        queryBuilder.limit(pagination.getLimit())
-      }
-
-      if (pagination.getOffset()) {
-        queryBuilder.offset(pagination.getOffset())
-      }
-    }
+    this.applyPagination(pagination, condition, queryBuilder)
+    condition = this.addDefaultSortIfNotSet(pagination, condition)
 
     if (condition) {
       this.conditionParser.parse(queryBuilder, condition)
@@ -89,6 +77,36 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     return rows
   }
 
+  protected applyPagination(pagination: Paginator | undefined, condition: Condition | undefined, queryBuilder: Knex.QueryBuilder) {
+    if (pagination) {
+      if (pagination.getLimit()) {
+        queryBuilder.limit(pagination.getLimit())
+      }
+
+      if (pagination.getOffset()) {
+        queryBuilder.offset(pagination.getOffset())
+      }
+    }
+
+    return condition
+  }
+
+  protected addDefaultSortIfNotSet(pagination: Paginator | undefined, condition: Condition | undefined) {
+    if (pagination) {
+      if (!condition) {
+        condition = new Condition(undefined)
+      } else if (condition.getSort().length === 0) {
+        condition = condition.clone()
+      }
+
+      if (!condition.getSort().length && pagination.getLimit() > 1) {
+        condition.setSort(this.primaryKey, 'asc')
+      }
+    }
+
+    return condition
+  }
+
   public async count(condition?: Readonly<Condition>): Promise<number> {
     let conditionClone: Condition | undefined
     if (condition) {
@@ -106,23 +124,27 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
   }
 
   public async save(item: E) {
-    try {
-      const data = this.mapToDB(item)
-      if (data) {
-        const { id } = item
-        if (id) {
-          const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: this.primaryKey, value: id }] })
-          return this.update(condition, data)
-        }
+    let result = false
 
-        item.id = await this.insert(data)
+    const data = this.mapToDB(item)
+    if (data) {
+      let { id } = item
+      if (id) {
+        const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: this.primaryKey, value: id }] })
+        result = await this.update(condition, data)
+      } else {
+        id = await this.insert(data)
+
+        if (id) {
+          result = true
+        }
       }
-    } catch (e) {
-      this.logger.error(e)
-      throw e
+
+      item.setData(this.map(data), true)
+      item.id = id
     }
 
-    return true
+    return result
   }
 
   public async insert(data: Record<string, any>): Promise<any | null> {
@@ -168,7 +190,7 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
       return result > 0
     } catch (e) {
       if (types.isNativeError(e)) {
-        this.logger.error(e.message, queryBuilder.toQuery())
+        this.logger.error(queryBuilder.toQuery(), e.message)
       }
 
       throw e
@@ -257,7 +279,7 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
   }
 
   public mapToDB(item: E): any {
-    const { id, [this.primaryKey]: primaryKey, ...data } = item.getData(false)
+    const { id, [this.primaryKey]: primaryKey, ...data } = item.getData(true)
     return data
   }
 }

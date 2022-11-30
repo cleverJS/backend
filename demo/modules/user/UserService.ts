@@ -93,12 +93,13 @@ export class UserService extends AbstractService<User, UserResource> {
   }
 
   public async updateLastVisitByUserId(id: number): Promise<boolean> {
+    let result = false
     const user = await this.findById(id)
     if (user) {
-      return this.updateLastVisit(user)
+      result = await this.updateLastVisit(user)
     }
 
-    return false
+    return result
   }
 
   public updateLastVisit(user: User): Promise<boolean> {
