@@ -2,14 +2,14 @@ import { logger } from '../logger/logger'
 import { Cloner } from '../utils/clone/Cloner'
 
 export interface IEntity {
-  id?: number | string | null
+  id?: any
   setData(data: Partial<any>, shouldClone?: boolean): void
   getData(shouldClone?: boolean): any
   clone(nextData?: Partial<any>): IEntity
 }
 
-export abstract class AbstractEntity<GData extends Record<string, any>, GID extends number | string | null = number | null> implements IEntity {
-  public id?: GID
+export abstract class AbstractEntity<GData extends Record<string, any>> implements IEntity {
+  public id?: any
 
   public constructor(data?: Partial<GData>) {
     if (data) {

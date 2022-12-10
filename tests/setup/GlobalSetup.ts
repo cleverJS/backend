@@ -17,7 +17,7 @@ afterAll(async () => {})
 
 function recreateDB() {
   const dirname = path.resolve()
-  const file = path.resolve(`${dirname}../../runtime/db.sqlite`)
+  const file = path.resolve(`${dirname}/runtime/db.sqlite`)
   FSWrapper.removeSync(file)
   FSWrapper.createFileSync(file)
 }
