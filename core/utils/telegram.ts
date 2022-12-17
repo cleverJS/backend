@@ -16,11 +16,12 @@ export class TelegramMessenger {
     this.bot = new Telegraf(this.botToken)
   }
 
-  public async start(): Promise<boolean> {
+  public start(): boolean {
     let result = false
     if (this.botToken && this.channelId && this.bot) {
       this.logger.info('Telegram bot starting')
-      await this.bot.launch()
+      // https://github.com/telegraf/telegraf/issues/1749
+      this.bot.launch().catch(this.logger.error)
       result = true
     } else {
       if (!this.botToken) {
