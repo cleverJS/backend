@@ -142,6 +142,10 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
 
       item.setData(this.map(data), true)
       item.id = id
+
+      if (this.primaryKey && this.primaryKey !== 'id') {
+        Object.defineProperty(item, this.primaryKey, { value: id })
+      }
     }
 
     return result
