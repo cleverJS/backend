@@ -1,17 +1,38 @@
 export class Ready {
-  protected promise: Promise<any>
+  protected promise: Promise<boolean>
 
   constructor() {
-    this.promise = new Promise((resolve) => {
-      this.resolve = () => {
-        resolve(true)
-      }
-    })
+    this.promise = this.getPromise()
   }
 
-  public async isReady(): Promise<true> {
+  public reset() {
+    this.resolve(false)
+    this.promise = this.getPromise()
+  }
+
+  /**
+   * @deprecated use isResolved instead
+   */
+  public async isReady(): Promise<boolean> {
     return this.promise
   }
 
-  public resolve = () => {}
+  public async isResolved(): Promise<boolean> {
+    return this.promise
+  }
+
+  public resolve = (flag: boolean = true) => {}
+  public reject = () => {}
+
+  protected getPromise() {
+    return new Promise<boolean>((resolve, reject) => {
+      this.resolve = (flag: boolean = true) => {
+        resolve(flag)
+      }
+
+      this.reject = () => {
+        reject(false)
+      }
+    })
+  }
 }
