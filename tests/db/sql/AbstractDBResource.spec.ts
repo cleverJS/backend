@@ -10,16 +10,17 @@ import { EntityFactory } from '../../../core/entity/EntityFactory'
 import { logger } from '../../../core/logger/logger'
 import { Paginator } from '../../../core/utils/Paginator'
 import { currentDateFunction } from '../../../demo/utils/common'
-import connections, { EDBConfigKey } from '../../../knexfile'
+// import connections, { EDBConfigKey } from '../../../knexfile'
 
 describe('Test AbstractDBResource', () => {
   const conditionDBParse = ConditionDbParser.getInstance()
-  const appKnexConfig = connections[EDBConfigKey.memory]
-  const connection = knex(appKnexConfig)
+  // const appKnexConfig = connections[EDBConfigKey.memory]
+  const connection = knex('')
 
   beforeAll(async () => {
     await connection.schema.createTable('test', (t) => {
       t.increments('id').unsigned().primary()
+      t.string('entryId', 10)
       t.string('title', 255)
       t.string('modifiedBy', 255)
       t.datetime('from')
@@ -117,7 +118,8 @@ describe('Test AbstractDBResource', () => {
     }).toEqual(dataDB2)
 
     const factory2 = new EntityFactory(Test2, castTest2)
-    const item2 = await factory.create({
+    const item2 = await factory2.create({
+      entryId: '',
       title: 'test',
     })
     const resource3 = new Test3Resource(connection, conditionDBParse, factory2)
@@ -167,6 +169,34 @@ describe('Test AbstractDBResource', () => {
 
     expect(item.getData().modifiedBy).toEqual('Modifier')
   })
+
+  it('should put alternative id', async () => {
+    const factory = new EntityFactory(Test2)
+    const item = await factory.create({
+      id: '1',
+    })
+
+    const resource = new Test2Resource(connection, conditionDBParse, factory)
+    await resource.save(item)
+
+    expect(item.entryId).toEqual(1)
+  })
+
+  it('should repeat on timeout', async () => {
+    const factory = new EntityFactory(Test2)
+    const item = await factory.create({
+      id: '1',
+    })
+
+    try {
+      const resource = new Test2Resource(connection, conditionDBParse, factory)
+      await resource.save(item)
+    } catch (e) {
+      expect(true).toBeTrue()
+    }
+
+    expect(item.entryId).toEqual(1)
+  })
 })
 
 class Test extends AbstractEntity<TTest> implements TTest {
@@ -177,7 +207,8 @@ class Test extends AbstractEntity<TTest> implements TTest {
   public modifiedBy = null
 }
 
-class Test2 extends AbstractEntity<TTest> implements TTest2 {
+class Test2 extends AbstractEntity<TTest2> implements TTest2 {
+  public entryId = ''
   public title = ''
 }
 
@@ -192,7 +223,7 @@ class TestResource extends AbstractDBResource<Test> {
     return data
   }
 }
-class Test2Resource extends AbstractDBResource<Test> {
+class Test2Resource extends AbstractDBResource<Test2> {
   protected primaryKey = 'entryId'
   protected table: string = 'test'
 }
@@ -235,11 +266,14 @@ const castTest = (data: unknown): Promise<TTest> => {
 const scheme2 = object()
   .required()
   .shape({
+    id: number().defined().default(0),
     title: string().defined().default(''),
+    entryId: string().defined().default(''),
   })
 
 interface TTest2 {
   title: string
+  entryId: string
 }
 
 const castTest2 = (data: unknown): Promise<TTest2> => {

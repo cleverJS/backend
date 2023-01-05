@@ -84,6 +84,7 @@ export function argsStringify(...args: any[]) {
 
   return args.reduce((prev, current, index) => {
     const isBeginning = index === 0
+    const preString = `${!isBeginning ? carryover : ''}`
 
     let messageNext = prev
     try {
@@ -91,15 +92,15 @@ export function argsStringify(...args: any[]) {
         messageNext += `${!isBeginning ? space : ''}${current}`
       } else if (current instanceof Error) {
         const { stack, ...other } = current
-        messageNext += `${!isBeginning ? carryover : ''}${JSON.stringify(other)}\n`
-        messageNext += `${!isBeginning ? carryover : ''}[Stack trace]: ${stack}`
+        messageNext += `${preString}${JSON.stringify(other)}\n`
+        messageNext += `${preString}[Stack trace]: ${stack}`
       } else if (typeof current === 'function') {
-        messageNext += `${!isBeginning ? carryover : ''}[Function]`
+        messageNext += `${preString}[Function]`
       } else {
-        messageNext += `${!isBeginning ? carryover : ''}${JSON.stringify(current, null, 4)}`
+        messageNext += `${preString}${JSON.stringify(current, getCircularReplacer())}`
       }
     } catch (e) {
-      messageNext += `${!isBeginning ? carryover : ''}${JSONStringifySafe(current, getCircularReplacer(), 4)}`
+      messageNext += `${preString}${JSONStringifySafe(current, getCircularReplacer(), 4)}`
     }
 
     return messageNext

@@ -422,4 +422,13 @@ describe('Test AbstractDBResource and AbstractService', () => {
     expect(dbItem.title).toEqual(payload2.title)
     expect(dbItem.author).toEqual(payload2.author)
   })
+
+  it('s', async () => {
+    try {
+      const e = await service.createEntity({})
+      expect(e).toBeTrue()
+    } catch (e) {
+      expect(e).toBeTrue()
+    }
+  })
 })

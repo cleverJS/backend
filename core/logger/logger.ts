@@ -3,7 +3,7 @@ import { v4 as uuidV4 } from 'uuid'
 import { ILoggerConfig } from './config'
 import { LogLevel, TransportInterface } from './transport/TransportInterface'
 
-class Logger {
+export class Logger {
   protected config?: ILoggerConfig
   protected transports: Map<string, TransportInterface> = new Map()
 

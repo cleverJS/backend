@@ -3,9 +3,9 @@ import { types } from 'util'
 import { loggerNamespace } from '../logger/logger'
 import { Cloner } from '../utils/clone/Cloner'
 import { getCircularReplacer, JSONStringifySafe } from '../utils/common'
+import { TClass } from '../utils/types'
 
 import { AbstractEntity } from './AbstractEntity'
-import { TClass } from '../utils/types'
 
 export interface IEntityFactory {
   create(data: unknown, clone: boolean): Promise<any>
@@ -47,7 +47,7 @@ export class EntityFactory<GData extends Record<string, any>, GEntity extends Ab
         this.logger.error(`Class [${this.EntityClass.name}]:`, e.message, JSONStringifySafe(data, getCircularReplacer()))
       }
 
-      throw e
+      throw new Error(e.message)
     }
 
     return item

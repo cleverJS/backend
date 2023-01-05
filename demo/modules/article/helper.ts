@@ -8,15 +8,15 @@ const scheme = object()
   .defined()
   .shape({
     id: number().defined().nullable(true).default(null),
-    title: string().defined().default(''),
-    author: string().defined().default(''),
+    title: string().required(),
+    author: string().required(),
     content: string().defined().nullable(true).default(null),
     created: date()
       .transform((castValue, originalValue) => {
         return new Date(originalValue)
       })
-      .defined()
-      .default(currentDateFunction),
+      .default(currentDateFunction)
+      .required(),
     isPublished: boolean().defined().default(false),
   })
 

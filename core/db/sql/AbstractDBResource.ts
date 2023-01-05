@@ -66,12 +66,12 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     let rows: T[] = []
     try {
       rows = await queryBuilder.select()
-    } catch (e) {
+    } catch (e: any) {
       if (types.isNativeError(e)) {
         this.logger.error(e.message, queryBuilder.toQuery())
       }
 
-      throw e
+      throw new Error(e.message)
     }
 
     return rows
@@ -173,12 +173,12 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
 
         return identificator
       }
-    } catch (e) {
+    } catch (e: any) {
       if (types.isNativeError(e)) {
         this.logger.error(e.message, queryBuilder.toQuery())
       }
 
-      throw e
+      throw new Error(e.message)
     }
 
     return null
@@ -192,12 +192,12 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
       this.conditionParser.parse(queryBuilder, condition)
       const result = await queryBuilder.update(dataNext)
       return result > 0
-    } catch (e) {
+    } catch (e: any) {
       if (types.isNativeError(e)) {
         this.logger.error(queryBuilder.toQuery(), e.message)
       }
 
-      throw e
+      throw new Error(e.message)
     }
   }
 
@@ -232,9 +232,9 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     let result
     try {
       result = await queryBuilder.truncate()
-    } catch (e) {
+    } catch (e: any) {
       this.logger.error(e)
-      throw e
+      throw new Error(e.message)
     }
 
     return result
