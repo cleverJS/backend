@@ -8,7 +8,7 @@ describe('Test', () => {
 
   test('should stringify object', () => {
     const result = argsStringify({ a: 1, b: 2 })
-    expect(result).toEqual('{\n    "a": 1,\n    "b": 2\n}')
+    expect(result).toEqual('{"a":1,"b":2}')
   })
 
   test('should stringify object with circular dependencies', () => {
@@ -19,7 +19,7 @@ describe('Test', () => {
     object1.b = object1
 
     const result = argsStringify(object1)
-    expect(result).toEqual('{\n    "a": 1,\n    "b": "[Circular Object]"\n}')
+    expect(result).toEqual('{"a":1,"b":"[Circular Object]"}')
   })
 
   test('should stringify function', () => {

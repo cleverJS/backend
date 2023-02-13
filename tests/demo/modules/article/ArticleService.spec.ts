@@ -66,7 +66,7 @@ describe('Test AbstractDBResource and AbstractService', () => {
   test('should findById 2', async () => {
     const item = await service.createEntity(payload1)
 
-    item.author = ''
+    item.author = 'AUTHOR_I'
     await service.save(item)
 
     let dbItem
@@ -171,7 +171,7 @@ describe('Test AbstractDBResource and AbstractService', () => {
 
     if (item.id) {
       const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: 'id', value: item.id }] })
-      await resource.update(condition, item.getData())
+      await resource.update(condition, item)
     }
 
     let dbItem
@@ -183,7 +183,8 @@ describe('Test AbstractDBResource and AbstractService', () => {
 
   test('should return false if item cannot be updated', async () => {
     const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: 'id', value: 9999 }] })
-    const result = await resource.update(condition, { title: '111' })
+    const item = await resource.createEntity({ title: '111', author: AUTHOR_I })
+    const result = await resource.update(condition, item)
 
     expect(result).toBeFalsy()
   })
@@ -421,14 +422,5 @@ describe('Test AbstractDBResource and AbstractService', () => {
     expect(dbItem.id).toEqual(1)
     expect(dbItem.title).toEqual(payload2.title)
     expect(dbItem.author).toEqual(payload2.author)
-  })
-
-  it('s', async () => {
-    try {
-      const e = await service.createEntity({})
-      expect(e).toBeTrue()
-    } catch (e) {
-      expect(e).toBeTrue()
-    }
   })
 })

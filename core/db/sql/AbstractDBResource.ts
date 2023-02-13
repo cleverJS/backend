@@ -126,52 +126,30 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
   public async save(item: E) {
     let result = false
 
-    const data = this.mapToDB(item)
-    if (data) {
-      let { id } = item
+    if (item) {
+      const { id } = item
       if (id) {
         const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: this.primaryKey, value: id }] })
-        result = await this.update(condition, data)
+        result = await this.update(condition, item)
       } else {
-        id = await this.insert(data)
-
-        if (id) {
-          result = true
-        }
-      }
-
-      item.setData(this.map(data), true)
-      item.id = id
-
-      if (this.primaryKey && this.primaryKey !== 'id') {
-        Object.defineProperty(item, this.primaryKey, { value: id })
+        result = await this.insert(item)
       }
     }
 
     return result
   }
 
-  public async insert(data: Record<string, any>): Promise<any | null> {
-    const { [this.primaryKey]: id, ...dataNext } = data
+  public async insert(item: E): Promise<any | null> {
+    const data = this.mapToDB(item)
 
     const queryBuilder: Knex.QueryBuilder = this.connection(this.table)
-    let result
 
+    let insertResult
     try {
       if (['pg', 'mssql', 'oracle'].includes(this.connection.client.config.client)) {
-        result = await queryBuilder.insert(dataNext).returning(this.primaryKey)
+        insertResult = await queryBuilder.insert(data).returning(this.primaryKey)
       } else {
-        result = await queryBuilder.insert(dataNext)
-      }
-
-      if (result && result.length > 0) {
-        let [identificator] = result
-
-        if (typeof identificator === 'object') {
-          identificator = identificator[this.primaryKey]
-        }
-
-        return identificator
+        insertResult = await queryBuilder.insert(data)
       }
     } catch (e: any) {
       if (types.isNativeError(e)) {
@@ -181,17 +159,35 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
       throw new Error(e.message)
     }
 
-    return null
+    let result = false
+
+    if (insertResult && insertResult.length > 0) {
+      let [identificator] = insertResult
+
+      if (typeof identificator === 'object') {
+        identificator = identificator[this.primaryKey]
+      }
+
+      this.changeEntity(item, data, identificator)
+
+      if (identificator) {
+        result = true
+        await this.afterInsert(item)
+      }
+    }
+
+    return result
   }
 
-  public async update(condition: Readonly<Condition>, data: Record<string, any>): Promise<boolean> {
-    const { [this.primaryKey]: id, ...dataNext } = data
+  public async update(condition: Readonly<Condition>, item: E): Promise<boolean> {
+    const data = this.mapToDB(item)
+
     const queryBuilder: Knex.QueryBuilder = this.connection(this.table)
 
+    let result = 0
     try {
       this.conditionParser.parse(queryBuilder, condition)
-      const result = await queryBuilder.update(dataNext)
-      return result > 0
+      result = await queryBuilder.update(data)
     } catch (e: any) {
       if (types.isNativeError(e)) {
         this.logger.error(queryBuilder.toQuery(), e.message)
@@ -199,38 +195,51 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
 
       throw new Error(e.message)
     }
+
+    this.changeEntity(item, data)
+    if (result > 0) {
+      await this.afterUpdate(item)
+    }
+
+    return result > 0
   }
 
   public async batchInsert(items: E[], chunkSize?: number): Promise<string[] | number[] | any> {
-    const rows = items.map((i) => {
-      const data = this.mapToDB(i)
-      const { [this.primaryKey]: id, ...dataNext } = data
-      return dataNext
-    })
-
+    const rows = items.map((i) => this.mapToDB(i))
     return this.batchInsertRaw(rows, chunkSize)
   }
 
   public async batchInsertRaw(rows: Record<string, any>[], chunkSize?: number): Promise<string[] | number[] | any> {
-    if (['pg', 'mssql', 'oracle'].includes(this.connection.client.config.client)) {
-      const result = await this.connection.batchInsert(this.table, rows, chunkSize).returning(this.primaryKey)
+    const rowsNext = rows.map((i) => {
+      const { [this.primaryKey]: id, ...rowNext } = i
+      return rowNext
+    })
 
-      return result.map((identificator) => {
+    let result
+    if (['pg', 'mssql', 'oracle'].includes(this.connection.client.config.client)) {
+      const batchInsertResult = await this.connection.batchInsert(this.table, rowsNext, chunkSize).returning(this.primaryKey)
+
+      result = batchInsertResult.map((identificator) => {
         if (typeof identificator === 'object') {
           return identificator[this.primaryKey]
         }
 
         return identificator
       })
+    } else {
+      result = await this.connection.batchInsert(this.table, rows, chunkSize)
     }
 
-    return this.connection.batchInsert(this.table, rows, chunkSize)
+    await this.afterBatchInsert(rows)
+
+    return result
   }
 
   public async truncate() {
     const queryBuilder: Knex.QueryBuilder = this.connection(this.table)
     let result
     try {
+      await this.beforeTruncate()
       result = await queryBuilder.truncate()
     } catch (e: any) {
       this.logger.error(e)
@@ -240,7 +249,7 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     return result
   }
 
-  public delete(id: string | number) {
+  public async delete(id: string | number) {
     const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: this.primaryKey, value: id }] })
     return this.deleteAll(condition)
   }
@@ -250,7 +259,10 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     if (condition) {
       this.conditionParser.parse(queryBuilder, condition)
     }
+
+    await this.beforeDelete(condition)
     const response = await queryBuilder.delete()
+
     return response > 0
   }
 
@@ -286,4 +298,20 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     const { id, [this.primaryKey]: primaryKey, ...data } = item.getData(true)
     return data
   }
+
+  protected changeEntity(item: E, data: Record<string, any>, id?: any) {
+    id = id || item.id
+    item.setData(this.map(data), true)
+    item.id = id
+
+    if (this.primaryKey && this.primaryKey !== 'id') {
+      Object.defineProperty(item, this.primaryKey, { value: id })
+    }
+  }
+
+  protected async beforeDelete(condition?: Condition) {}
+  protected async beforeTruncate() {}
+  protected async afterBatchInsert(rows: Record<string, any>[]) {}
+  protected async afterInsert(item: E) {}
+  protected async afterUpdate(item: E) {}
 }

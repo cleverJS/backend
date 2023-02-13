@@ -24,7 +24,7 @@ export class ArticleResource extends AbstractDBResource<Article> {
     return this.connection.raw(query)
   }
 
-  mapToDB(item: Article): any {
+  public mapToDB(item: Article): any {
     if (!item.created) {
       const currentDate = new Date()
       currentDate.setMilliseconds(0)
