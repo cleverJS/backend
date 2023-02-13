@@ -1,6 +1,6 @@
 import { argsStringify } from '../../core/utils/common'
 
-describe('Test', () => {
+describe('Test common', () => {
   test('should concatenate primitives', () => {
     const result = argsStringify('a', 'b', 1, false, undefined)
     expect(result).toEqual('a b 1 false undefined')
