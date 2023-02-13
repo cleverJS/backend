@@ -168,11 +168,10 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
         identificator = identificator[this.primaryKey]
       }
 
-      this.changeEntity(item, data, identificator)
-
       if (identificator) {
-        result = true
+        this.changeEntity(item, data, identificator)
         await this.afterInsert(item)
+        result = true
       }
     }
 
@@ -182,23 +181,29 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
   public async update(condition: Readonly<Condition>, item: E): Promise<boolean> {
     const data = this.mapToDB(item)
 
+    const result = await this.updateRaw(condition, data)
+
+    if (result) {
+      this.changeEntity(item, data)
+      await this.afterUpdate(item)
+    }
+
+    return result
+  }
+
+  public async updateRaw(condition: Readonly<Condition>, raw: Record<string, any>): Promise<boolean> {
     const queryBuilder: Knex.QueryBuilder = this.connection(this.table)
 
     let result = 0
     try {
       this.conditionParser.parse(queryBuilder, condition)
-      result = await queryBuilder.update(data)
+      result = await queryBuilder.update(raw)
     } catch (e: any) {
       if (types.isNativeError(e)) {
         this.logger.error(queryBuilder.toQuery(), e.message)
       }
 
       throw new Error(e.message)
-    }
-
-    this.changeEntity(item, data)
-    if (result > 0) {
-      await this.afterUpdate(item)
     }
 
     return result > 0
