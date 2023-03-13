@@ -78,7 +78,7 @@
     "morphism": "^1.12.3",
     "prettier": "^2.8.0",
     "pretty-hrtime": "^1.0.3",
-    "sqlite3": "^5.1.4",
+    "sqlite3": "^5.1.5",
     "ts-jest": "^29.0.3",
     "jest-environment-node": "^29.3.1",
     "yup": "^0.32.11",
