@@ -23,6 +23,7 @@ export interface IConnectionInfo {
   id: string
   remoteAddress?: string
   state: any
+  request: IncomingMessage
 }
 
 export type RequestHandler<T = Record<string, any>> = (
@@ -246,7 +247,7 @@ export class WSServer {
       const state: Record<string, any> = {}
       const remoteAddress = request.headers.origin || request.socket.remoteAddress
 
-      const connectionInfo: IConnectionInfo = { id, state, remoteAddress }
+      const connectionInfo: IConnectionInfo = { id, state, remoteAddress, request }
       this.connectionInfoMap.set(client, connectionInfo)
       this.handleError(client)
       this.handleClose(client)

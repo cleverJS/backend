@@ -7,13 +7,17 @@ import { TArticle } from './Article'
 const scheme = object()
   .defined()
   .shape({
-    id: number().defined().nullable(true).default(null),
+    id: number().defined().nullable().default(null),
     title: string().required(),
     author: string().required(),
-    content: string().defined().nullable(true).default(null),
+    content: string().defined().nullable().default(null),
     created: date()
       .transform((castValue, originalValue) => {
-        return new Date(originalValue)
+        if (!originalValue) {
+          return undefined
+        }
+
+        return castValue
       })
       .default(currentDateFunction)
       .required(),

@@ -6,9 +6,9 @@ const scheme = object()
   .defined()
   .shape({
     id: number().defined().nullable().default(null),
-    userId: number().defined().nullable(false).default(0),
-    token: string().defined().nullable(false).default(''),
-    refreshToken: string().defined().nullable(false).default(''),
+    userId: number().defined().nonNullable().default(0),
+    token: string().defined().nonNullable().default(''),
+    refreshToken: string().defined().nonNullable().default(''),
     ttl: date().defined().nullable().default(null),
     createdAt: date().defined().default(new Date()),
     updatedAt: date().defined().default(new Date()),

@@ -31,6 +31,35 @@ export class ArticleResource extends AbstractDBResource<Article> {
       item.created = currentDate
     }
 
-    return super.mapToDB(item)
+    const data = super.mapToDB(item)
+    data.created = data.created.toISOString()
+
+    if (data.from) {
+      data.from = data.from.toISOString()
+    }
+
+    if (data.to) {
+      data.to = data.to.toISOString()
+    }
+
+    return data
+  }
+
+  public map(data: Record<string, any>): any {
+    data = super.map(data)
+
+    if (data.created) {
+      data.created = new Date(data.created)
+    }
+
+    if (data.from) {
+      data.from = new Date(data.from)
+    }
+
+    if (data.to) {
+      data.to = new Date(data.to)
+    }
+
+    return data
   }
 }

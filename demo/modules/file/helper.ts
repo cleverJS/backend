@@ -1,20 +1,40 @@
 import { date, number, object, string } from 'yup'
 
+import { currentDateFunction } from '../../utils/common'
+
 import { TFile } from './File'
 
 const scheme = object()
   .defined()
   .shape({
-    id: number().defined().nullable(true).default(null),
-    code: string().defined().nullable(true).default(null),
+    id: number().defined().nullable().default(null),
+    code: string().defined().nullable().default(null),
     name: string().defined().default(''),
-    mime: string().defined().nullable(true).default(null),
+    mime: string().defined().nullable().default(null),
     baseDir: string().defined().default(''),
     url: string().defined().default(''),
     sort: number().defined().default(100),
     data: object().defined().default({}),
-    createdAt: date().default(new Date()).defined(),
-    updatedAt: date().default(new Date()).defined(),
+    createdAt: date()
+      .transform((castValue, originalValue) => {
+        if (!originalValue) {
+          return undefined
+        }
+
+        return castValue
+      })
+      .default(currentDateFunction)
+      .defined(),
+    updatedAt: date()
+      .transform((castValue, originalValue) => {
+        if (!originalValue) {
+          return undefined
+        }
+
+        return castValue
+      })
+      .default(currentDateFunction)
+      .defined(),
   })
 
 export const castFile = (data: unknown): Promise<TFile> => {

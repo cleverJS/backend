@@ -68,8 +68,8 @@ describe('Test AbstractDBResource', () => {
 
     const condition = new Condition({
       conditions: [
-        { operator: TConditionOperator.GREATER_OR_EQUALS, field: 'from', value: currentDate },
-        { operator: TConditionOperator.LESS_OR_EQUALS, field: 'to', value: currentDate },
+        { operator: TConditionOperator.GREATER_OR_EQUALS, field: 'from', value: currentDate.toISOString() },
+        { operator: TConditionOperator.LESS_OR_EQUALS, field: 'to', value: currentDate.toISOString() },
       ],
     })
 
@@ -157,7 +157,6 @@ describe('Test AbstractDBResource', () => {
   it('should change referenced object during mapToDB', async () => {
     const factory = new EntityFactory(Test, castTest)
     const item = await factory.create({
-      id: '1',
       title: 'test',
     })
 
@@ -171,14 +170,12 @@ describe('Test AbstractDBResource', () => {
 
   it('should put alternative id', async () => {
     const factory = new EntityFactory(Test2)
-    const item = await factory.create({
-      id: '1',
-    })
+    const item = await factory.create({})
 
     const resource = new Test2Resource(connection, conditionDBParse, factory)
     await resource.save(item)
 
-    expect(item.entryId).toEqual('1')
+    expect(item.entryId).toEqual(1)
   })
 
   // it('should repeat on timeout', async () => {
@@ -219,6 +216,28 @@ class TestResource extends AbstractDBResource<Test> {
 
     data.modifiedBy = 'Modifier'
 
+    if (data.from) {
+      data.from = data.from.toISOString()
+    }
+
+    if (data.to) {
+      data.to = data.to.toISOString()
+    }
+
+    return data
+  }
+
+  public map(data: Record<string, any>): any {
+    data = super.map(data)
+
+    if (data.from) {
+      data.from = new Date(data.from)
+    }
+
+    if (data.to) {
+      data.to = new Date(data.to)
+    }
+
     return data
   }
 }
@@ -246,13 +265,21 @@ const scheme = object()
     modifiedBy: string().nullable().defined().default(null),
     from: date()
       .transform((castValue, originalValue) => {
-        return new Date(originalValue)
+        if (!originalValue) {
+          return undefined
+        }
+
+        return castValue
       })
       .defined()
       .default(currentDateFunction),
     to: date()
       .transform((castValue, originalValue) => {
-        return new Date(originalValue)
+        if (!originalValue) {
+          return undefined
+        }
+
+        return castValue
       })
       .defined()
       .default(currentDateFunction),

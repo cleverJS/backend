@@ -6,10 +6,10 @@ const scheme = object()
   .defined()
   .shape({
     id: number().defined().nullable().default(null),
-    password: string().defined().nullable(false).default(''),
-    salt: string().defined().nullable(false).default(''),
-    login: string().defined().nullable(false).default(''),
-    uuid: string().defined().nullable(false).default(''),
+    password: string().defined().nonNullable().default(''),
+    salt: string().defined().nonNullable().default(''),
+    login: string().defined().nonNullable().default(''),
+    uuid: string().defined().nonNullable().default(''),
     role: number()
       .oneOf(Object.values(EUserRoles) as number[])
       .defined()
