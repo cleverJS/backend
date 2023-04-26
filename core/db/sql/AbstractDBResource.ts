@@ -42,7 +42,7 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
 
   public async findAll(condition?: Condition, pagination?: Paginator): Promise<E[]> {
     const rows = await this.findAllRaw<TEntityFrom<E>>(condition, pagination)
-    return this.createEntityList(rows, false)
+    return this.createEntityList(rows.map(this.map.bind(this)), false)
   }
 
   public async findAllRaw<T extends Record<string, any> = Record<string, any>>(
@@ -276,23 +276,26 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
   }
 
   public async createEntityList(rows: Partial<TEntityFrom<E>>[], clone: boolean = true) {
-    let result: Promise<E>[] = []
+    let result: E[] = []
 
     try {
+      const promises = []
       for (const row of rows) {
-        const entity = this.createEntity(this.map(row), clone)
-        result.push(entity)
+        const entity = this.createEntity(row, clone)
+        promises.push(entity)
       }
+
+      result = await Promise.all(promises)
     } catch (e) {
       this.logger.warn('createEntityList was interrupted because validation unsatisfying record was received')
       result = []
     }
 
-    return Promise.all(result)
+    return result
   }
 
   public map(data: Record<string, any>): any {
-    if (this.primaryKey !== 'id' && data[this.primaryKey]) {
+    if (this.primaryKey !== 'id' && data?.[this.primaryKey]) {
       data.id = data[this.primaryKey]
     }
 
