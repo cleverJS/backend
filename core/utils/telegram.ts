@@ -49,11 +49,14 @@ export class TelegramMessenger {
 
   public async send(message: string): Promise<void> {
     if (this.bot) {
-      if (message.length > 9500) {
+      if (message.length >= 9500) {
         const chunks = chunkString(message, 9500)
-        for (let i = 0; chunks.length; i++) {
-          await this.bot.telegram.sendMessage(this.channelId, chunks[i])
+        const promises = []
+        for (let i = 0; i < chunks.length; i++) {
+          promises.push(this.bot.telegram.sendMessage(this.channelId, chunks[i]))
         }
+
+        await Promise.all(promises)
       } else {
         await this.bot.telegram.sendMessage(this.channelId, message)
       }
