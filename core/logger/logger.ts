@@ -3,6 +3,13 @@ import { v4 as uuidV4 } from 'uuid'
 import { ILoggerConfig } from './config'
 import { LogLevel, TransportInterface } from './transport/TransportInterface'
 
+export interface ILoggerWrapper {
+  debug: (...msg: any[]) => void
+  info: (...msg: any[]) => void
+  warn: (...msg: any[]) => void
+  error: (...msg: any[]) => void
+}
+
 export class Logger {
   protected config?: ILoggerConfig
   protected transports: Map<string, TransportInterface> = new Map()
@@ -79,7 +86,7 @@ export class Logger {
 
 export const logger = new Logger()
 
-export const loggerNamespace = (namespace: string) => ({
+export const loggerNamespace = (namespace: string): ILoggerWrapper => ({
   debug(...msg: any[]) {
     logger.debug(`[${namespace}]`, ...msg)
   },
