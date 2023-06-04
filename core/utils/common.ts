@@ -164,7 +164,7 @@ export async function timer<T>(callback: () => Promise<T>, logger: any, message:
 }
 
 export function argsCount(...args: any[]) {
-  return args.reduce((prev, current, index) => {
+  return args.reduce((prev, current) => {
     if (current) {
       prev++
     }
