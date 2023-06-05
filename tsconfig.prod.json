@@ -23,7 +23,6 @@
     "baseUrl": ".",
     "forceConsistentCasingInFileNames": true,
     "typeRoots": ["./node_modules/@types"],
-    "types": ["node", "redis"],
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "inlineSourceMap": true,
