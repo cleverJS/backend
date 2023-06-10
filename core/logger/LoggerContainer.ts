@@ -18,25 +18,29 @@ export class LoggerContainer {
     this.loggers.set(name, logger)
   }
 
-  public getLoggerWrapper(
-    name: string,
-    options?: {
-      wrapper?: (logger: Logger, ...args: any[]) => ILoggerWrapper
-      params?: any
-    }
-  ): ILoggerWrapper {
+  public getLogger(name: string) {
     const logger = this.loggers.get(name)
 
     if (!logger) {
       throw new Error(`No logger ${name}`)
     }
 
-    return options?.wrapper ? options.wrapper(logger, options.params) : this.defaultWrapper(logger, options?.params || 'Global')
+    return logger
   }
 
-  protected defaultWrapper(logger: Logger, ...args: any[]) {
-    const [namespace] = args
+  public getLoggerWrapper(
+    name: string,
+    options?: {
+      namespace?: string
+      wrapper?: (logger: Logger, ...args: any[]) => ILoggerWrapper
+      params?: any
+    }
+  ): ILoggerWrapper {
+    const logger = this.getLogger(name)
+    return options?.wrapper ? options.wrapper(logger, options.params) : this.defaultWrapper(logger, options?.namespace, options?.params)
+  }
 
+  protected defaultWrapper(logger: Logger, namespace: string = 'Global', ...args: any[]) {
     return {
       debug(...msg: any[]) {
         logger.debug(`[${namespace}]`, ...msg)
