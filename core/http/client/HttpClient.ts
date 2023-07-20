@@ -2,7 +2,7 @@ import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, Canceler, CancelT
 import fs from 'fs'
 import { types } from 'util'
 
-import { logger } from '../../logger/logger'
+import { HttpError, TResponseErrorParams } from '../../errors/HttpError'
 
 import { RequestCancel } from './RequestCancel'
 
@@ -89,27 +89,38 @@ export class HttpClient {
         return candidate.isAxiosError === true
       }
 
+      const responseErrorParams: TResponseErrorParams = {
+        status: null,
+        data: '',
+        message: '',
+      }
+
       if (isAxiosError(error)) {
         if (error.response) {
           // The request was made and the server responded with a status code
           // that falls out of the range of 2xx
-          logger.error(error.response.headers)
-          logger.error(error.response.status)
-          logger.error(error.response.data)
+          responseErrorParams.status = error.response?.status || null
+          responseErrorParams.data = error.response?.data || ''
         } else if (error.request) {
           // The request was made but no response was received
           // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
           // http.ClientRequest in node.js
-          logger.error(error.request)
+          responseErrorParams.message = error.request
         } else {
           // Something happened in setting up the request that triggered an Error
-          logger.error('Error', error.message)
+          responseErrorParams.message = error.message
         }
       } else if (types.isNativeError(error)) {
-        logger.error(error.message || error)
+        responseErrorParams.message = error.message
       }
 
-      throw error
+      const requestErrorParams = {
+        method,
+        url,
+        payload: { ...config.params, ...config.data },
+      }
+
+      throw new HttpError(requestErrorParams, responseErrorParams)
     }
   }
 

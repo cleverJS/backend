@@ -2,6 +2,8 @@ import path from 'path'
 import hrtime from 'pretty-hrtime'
 import { fileURLToPath } from 'url'
 
+import { logger } from '../logger/logger'
+
 import { isoDateRegex, stringifiedObject } from './regexp'
 
 export const CORE_DEBUG = (process.env.CORE_DEBUG || 'false') === 'true'
@@ -163,6 +165,13 @@ export async function timer<T>(callback: () => Promise<T>, logger: any, message:
   return result
 }
 
+export async function timerV2<T>(callback: () => Promise<T>) {
+  const start = process.hrtime.bigint()
+  const result = await callback()
+  const end = process.hrtime.bigint()
+  return { result, time: Number(end - start) / 1e6 }
+}
+
 export function argsCount(...args: any[]) {
   return args.reduce((prev, current) => {
     if (current) {
@@ -257,3 +266,36 @@ export function parseDate(value: any) {
 
   return result
 }
+
+export async function waitFor(condition: () => Promise<boolean>, intervalMs: number = 10000, maxNumberOfAttempts: number = 100): Promise<boolean> {
+  return new Promise((resolve, reject) => {
+    let currentAttempt = 0
+
+    const checkCondition = async () => {
+      logger.debug(`currentAttempt ${currentAttempt}`)
+      if (currentAttempt >= maxNumberOfAttempts) {
+        reject(new Error('Maximum number of attempts exceeded'))
+        return
+      }
+
+      let result = false
+      try {
+        result = await condition()
+      } catch (e) {
+        reject(e)
+        return
+      }
+
+      if (result) {
+        resolve(true)
+      } else {
+        currentAttempt++
+        setTimeout(checkCondition, intervalMs)
+      }
+    }
+
+    checkCondition()
+  })
+}
+
+export const isEmptyObject = (obj: Record<string, any>): boolean => Object.keys(obj).length === 0

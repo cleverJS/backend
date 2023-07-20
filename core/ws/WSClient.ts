@@ -86,7 +86,7 @@ export class WSClient {
     this.ws.addEventListener('open', this.handleOpen)
     this.ws.addEventListener('close', this.handleClose)
     this.ws.addEventListener('message', this.handleMessage)
-    await this.isConnectionOpen.isReady()
+    await this.isConnectionOpen.isResolved()
   }
 
   public modifyResponse = async (response: TResponse<Record<string, any>>, request?: TRequest): Promise<void> => {}
@@ -125,7 +125,7 @@ export class WSClient {
         if (this.debug) {
           this.logger.debug('Waiting for connection closing')
         }
-        await this.isConnectionClosed.isReady()
+        await this.isConnectionClosed.isResolved()
       }
     }
 
@@ -172,7 +172,7 @@ export class WSClient {
   protected async send(header: IRequestHeader, payload: Record<string, any> = {}) {
     const message = JSON.stringify({ header, payload })
 
-    await this.isConnectionOpen.isReady()
+    await this.isConnectionOpen.isResolved()
 
     if (this.ws) {
       this.ws.send(message)
