@@ -6,7 +6,7 @@ import { logger } from '../core/logger/logger'
 
 class CacheContainer {
   public cacheRuntime: Cache = new Cache(new CacheAdapterRuntime())
-  protected intervalTimerId: NodeJS.Timer
+  protected intervalTimerId: NodeJS.Timeout
 
   constructor() {
     this.intervalTimerId = setInterval(() => {

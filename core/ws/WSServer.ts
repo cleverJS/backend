@@ -43,7 +43,7 @@ export class WSServer {
   protected bus: TypedEmitter<IWSServerEvents>
   protected readonly logger = loggerNamespace('WSServer')
   protected readonly keepAliveTimeout: number
-  protected keepAliveTimer: NodeJS.Timer | null = null
+  protected keepAliveTimer: NodeJS.Timeout | null = null
   protected readonly handlers: Map<string, RequestHandler<any>> = new Map()
 
   public constructor(config: IWSConfig, server?: Server) {
@@ -78,7 +78,7 @@ export class WSServer {
           client.send(response.toString())
         } else if (client.readyState === WebSocket.CLOSED || client.readyState === WebSocket.CLOSING) {
           const info = this.connectionInfoMap.get(client)
-          this.logger.warn('force closing')
+
           if (info) {
             this.logger.warn(`clear connection ${JSON.stringify(info)}`)
             this.connectionInfoMap.delete(client)

@@ -64,9 +64,9 @@ export class WSClient {
   protected requests: Map<string, TRequest> = new Map()
   protected delayAttempt: number = 1000
   protected requestTimeoutMS: number
-  protected dropRequestIntervalId: NodeJS.Timer | null = null
-  protected waitForSocketStateTimeoutId: NodeJS.Timer | null = null
-  protected requestsQueueCheckTimerId: NodeJS.Timer | null = null
+  protected dropRequestIntervalId: NodeJS.Timeout | null = null
+  protected waitForSocketStateTimeoutId: NodeJS.Timeout | null = null
+  protected requestsQueueCheckTimerId: NodeJS.Timeout | null = null
 
   /**
    */

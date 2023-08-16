@@ -288,7 +288,6 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
       result = await Promise.all(promises)
     } catch (e) {
       this.logger.warn('createEntityList was interrupted because validation unsatisfying record was received')
-      result = []
     }
 
     return result

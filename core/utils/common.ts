@@ -94,7 +94,9 @@ export function argsStringify(...args: any[]) {
         messageNext += `${!isBeginning ? space : ''}${current}`
       } else if (current instanceof Error) {
         const { stack, ...other } = current
-        messageNext += `${preString}${JSON.stringify(other)}\n`
+        if (!isEmptyObject(other)) {
+          messageNext += `${preString}${JSON.stringify(other)}\n`
+        }
         messageNext += `${preString}[Stack trace]: ${stack}`
       } else if (typeof current === 'function') {
         messageNext += `${preString}[Function]`
