@@ -51,16 +51,55 @@ export class HttpClient {
       cancelToken: this.cancelToken(cancelObject),
     }
 
-    const writer = fs.createWriteStream(destination)
-    const response = await this.client({ ...config, ...this.extendedConfig })
-    response.data.pipe(writer)
+    try {
+      const response = await this.client({ ...config, ...this.extendedConfig })
 
-    return new Promise((resolve, reject) => {
-      writer.on('finish', resolve)
-      writer.on('error', reject)
-    })
+      await new Promise((resolve, reject) => {
+        const writer = fs.createWriteStream(destination)
+        response.data.pipe(writer)
+
+        writer.on('finish', resolve)
+        writer.on('error', reject)
+      })
+    } catch (error: any) {
+      const isAxiosError = (candidate: any): candidate is AxiosError => {
+        return candidate.isAxiosError === true
+      }
+
+      const responseErrorParams: TResponseErrorParams = {
+        status: null,
+        data: '',
+        message: '',
+      }
+
+      if (isAxiosError(error)) {
+        if (error.response) {
+          // The request was made and the server responded with a status code
+          // that falls out of the range of 2xx
+          responseErrorParams.status = error.response?.status || null
+          responseErrorParams.data = ''
+        } else if (error.request) {
+          // The request was made but no response was received
+          // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+          // http.ClientRequest in node.js
+          responseErrorParams.message = error.request
+        } else {
+          // Something happened in setting up the request that triggered an Error
+          responseErrorParams.message = error.message
+        }
+      } else if (types.isNativeError(error)) {
+        responseErrorParams.message = error.message
+      }
+
+      const requestErrorParams = {
+        method: 'stream',
+        url,
+        payload: { ...config.params, ...config.data },
+      }
+
+      throw new HttpError(requestErrorParams, responseErrorParams)
+    }
   }
-
   public setHeaders(headers: Record<string, any>) {
     this.headers = headers
   }
