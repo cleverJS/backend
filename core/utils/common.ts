@@ -98,6 +98,8 @@ export function argsStringify(...args: any[]) {
           messageNext += `${preString}${JSON.stringify(other)}\n`
         }
         messageNext += `${preString}[Stack trace]: ${stack}`
+      } else if (current instanceof AggregateError) {
+        messageNext += `${preString}${JSON.stringify(current)}\n`
       } else if (typeof current === 'function') {
         messageNext += `${preString}[Function]`
       } else {
