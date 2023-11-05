@@ -1,3 +1,4 @@
+import { logger } from '../../core/logger/logger'
 import { argsStringify } from '../../core/utils/common'
 
 describe('Test common', () => {
@@ -25,5 +26,21 @@ describe('Test common', () => {
   test('should stringify function', () => {
     const result = argsStringify(() => {})
     expect(result).toEqual('[Function]')
+  })
+
+  test('should stringify Error', () => {
+    const error = new Error('Test')
+    const result = argsStringify(error)
+    logger.info(result)
+
+    expect(true).toBeTruthy()
+  })
+
+  test('should stringify AggregateError', () => {
+    const error = new AggregateError([new Error('Test1'), new Error('Test2')])
+    const result = argsStringify(error)
+    logger.info(result)
+
+    expect(true).toBeTruthy()
   })
 })

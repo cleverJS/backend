@@ -88,18 +88,44 @@ export function argsStringify(...args: any[]) {
     const isBeginning = index === 0
     const preString = `${!isBeginning ? carryover : ''}`
 
+    function errorToString(e: Error) {
+      let result = ''
+
+      const { stack, ...other } = e
+      if (!isEmptyObject(other)) {
+        result += `${preString}${JSON.stringify(other)}\n`
+      }
+
+      result += `${preString}[Stack trace]: ${stack}`
+
+      return result
+    }
+
     let messageNext = prev
     try {
       if (['string', 'number', 'boolean', 'bigint', 'undefined'].includes(typeof current)) {
         messageNext += `${!isBeginning ? space : ''}${current}`
-      } else if (current instanceof Error) {
-        const { stack, ...other } = current
-        if (!isEmptyObject(other)) {
-          messageNext += `${preString}${JSON.stringify(other)}\n`
-        }
-        messageNext += `${preString}[Stack trace]: ${stack}`
       } else if (current instanceof AggregateError) {
-        messageNext += `${preString}${JSON.stringify(current)}\n`
+        const { stack, errors, message } = current
+        if (stack) {
+          messageNext += `${ preString }[Stack trace]: ${ stack }\n`
+        }
+
+        if (message) {
+          messageNext += `\t${preString}${message}\n`
+        }
+
+        if (errors && errors.length) {
+          for (const error of errors) {
+            if (error instanceof Error) {
+              messageNext += `\t${errorToString(error)}\n\n`
+            } else {
+              messageNext += `\t${preString}${JSON.stringify(errors)}\n`
+            }
+          }
+        }
+      } else if (current instanceof Error) {
+        messageNext += `${errorToString(current)}\n`
       } else if (typeof current === 'function') {
         messageNext += `${preString}[Function]`
       } else {
@@ -303,3 +329,8 @@ export async function waitFor(condition: () => Promise<boolean>, intervalMs: num
 }
 
 export const isEmptyObject = (obj: Record<string, any>): boolean => Object.keys(obj).length === 0
+
+export function splitWords(input: string) {
+  const regexp = /[\p{L}\p{N}_.-]+/gu
+  return input.match(regexp)?.map((i) => i.toLowerCase())
+}
