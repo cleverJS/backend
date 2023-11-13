@@ -1,6 +1,6 @@
 {
   "name": "@cleverjs/backend",
-  "version": "1.11.7",
+  "version": "1.11.8",
   "description": "CleverJS Backend",
   "author": "",
   "license": "MIT",
@@ -22,9 +22,9 @@
     "npm": ">=8.11"
   },
   "dependencies": {
-    "@types/pretty-hrtime": "^1.0.2",
-    "@types/uuid": "^9.0.6",
-    "@types/ws": "^8.5.8",
+    "@types/pretty-hrtime": "^1.0.3",
+    "@types/uuid": "^9.0.7",
+    "@types/ws": "^8.5.9",
     "@elastic/elasticsearch": "=7.17.13",
     "fastify": "^4.24.3",
     "ws": "^8.14.2",

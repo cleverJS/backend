@@ -240,11 +240,11 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     return result
   }
 
-  public async truncate() {
+  public async truncate(requestor: string) {
     const queryBuilder: Knex.QueryBuilder = this.connection(this.table)
     let result
     try {
-      await this.beforeTruncate()
+      await this.beforeTruncate(requestor)
       result = await queryBuilder.truncate()
     } catch (e: any) {
       this.logger.error(e)
@@ -254,18 +254,18 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     return result
   }
 
-  public async delete(id: string | number) {
+  public async delete(id: string | number, requestor: string) {
     const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: this.primaryKey, value: id }] })
-    return this.deleteAll(condition)
+    return this.deleteAll(condition, requestor)
   }
 
-  public async deleteAll(condition?: Condition) {
+  public async deleteAll(condition: Condition, requestor: string) {
     const queryBuilder: Knex.QueryBuilder = this.connection(this.table)
     if (condition) {
       this.conditionParser.parse(queryBuilder, condition)
     }
 
-    await this.beforeDelete(condition)
+    await this.beforeDelete(condition, requestor)
     const response = await queryBuilder.delete()
 
     return response > 0
@@ -316,8 +316,8 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     }
   }
 
-  protected async beforeDelete(condition?: Condition) {}
-  protected async beforeTruncate() {}
+  protected async beforeDelete(condition: Condition, requestor: string) {}
+  protected async beforeTruncate(requestor: string) {}
   protected async afterBatchInsert(rows: Record<string, any>[]) {}
   protected async afterInsert(item: E) {}
   protected async afterUpdate(item: E) {}
