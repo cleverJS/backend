@@ -17,7 +17,7 @@ export class TransportTelegram implements TransportInterface {
 
         const time = new Date().toISOString()
         // eslint-disable-next-line no-console
-        this.messenger.send(`${time} [${level}] ${message}`).catch(console.error)
+        this.messenger.send(`${time} [${level}] ${message}`, process.env.TELEGRAM_CHANNEL_ID || '').catch(console.error)
       } catch (e: any) {
         // eslint-disable-next-line no-console
         console.error(e)

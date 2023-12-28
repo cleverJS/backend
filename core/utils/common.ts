@@ -199,7 +199,7 @@ export async function timerV2<T>(callback: () => Promise<T>) {
   const start = process.hrtime.bigint()
   const result = await callback()
   const end = process.hrtime.bigint()
-  return { result, time: Number(end - start) / 1e6 }
+  return { result, time: Math.round(Number(end - start) / 1e6) }
 }
 
 export function argsCount(...args: any[]) {
