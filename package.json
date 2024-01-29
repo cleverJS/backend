@@ -18,12 +18,12 @@
     "postinstall": "tsc -d --project tsconfig.prod.json && ts-node -T core/info.ts"
   },
   "engines": {
-    "node": ">=16.15",
+    "node": ">=16.20",
     "npm": ">=8.11"
   },
   "dependencies": {
     "@types/pretty-hrtime": "^1.0.3",
-    "@types/uuid": "^9.0.7",
+    "@types/uuid": "^9.0.8",
     "@types/ws": "^8.5.10",
     "@elastic/elasticsearch": "=7.17.13",
     "fastify": "^4.25.2",
@@ -34,7 +34,7 @@
     "fastest-validator": "^1.17.0",
     "redis": "^4.6.12",
     "typed-emitter": "^2.1.0",
-    "dotenv": "^16.3.1",
+    "dotenv": "^16.4.1",
     "path": "^0.12.7",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",

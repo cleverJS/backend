@@ -71,7 +71,7 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
         this.logger.error(e.message, queryBuilder.toQuery())
       }
 
-      throw new Error(e.message)
+      throw new Error(e.message, { cause: e })
     }
 
     return rows
@@ -156,7 +156,7 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
         this.logger.error(e.message, queryBuilder.toQuery())
       }
 
-      throw new Error(e.message)
+      throw new Error(e.message, { cause: e })
     }
 
     let result = false
@@ -203,7 +203,7 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
         this.logger.error(queryBuilder.toQuery(), e.message)
       }
 
-      throw new Error(e.message)
+      throw new Error(e.message, { cause: e })
     }
 
     return result > 0
@@ -248,7 +248,7 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
       result = await queryBuilder.truncate()
     } catch (e: any) {
       this.logger.error(e)
-      throw new Error(e.message)
+      throw e
     }
 
     return result
@@ -278,17 +278,13 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
   public async createEntityList(rows: Partial<TEntityFrom<E>>[], clone: boolean = true) {
     let result: E[] = []
 
-    try {
-      const promises = []
-      for (const row of rows) {
-        const entity = this.createEntity(row, clone)
-        promises.push(entity)
-      }
-
-      result = await Promise.all(promises)
-    } catch (e) {
-      this.logger.warn('createEntityList was interrupted because validation unsatisfying record was received')
+    const promises = []
+    for (const row of rows) {
+      const entity = this.createEntity(row, clone)
+      promises.push(entity)
     }
+
+    result = await Promise.all(promises)
 
     return result
   }
