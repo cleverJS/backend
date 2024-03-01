@@ -1,5 +1,6 @@
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, Canceler, CancelToken, Method } from 'axios'
 import fs from 'fs'
+import { Stream } from 'node:stream'
 import { types } from 'util'
 
 import { HttpError, TResponseErrorParams } from '../../errors/HttpError'
@@ -157,6 +158,10 @@ export class HttpClient {
         method,
         url,
         payload: { ...config.params, ...config.data },
+      }
+
+      if (payload instanceof Stream) {
+        requestErrorParams.payload = '[Stream]'
       }
 
       throw new HttpError(requestErrorParams, responseErrorParams)

@@ -35,11 +35,11 @@ export abstract class AbstractService<GEntity extends IEntity, GResource extends
     return this.resource.count(condition)
   }
 
-  public delete(id: string | number, requestor: string): Promise<boolean> {
+  public delete(id: string | number, requestor?: string): Promise<boolean> {
     return this.resource.delete(id, requestor)
   }
 
-  public deleteAll(condition: Readonly<Condition>, requestor: string): Promise<boolean> {
+  public deleteAll(condition: Readonly<Condition>, requestor?: string): Promise<boolean> {
     return this.resource.deleteAll(condition, requestor)
   }
 
@@ -119,7 +119,7 @@ export abstract class AbstractService<GEntity extends IEntity, GResource extends
     return result as T[]
   }
 
-  public async truncate(requestor: string): Promise<any> {
+  public async truncate(requestor?: string): Promise<any> {
     return this.resource.truncate(requestor)
   }
 }

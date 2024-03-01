@@ -24,14 +24,14 @@ export abstract class AbstractResource<E extends IEntity> {
     select?: string[]
   ): Promise<T[]>
   public abstract count(condition?: Readonly<Condition>): Promise<number>
-  public abstract delete(id: string | number, requestor: string): Promise<boolean>
-  public abstract deleteAll(condition: Readonly<Condition>, requestor: string): Promise<boolean>
+  public abstract delete(id: string | number, requestor?: string): Promise<boolean>
+  public abstract deleteAll(condition: Readonly<Condition>, requestor?: string): Promise<boolean>
   public abstract save(item: E): Promise<boolean>
   public abstract insert(data: Partial<TEntityFrom<E>>): Promise<any | null>
   public abstract update(condition: Readonly<Condition>, data: Partial<TEntityFrom<E>>): Promise<boolean>
   public abstract batchInsert(item: E[], chunkSize?: number): Promise<string[] | number[] | any>
   public abstract batchInsertRaw(rows: Partial<TEntityFrom<E>>[], chunkSize?: number): Promise<string[] | number[] | any>
-  public abstract truncate(requestor: string): Promise<any>
+  public abstract truncate(requestor?: string): Promise<any>
   public abstract createEntity(data: Partial<TEntityFrom<E>>, clone: boolean): Promise<E>
   public abstract map(data: Record<string, any>): any
   public abstract mapToDB(item: E): any

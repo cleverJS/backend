@@ -1,4 +1,4 @@
-import * as argon2 from 'argon2'
+import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import * as fs from 'fs'
 import jwt, { VerifyOptions } from 'jsonwebtoken'
@@ -28,11 +28,7 @@ export class SecurityHelper {
     const salt = SecurityHelper.genRandomString(16)
     try {
       const bufferPassword = Buffer.from(password)
-      const bufferSalt = Buffer.from(salt)
-      hash = await argon2.hash(bufferPassword, {
-        type: argon2.argon2id,
-        salt: bufferSalt,
-      })
+      hash = await bcrypt.hash(bufferPassword, salt)
     } catch (e) {
       logger.error(e)
     }
@@ -43,12 +39,12 @@ export class SecurityHelper {
     }
   }
 
-  public static async verifyPassword(hash: string, password: string, salt: string): Promise<boolean> {
+  public static async verifyPassword(hash: string, password: string): Promise<boolean> {
     let result = false
     const bufferPassword = Buffer.from(password)
-    const bufferSalt = Buffer.from(salt)
+
     try {
-      result = await argon2.verify(hash, bufferPassword, { salt: bufferSalt })
+      result = await bcrypt.compare(bufferPassword, hash)
     } catch (e) {
       logger.error(e)
     }

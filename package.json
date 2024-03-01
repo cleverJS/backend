@@ -44,6 +44,7 @@
     "piscina": "^4.1.0"
   },
   "devDependencies": {
+    "form-data": "^4.0.0",
     "@jest/globals": "^29.6.1",
     "@types/jest": "^29.5.3",
     "@jest/types": "^29.6.1",

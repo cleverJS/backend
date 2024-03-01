@@ -155,13 +155,13 @@ export class AuthService {
       return null
     }
 
-    const { id, login, password, salt } = user
+    const { id, login, password } = user
 
     if (!id) {
       return null
     }
 
-    const isVerified = await SecurityHelper.verifyPassword(password, passwordText, salt)
+    const isVerified = await SecurityHelper.verifyPassword(password, passwordText)
 
     if (!isVerified) {
       return null
