@@ -16,23 +16,6 @@ export enum TConditionOperator {
   IS_NOT_NULL,
 }
 
-export const conditionOperatorNames = {
-  0: 'EQUALS',
-  1: 'NOT_EQUALS',
-  2: 'LESS_THAN',
-  3: 'GREATER_THAN',
-  4: 'LESS_OR_EQUALS',
-  5: 'GREATER_OR_EQUALS',
-  6: 'BETWEEN',
-  7: 'NOT_BETWEEN',
-  8: 'LIKE',
-  9: 'NOT_LIKE',
-  10: 'IN',
-  11: 'NOT_IN',
-  12: 'IS_NULL',
-  13: 'IS_NOT_NULL',
-}
-
 export type TSortDirection = 'asc' | 'desc'
 export type TConditionLogic = 'and' | 'or'
 

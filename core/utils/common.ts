@@ -108,7 +108,7 @@ export function argsStringify(...args: any[]) {
       } else if (current instanceof AggregateError) {
         const { stack, errors, message } = current
         if (stack) {
-          messageNext += `${ preString }[Stack trace]: ${ stack }\n`
+          messageNext += `${preString}[Stack trace]: ${stack}\n`
         }
 
         if (message) {
@@ -333,4 +333,13 @@ export const isEmptyObject = (obj: Record<string, any>): boolean => Object.keys(
 export function splitWords(input: string) {
   const regexp = /[\p{L}\p{N}_.-]+/gu
   return input.match(regexp)?.map((i) => i.toLowerCase())
+}
+
+export function getKeyByValue<T extends { [index: string]: string | number }>(enumObj: T, value: string | number): keyof T | null {
+  for (const key in enumObj) {
+    if (enumObj[key] === value) {
+      return key
+    }
+  }
+  return null
 }

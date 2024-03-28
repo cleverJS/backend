@@ -1,10 +1,9 @@
 import { Knex } from 'knex'
 
 import { loggerNamespace } from '../../../logger/logger'
-import { isInstanceOf } from '../../../utils/common'
+import { getKeyByValue, isInstanceOf } from '../../../utils/common'
 import {
   Condition,
-  conditionOperatorNames,
   IConditionItem,
   IConditionItemList,
   TConditionBetween,
@@ -161,11 +160,11 @@ export class ConditionDbParser {
     const { value, field } = condition
 
     if (typeof value !== 'string') {
-      throw new ErrorCondition(`Value should be a string in ${conditionOperatorNames[condition.operator]} condition. Actual ${value}`)
+      throw new ErrorCondition(`Value should be a string in ${getKeyByValue(TConditionOperator, condition.operator)} condition. Actual ${value}`)
     }
 
     if (value === '') {
-      throw new ErrorCondition(`${conditionOperatorNames[condition.operator]} cannot have empty value`)
+      throw new ErrorCondition(`${getKeyByValue(TConditionOperator, condition.operator)} cannot have empty value`)
     }
 
     if (logic === 'and') {
@@ -179,11 +178,11 @@ export class ConditionDbParser {
     const { value, field } = condition
 
     if (typeof value !== 'string') {
-      throw new ErrorCondition(`Value should be a string in ${conditionOperatorNames[condition.operator]} condition. Actual ${value}`)
+      throw new ErrorCondition(`Value should be a string in ${getKeyByValue(TConditionOperator, condition.operator)} condition. Actual ${value}`)
     }
 
     if (value === '') {
-      throw new ErrorCondition(`${conditionOperatorNames[condition.operator]} cannot have empty value`)
+      throw new ErrorCondition(`${getKeyByValue(TConditionOperator, condition.operator)} cannot have empty value`)
     }
 
     if (logic === 'and') {
@@ -197,11 +196,11 @@ export class ConditionDbParser {
     const { value, field } = condition
 
     if (typeof value !== 'string') {
-      throw new ErrorCondition(`Value should be a string in ${conditionOperatorNames[condition.operator]} condition. Actual ${value}`)
+      throw new ErrorCondition(`Value should be a string in ${getKeyByValue(TConditionOperator, condition.operator)} condition. Actual ${value}`)
     }
 
     if (value === '') {
-      throw new ErrorCondition(`${conditionOperatorNames[condition.operator]} cannot have empty value`)
+      throw new ErrorCondition(`${getKeyByValue(TConditionOperator, condition.operator)} cannot have empty value`)
     }
 
     if (logic === 'and') {
@@ -235,7 +234,7 @@ export class ConditionDbParser {
     const { value, field } = condition
 
     if (value === undefined || value === null) {
-      throw new ErrorCondition(`${conditionOperatorNames[condition.operator]} cannot have NULL or undefined value`)
+      throw new ErrorCondition(`${getKeyByValue(TConditionOperator, condition.operator)} cannot have NULL or undefined value`)
     }
 
     if (logic === 'and') {
