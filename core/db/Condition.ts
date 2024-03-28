@@ -8,6 +8,7 @@ export enum TConditionOperator {
   BETWEEN,
   NOT_BETWEEN,
   LIKE,
+  ILIKE,
   NOT_LIKE,
   IN,
   NOT_IN,
@@ -65,7 +66,7 @@ export type TConditionIN = {
 }
 
 export type TConditionLike = {
-  operator: TConditionOperator.LIKE | TConditionOperator.NOT_LIKE
+  operator: TConditionOperator.LIKE | TConditionOperator.NOT_LIKE | TConditionOperator.ILIKE
   field: string
   value: string | number | Date
 }

@@ -114,6 +114,9 @@ export class ConditionDbParser {
       case TConditionOperator.LIKE:
         this.parseLikeCondition(queryBuilder, condition, logic)
         break
+      case TConditionOperator.ILIKE:
+        this.parseILikeCondition(queryBuilder, condition, logic)
+        break
       case TConditionOperator.NOT_LIKE:
         this.parseNotLikeCondition(queryBuilder, condition, logic)
         break
@@ -156,8 +159,13 @@ export class ConditionDbParser {
 
   protected parseLikeCondition(queryBuilder: Knex.QueryBuilder, condition: TConditionLike, logic: TConditionLogic): void {
     const { value, field } = condition
-    if (value === undefined || value === null || value === '') {
-      throw new ErrorCondition(`${conditionOperatorNames[condition.operator]} cannot have NULL, undefined or empty value`)
+
+    if (typeof value !== 'string') {
+      throw new ErrorCondition(`Value should be a string in ${conditionOperatorNames[condition.operator]} condition. Actual ${value}`)
+    }
+
+    if (value === '') {
+      throw new ErrorCondition(`${conditionOperatorNames[condition.operator]} cannot have empty value`)
     }
 
     if (logic === 'and') {
@@ -167,10 +175,33 @@ export class ConditionDbParser {
     }
   }
 
+  protected parseILikeCondition(queryBuilder: Knex.QueryBuilder, condition: TConditionLike, logic: TConditionLogic): void {
+    const { value, field } = condition
+
+    if (typeof value !== 'string') {
+      throw new ErrorCondition(`Value should be a string in ${conditionOperatorNames[condition.operator]} condition. Actual ${value}`)
+    }
+
+    if (value === '') {
+      throw new ErrorCondition(`${conditionOperatorNames[condition.operator]} cannot have empty value`)
+    }
+
+    if (logic === 'and') {
+      queryBuilder.andWhereILike(field, value)
+    } else {
+      queryBuilder.orWhereILike(field, value)
+    }
+  }
+
   protected parseNotLikeCondition(queryBuilder: Knex.QueryBuilder, condition: TConditionLike, logic: TConditionLogic): void {
     const { value, field } = condition
-    if (value === undefined || value === null || value === '') {
-      throw new ErrorCondition(`${conditionOperatorNames[condition.operator]} cannot have NULL, undefined or empty value`)
+
+    if (typeof value !== 'string') {
+      throw new ErrorCondition(`Value should be a string in ${conditionOperatorNames[condition.operator]} condition. Actual ${value}`)
+    }
+
+    if (value === '') {
+      throw new ErrorCondition(`${conditionOperatorNames[condition.operator]} cannot have empty value`)
     }
 
     if (logic === 'and') {
