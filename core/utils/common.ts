@@ -217,28 +217,30 @@ export const capitalize = (s: string) => {
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
-export function convertToBoolean(v: any) {
-  if (typeof v !== 'boolean') {
-    const valueNumber = Number(v)
-    if (!Number.isNaN(valueNumber)) {
-      return valueNumber === 1
-    }
-
-    if (typeof v === 'string') {
-      const lowerCase = v.toLowerCase()
-      if (['yes', 'no'].includes(lowerCase)) {
-        return true
-      }
-
-      if (['no', 'n'].includes(lowerCase)) {
-        return true
-      }
-    }
-
-    return false
+export function convertToBoolean(v: any): boolean {
+  if (typeof v === 'boolean') {
+    return v
   }
 
-  return v
+  if (typeof v === 'number') {
+    if ([0, 1].includes(v)) {
+      return v === 1
+    }
+
+  }
+
+  if (typeof v === 'string') {
+    const lowerCase = v.toLowerCase()
+    if (['yes', 'y', 'true', 't', '1'].includes(lowerCase)) {
+      return true
+    }
+
+    if (['no', 'n', 'false', 'f', '0'].includes(lowerCase)) {
+      return false
+    }
+  }
+
+  throw new Error(`Not convertible boolean value '${v}'`)
 }
 
 export function convertNullishToEmpty(v: any) {

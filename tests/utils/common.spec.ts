@@ -1,5 +1,5 @@
 import { logger } from '../../core/logger/logger'
-import { argsStringify } from '../../core/utils/common'
+import { argsStringify, convertToBoolean } from '../../core/utils/common'
 
 describe('Test common', () => {
   test('should concatenate primitives', () => {
@@ -42,5 +42,19 @@ describe('Test common', () => {
     logger.info(result)
 
     expect(true).toBeTruthy()
+  })
+
+  test('should return true', async () => {
+    const yesStatements = ['yes', 'y', 'true', 't', '1', 1, true]
+    for (const yes of yesStatements) {
+      expect(convertToBoolean(yes)).toBeTruthy()
+    }
+  })
+
+  test('should return false', async () => {
+    const yesStatements = ['no', 'n', 'false', 'f', '0', 0, false]
+    for (const yes of yesStatements) {
+      expect(convertToBoolean(yes)).toBeFalsy()
+    }
   })
 })
