@@ -52,7 +52,7 @@ describe('Test common', () => {
   })
 
   test('should return false', async () => {
-    const yesStatements = ['no', 'n', 'false', 'f', '0', 0, false]
+    const yesStatements = ['no', 'n', 'false', 'f', '0', 0, false, null, undefined, 'null', 'undefined']
     for (const yes of yesStatements) {
       expect(convertToBoolean(yes)).toBeFalsy()
     }

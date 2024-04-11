@@ -218,6 +218,10 @@ export const capitalize = (s: string) => {
 }
 
 export function convertToBoolean(v: any): boolean {
+  if ([undefined, null].includes(v)) {
+    return false
+  }
+
   if (typeof v === 'boolean') {
     return v
   }
@@ -226,7 +230,6 @@ export function convertToBoolean(v: any): boolean {
     if ([0, 1].includes(v)) {
       return v === 1
     }
-
   }
 
   if (typeof v === 'string') {
@@ -235,7 +238,7 @@ export function convertToBoolean(v: any): boolean {
       return true
     }
 
-    if (['no', 'n', 'false', 'f', '0'].includes(lowerCase)) {
+    if (['no', 'n', 'false', 'f', '0', 'null', 'undefined'].includes(lowerCase)) {
       return false
     }
   }
