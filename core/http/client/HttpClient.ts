@@ -98,6 +98,10 @@ export class HttpClient {
         payload: { ...config.params, ...config.data },
       }
 
+      if (payload instanceof Stream || payload instanceof Buffer) {
+        requestErrorParams.payload = '[Stream]'
+      }
+
       throw new HttpError(requestErrorParams, responseErrorParams)
     }
   }

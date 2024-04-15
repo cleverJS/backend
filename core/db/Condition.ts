@@ -51,7 +51,7 @@ export type TConditionIN = {
 export type TConditionLike = {
   operator: TConditionOperator.LIKE | TConditionOperator.NOT_LIKE | TConditionOperator.ILIKE
   field: string
-  value: string | number | Date
+  value: string
 }
 
 export type TConditionNull = {
