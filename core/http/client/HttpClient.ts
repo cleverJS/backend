@@ -69,7 +69,7 @@ export class HttpClient {
 
       const responseErrorParams: TResponseErrorParams = {
         status: null,
-        data: '',
+        data: {},
         message: '',
       }
 
@@ -78,7 +78,13 @@ export class HttpClient {
           // The request was made and the server responded with a status code
           // that falls out of the range of 2xx
           responseErrorParams.status = error.response?.status || null
-          responseErrorParams.data = ''
+
+          if (error.response.status === 404) {
+            responseErrorParams.message = error.response?.statusText
+          } else {
+            responseErrorParams.data = error.response?.data || {}
+            responseErrorParams.message = error.response?.statusText
+          }
         } else if (error.request) {
           // The request was made but no response was received
           // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
@@ -135,7 +141,7 @@ export class HttpClient {
 
       const responseErrorParams: TResponseErrorParams = {
         status: null,
-        data: '',
+        data: {},
         message: '',
       }
 
@@ -144,11 +150,29 @@ export class HttpClient {
           // The request was made and the server responded with a status code
           // that falls out of the range of 2xx
           responseErrorParams.status = error.response?.status || null
-          responseErrorParams.data = error.response?.data || ''
+
+          if (error.response.status === 404) {
+            responseErrorParams.message = error.response?.statusText
+          } else {
+            responseErrorParams.data = error.response?.data || {}
+            responseErrorParams.message = error.response?.statusText
+          }
         } else if (error.request) {
           // The request was made but no response was received
           // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
           // http.ClientRequest in node.js
+
+          if (error.code === 'ETIMEDOUT') {
+            responseErrorParams.status = 408
+            responseErrorParams.message = error.message
+          } else {
+            for (const [key, value] of Object.entries(error)) {
+              responseErrorParams.status = 520
+              if (typeof value !== 'object') {
+                responseErrorParams.data[key] = value
+              }
+            }
+          }
           responseErrorParams.message = error.request
         } else {
           // Something happened in setting up the request that triggered an Error

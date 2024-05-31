@@ -109,7 +109,7 @@ export class FileService {
   public async delete(id: number): Promise<void> {
     const item = await this.resource.findById(id)
     if (item) {
-      await Promise.all([this.deleteFile(item), this.resource.delete(id)])
+      await Promise.all([this.deleteFile(item), this.resource.delete(id, 'requestor')])
     }
   }
 
