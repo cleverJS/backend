@@ -11,12 +11,6 @@ export interface IEntity {
 export abstract class AbstractEntity<GData extends Record<string, any>> implements IEntity {
   public id?: any
 
-  public constructor(data?: Partial<GData>) {
-    if (data) {
-      this.setData(data)
-    }
-  }
-
   public setData(data: Partial<GData>, shouldClone: boolean = true): void {
     if (shouldClone) {
       data = Cloner.getInstance().clone(data)

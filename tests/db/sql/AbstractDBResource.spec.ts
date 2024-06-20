@@ -1,5 +1,5 @@
 // eslint-disable-next-line max-classes-per-file
-import knex from 'knex'
+import knex, { Knex } from 'knex'
 import { date, number, object, string } from 'yup'
 
 import { Condition, TConditionOperator } from '../../../core/db/Condition'
@@ -10,24 +10,36 @@ import { EntityFactory } from '../../../core/entity/EntityFactory'
 import { logger } from '../../../core/logger/logger'
 import { Paginator } from '../../../core/utils/Paginator'
 import { currentDateFunction } from '../../../demo/utils/common'
+import knexfile, { EDBConfigKey } from '../../../knexfile'
 
 describe('Test AbstractDBResource', () => {
   const conditionDBParse = ConditionDbParser.getInstance()
-  const connection = knex('')
+  const knexfileElement = knexfile[EDBConfigKey.memory]
+  const connection = knex(knexfileElement)
 
   beforeAll(async () => {
-    await connection.schema.createTable('test', (t) => {
+    const p1 = connection.schema.createTable('test', (t) => {
       t.increments('id').unsigned().primary()
-      t.string('entryId', 10)
       t.string('title', 255)
       t.string('modifiedBy', 255)
       t.datetime('from')
       t.datetime('to')
     })
+
+    const p2 = connection.schema.createTable('test2', (t) => {
+      t.increments('entryId').unsigned().primary()
+      t.string('title', 255)
+      t.string('modifiedBy', 255)
+      t.datetime('from')
+      t.datetime('to')
+    })
+
+    await Promise.all([p1, p2])
   })
 
   beforeEach(async () => {
     await connection.table('test').truncate()
+    await connection.table('test2').truncate()
   })
 
   afterAll(async () => {
@@ -178,21 +190,63 @@ describe('Test AbstractDBResource', () => {
     expect(item.entryId).toEqual(1)
   })
 
-  // it('should repeat on timeout', async () => {
-  //   const factory = new EntityFactory(Test2)
-  //   const item = await factory.create({
-  //     id: '1',
-  //   })
-  //
-  //   try {
-  //     const resource = new Test2Resource(connection, conditionDBParse, factory)
-  //     await resource.save(item)
-  //   } catch (e) {
-  //     expect(true).toBeTrue()
-  //   }
-  //
-  //   expect(item.entryId).toEqual('1')
-  // })
+  it('should rollback on failure', async () => {
+    const factory = new EntityFactory(Test2)
+    const item = await factory.create({
+      title: 'Title',
+    })
+
+    const resource = new Test2Resource(connection, conditionDBParse, factory)
+    try {
+      await resource.save(item)
+
+      item.title = 'changed title'
+      const trx: Knex.Transaction = await connection.transaction()
+      try {
+        await resource.save(item, trx)
+        await trx.raw('select A sdfgkjsdhfgsdkfjg')
+        trx.commit()
+        await trx.executionPromise
+      } catch (e: any) {
+        trx.rollback()
+      }
+    } catch (e) {
+      expect(true).toBeTrue()
+    }
+
+    const itemNext = await resource.findById(item.id)
+    expect(itemNext?.title || '').toEqual('Title')
+  })
+
+  it('should save and modify in transaction', async () => {
+    const factory = new EntityFactory(Test2)
+    const item1 = await factory.create({
+      title: 'Title',
+    })
+
+    const item2 = await factory.create({
+      title: 'Title',
+    })
+
+    const resource = new Test2Resource(connection, conditionDBParse, factory)
+    try {
+      await resource.save(item1, connection)
+      const trx: Knex.Transaction = await connection.transaction()
+      try {
+        await resource.delete(item1.id, 'test', trx)
+        await resource.save(item2, trx)
+        trx.commit()
+        await trx.executionPromise
+      } catch (e: any) {
+        trx.rollback()
+      }
+    } catch (e) {
+      expect(true).toBeTrue()
+    }
+
+    const count = await resource.count()
+    expect(count).toEqual(1)
+  })
 })
 
 class Test extends AbstractEntity<TTest> implements TTest {
@@ -243,10 +297,10 @@ class TestResource extends AbstractDBResource<Test> {
 }
 class Test2Resource extends AbstractDBResource<Test2> {
   protected primaryKey = 'entryId'
-  protected table: string = 'test'
+  protected table: string = 'test2'
 }
 class Test3Resource extends AbstractDBResource<Test2> {
-  protected table: string = 'test'
+  protected table: string = 'test3'
 }
 
 interface TTest {

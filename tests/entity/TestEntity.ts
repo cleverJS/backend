@@ -4,7 +4,7 @@ import { boolean, number, object, string } from 'yup'
 import { AbstractEntity } from '../../core/entity/AbstractEntity'
 import { capitalize, convertNullishToEmpty, convertToBoolean } from '../../core/utils/common'
 
-export interface ITestEntity extends Object {
+export interface ITestEntity extends Record<string, any> {
   id: number
   title: string
   active: boolean

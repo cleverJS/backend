@@ -13,12 +13,16 @@ import { ConditionDbParser } from './condition/ConditionDbParser'
 
 export abstract class AbstractDBResource<E extends IEntity> extends AbstractResource<E> {
   protected readonly logger = loggerNamespace(`AbstractDBResource:${this.constructor.name}`)
+
+  protected abstract readonly table: string
   protected readonly primaryKey: string = 'id'
+  protected readonly entityFactory: IEntityFactory
   protected readonly connection: Knex<any, unknown[]>
   protected readonly conditionParser: ConditionDbParser
 
   public constructor(connection: Knex<any, unknown[]>, conditionParser: ConditionDbParser, entityFactory: IEntityFactory) {
-    super(entityFactory)
+    super()
+    this.entityFactory = entityFactory
     this.connection = connection
     this.conditionParser = conditionParser
   }
@@ -28,11 +32,11 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     return this.findOne(condition)
   }
 
-  public async findOne(condition: Condition): Promise<E | null> {
+  public async findOne(condition: Condition, connection?: Knex): Promise<E | null> {
     const paginator = new Paginator()
     paginator.setItemsPerPage(1)
 
-    const result = await this.findAll(condition, paginator)
+    const result = await this.findAll(condition, paginator, connection)
     if (result.length) {
       return result[0]
     }
@@ -40,17 +44,18 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     return null
   }
 
-  public async findAll(condition?: Condition, pagination?: Paginator): Promise<E[]> {
-    const rows = await this.findAllRaw<TEntityFrom<E>>(condition, pagination)
+  public async findAll(condition?: Condition, pagination?: Paginator, connection?: Knex): Promise<E[]> {
+    const rows = await this.findAllRaw<TEntityFrom<E>>(condition, pagination, undefined, connection)
     return this.createEntityList(rows.map(this.map.bind(this)), false)
   }
 
   public async findAllRaw<T extends Record<string, any> = Record<string, any>>(
     condition?: Condition,
     pagination?: Paginator,
-    select?: string[]
+    select?: string[],
+    connection?: Knex
   ): Promise<T[]> {
-    const queryBuilder: Knex.QueryBuilder = this.connection(this.table)
+    const queryBuilder: Knex.QueryBuilder = connection ? connection(this.table) : this.connection(this.table)
 
     if (select) {
       queryBuilder.select(select)
@@ -77,43 +82,13 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     return rows
   }
 
-  protected applyPagination(pagination: Paginator | undefined, condition: Condition | undefined, queryBuilder: Knex.QueryBuilder) {
-    if (pagination) {
-      if (pagination.getLimit()) {
-        queryBuilder.limit(pagination.getLimit())
-      }
-
-      if (pagination.getOffset()) {
-        queryBuilder.offset(pagination.getOffset())
-      }
-    }
-
-    return condition
-  }
-
-  protected addDefaultSortIfNotSet(pagination: Paginator | undefined, condition: Condition | undefined) {
-    if (pagination) {
-      if (!condition) {
-        condition = new Condition(undefined)
-      } else if (condition.getSort().length === 0) {
-        condition = condition.clone()
-      }
-
-      if (!condition.getSort().length && pagination.getLimit() > 1) {
-        condition.setSort(this.primaryKey, 'asc')
-      }
-    }
-
-    return condition
-  }
-
-  public async count(condition?: Readonly<Condition>): Promise<number> {
+  public async count(condition?: Readonly<Condition>, connection?: Knex): Promise<number> {
     let conditionClone: Condition | undefined
     if (condition) {
       conditionClone = condition.clone()
       conditionClone.clearSort()
     }
-    const queryBuilder: Knex.QueryBuilder = this.connection(this.table)
+    const queryBuilder: Knex.QueryBuilder = connection ? connection(this.table) : this.connection(this.table)
     this.conditionParser.parse(queryBuilder, conditionClone)
     const result = await queryBuilder.count<{ count: number }[]>('* as count')
     if (result && result.length) {
@@ -123,26 +98,26 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     return 0
   }
 
-  public async save(item: E) {
+  public async save(item: E, connection?: Knex) {
     let result = false
 
     if (item) {
       const { id } = item
       if (id) {
         const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: this.primaryKey, value: id }] })
-        result = await this.update(condition, item)
+        result = await this.update(condition, item, connection)
       } else {
-        result = await this.insert(item)
+        result = await this.insert(item, connection)
       }
     }
 
     return result
   }
 
-  public async insert(item: E): Promise<any | null> {
+  public async insert(item: E, connection?: Knex): Promise<any | null> {
     const data = this.mapToDB(item)
 
-    const queryBuilder: Knex.QueryBuilder = this.connection(this.table)
+    const queryBuilder: Knex.QueryBuilder = connection ? connection(this.table) : this.connection(this.table)
 
     let insertResult
     try {
@@ -178,10 +153,10 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     return result
   }
 
-  public async update(condition: Readonly<Condition>, item: E): Promise<boolean> {
+  public async update(condition: Readonly<Condition>, item: E, connection?: Knex): Promise<boolean> {
     const data = this.mapToDB(item)
 
-    const result = await this.updateRaw(condition, data)
+    const result = await this.updateRaw(condition, data, connection)
 
     if (result) {
       this.changeEntity(item, data)
@@ -191,8 +166,8 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     return result
   }
 
-  public async updateRaw(condition: Readonly<Condition>, raw: Record<string, any>): Promise<boolean> {
-    const queryBuilder: Knex.QueryBuilder = this.connection(this.table)
+  public async updateRaw(condition: Readonly<Condition>, raw: Record<string, any>, connection?: Knex): Promise<boolean> {
+    const queryBuilder: Knex.QueryBuilder = connection ? connection(this.table) : this.connection(this.table)
 
     let result = 0
     try {
@@ -209,12 +184,14 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     return result > 0
   }
 
-  public async batchInsert(items: E[], chunkSize?: number): Promise<string[] | number[] | any> {
+  public async batchInsert(items: E[], chunkSize?: number, connection?: Knex): Promise<string[] | number[] | any> {
     const rows = items.map((i) => this.mapToDB(i))
-    return this.batchInsertRaw(rows, chunkSize)
+    return this.batchInsertRaw(rows, chunkSize, connection)
   }
 
-  public async batchInsertRaw(rows: Record<string, any>[], chunkSize?: number): Promise<string[] | number[] | any> {
+  public async batchInsertRaw(rows: Record<string, any>[], chunkSize?: number, connection?: Knex): Promise<string[] | number[] | any> {
+    const conn = connection || this.connection
+
     const rowsNext = rows.map((i) => {
       const { [this.primaryKey]: id, ...rowNext } = i
       return rowNext
@@ -222,7 +199,7 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
 
     let result
     if (['pg', 'mssql', 'oracle'].includes(this.connection.client.config.client)) {
-      const batchInsertResult = await this.connection.batchInsert(this.table, rowsNext, chunkSize).returning(this.primaryKey)
+      const batchInsertResult = await conn.batchInsert(this.table, rowsNext, chunkSize).returning(this.primaryKey)
 
       result = batchInsertResult.map((identificator) => {
         if (typeof identificator === 'object') {
@@ -232,7 +209,7 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
         return identificator
       })
     } else {
-      result = await this.connection.batchInsert(this.table, rows, chunkSize)
+      result = await conn.batchInsert(this.table, rows, chunkSize)
     }
 
     await this.afterBatchInsert(rows)
@@ -240,8 +217,8 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     return result
   }
 
-  public async truncate(requestor: string) {
-    const queryBuilder: Knex.QueryBuilder = this.connection(this.table)
+  public async truncate(requestor: string, connection?: Knex) {
+    const queryBuilder: Knex.QueryBuilder = connection ? connection(this.table) : this.connection(this.table)
     let result
     try {
       await this.beforeTruncate(requestor)
@@ -254,13 +231,13 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     return result
   }
 
-  public async delete(id: string | number, requestor: string) {
+  public async delete(id: string | number, requestor: string, connection?: Knex) {
     const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: this.primaryKey, value: id }] })
-    return this.deleteAll(condition, requestor)
+    return this.deleteAll(condition, requestor, connection)
   }
 
-  public async deleteAll(condition: Condition, requestor: string) {
-    const queryBuilder: Knex.QueryBuilder = this.connection(this.table)
+  public async deleteAll(condition: Condition, requestor: string, connection?: Knex) {
+    const queryBuilder: Knex.QueryBuilder = connection ? connection(this.table) : this.connection(this.table)
     if (condition) {
       this.conditionParser.parse(queryBuilder, condition)
     }
@@ -300,6 +277,40 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
   public mapToDB(item: E): any {
     const { id, [this.primaryKey]: primaryKey, ...data } = item.getData(true)
     return data
+  }
+
+  public getPrimaryKey() {
+    return this.primaryKey
+  }
+
+  protected applyPagination(pagination: Paginator | undefined, condition: Condition | undefined, queryBuilder: Knex.QueryBuilder) {
+    if (pagination) {
+      if (pagination.getLimit()) {
+        queryBuilder.limit(pagination.getLimit())
+      }
+
+      if (pagination.getOffset()) {
+        queryBuilder.offset(pagination.getOffset())
+      }
+    }
+
+    return condition
+  }
+
+  protected addDefaultSortIfNotSet(pagination: Paginator | undefined, condition: Condition | undefined) {
+    if (pagination) {
+      if (!condition) {
+        condition = new Condition(undefined)
+      } else if (condition.getSort().length === 0) {
+        condition = condition.clone()
+      }
+
+      if (!condition.getSort().length && pagination.getLimit() > 1) {
+        condition.setSort(this.primaryKey, 'asc')
+      }
+    }
+
+    return condition
   }
 
   protected changeEntity(item: E, data: Record<string, any>, id?: any) {
