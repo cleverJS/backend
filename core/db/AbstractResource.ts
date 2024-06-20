@@ -25,4 +25,5 @@ export abstract class AbstractResource<E> {
   public abstract createEntity(data: Partial<TEntityFrom<E>>, clone: boolean): Promise<E>
   public abstract map(data: Record<string, any>): any
   public abstract mapToDB(item: E): any
+  public abstract getPrimaryKey(): any
 }
