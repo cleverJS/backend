@@ -32,7 +32,7 @@ export class Cache implements CacheAdapterInterface {
     return this.adapter.set(key, value, ttl || undefined, tags || undefined)
   }
 
-  public getOrSet<T>(key: string, fn: () => Promise<T>, ttl?: number | null, tags?: string[]): Promise<T | undefined> {
+  public getOrSet<T>(key: string, fn: () => Promise<T>, ttl?: number | null, tags?: string[]): Promise<T> {
     return this.adapter.getOrSet<T>(key, fn, ttl || undefined, tags || undefined)
   }
 

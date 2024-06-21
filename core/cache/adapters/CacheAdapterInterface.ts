@@ -6,14 +6,14 @@ export abstract class CacheAdapterInterface {
    * @param ttl - in seconds
    * @param tags
    */
-  public async getOrSet<T>(key: string, fn: () => Promise<T>, ttl?: number | null, tags?: string[]): Promise<T | undefined> {
+  public async getOrSet<T>(key: string, fn: () => Promise<T>, ttl?: number | null, tags?: string[]): Promise<T> {
     let result = await this.get<T>(key)
     if (!result) {
       result = await fn()
       await this.set(key, result, ttl, tags)
     }
 
-    return this.get<T>(key)
+    return this.get<T>(key) as Promise<T>
   }
 
   public abstract get<T>(key: string, defaultValue?: T): Promise<T | undefined>
