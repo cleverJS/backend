@@ -1,5 +1,6 @@
 import { logger } from '../logger/logger'
 import { Cloner } from '../utils/clone/Cloner'
+import { ICloneable } from "../utils/clone/ICloneable";
 
 export interface IEntity {
   id?: any
@@ -8,7 +9,7 @@ export interface IEntity {
   clone(nextData?: Partial<any>): IEntity
 }
 
-export abstract class AbstractEntity<GData extends Record<string, any>> implements IEntity {
+export abstract class AbstractEntity<GData extends Record<string, any>> implements IEntity, ICloneable {
   public id?: any
 
   public setData(data: Partial<GData>, shouldClone: boolean = true): void {

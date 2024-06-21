@@ -1,5 +1,7 @@
 import { ESetTTLMode, Redis } from '../../db/redis/Redis'
 import { loggerNamespace } from '../../logger/logger'
+import { Cloner } from '../../utils/clone/Cloner'
+import { hasOwnMethods, isNonPrimitive } from '../../utils/reflect'
 
 import { CacheAdapterInterface } from './CacheAdapterInterface'
 
@@ -14,18 +16,31 @@ export class CacheAdapterRedis extends CacheAdapterInterface {
     this.redis = redisClient
   }
 
-  public async get(key: string, defaultValue?: unknown): Promise<unknown | undefined> {
-    let result = await this.redis.client.get(CacheAdapterRedis.createKey(key))
+  public async get<T>(key: string, defaultValue?: T): Promise<T | undefined> {
+    const cache = await this.redis.client.get(CacheAdapterRedis.createKey(key))
 
-    if (result) {
-      result = JSON.parse(result)
+    let result: T | undefined
+    if (cache) {
+      result = JSON.parse(cache) as T
     }
 
-    return result || defaultValue
+    if (!result) {
+      if (isNonPrimitive(defaultValue)) {
+        result = Cloner.getInstance().clone(defaultValue)
+      } else {
+        result = defaultValue
+      }
+    }
+
+    return result
   }
 
   public async set(key: string, value: unknown, ttl?: number | null, tags?: string[]): Promise<void> {
     try {
+      if (!this.#canBeCached(value)) {
+        throw new Error('Complex object cannot be cached in Redis, because it will lose its behaviour')
+      }
+
       const redisKey = CacheAdapterRedis.createKey(key)
       const data: string = JSON.stringify(value)
 
@@ -86,5 +101,23 @@ export class CacheAdapterRedis extends CacheAdapterInterface {
 
   public static createTagKey(key: string): string {
     return `${PREFIX}:tags:${key.replace('_', ':')}`
+  }
+
+  #canBeCached(value: unknown) {
+    let result = true
+    if (isNonPrimitive(value)) {
+      if (Array.isArray(value)) {
+        for (const item of value) {
+          if (!this.#canBeCached(item)) {
+            result = false
+            break
+          }
+        }
+      } else if (hasOwnMethods(value)) {
+        result = false
+      }
+    }
+
+    return result
   }
 }

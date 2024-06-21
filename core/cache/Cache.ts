@@ -24,16 +24,16 @@ export class Cache implements CacheAdapterInterface {
     this.checkExpired().catch(this.logger.error)
   }
 
-  public get(key: string, defaultValue?: any): Promise<any | undefined> {
-    return this.adapter.get(key, defaultValue)
+  public get<T>(key: string, defaultValue?: any): Promise<T | undefined> {
+    return this.adapter.get<T>(key, defaultValue)
   }
 
   public set(key: string, value: any, ttl?: number | null, tags?: string[]): Promise<void> {
     return this.adapter.set(key, value, ttl || undefined, tags || undefined)
   }
 
-  public getOrSet(key: string, fn: () => Promise<any>, ttl?: number | null, tags?: string[]): Promise<any> {
-    return this.adapter.getOrSet(key, fn, ttl || undefined, tags || undefined)
+  public getOrSet<T>(key: string, fn: () => Promise<T>, ttl?: number | null, tags?: string[]): Promise<T | undefined> {
+    return this.adapter.getOrSet<T>(key, fn, ttl || undefined, tags || undefined)
   }
 
   public clear(key?: string): Promise<void> {

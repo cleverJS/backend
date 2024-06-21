@@ -1,4 +1,6 @@
 import { loggerNamespace } from '../../logger/logger'
+import { Cloner } from '../../utils/clone/Cloner'
+import { isNonPrimitive } from '../../utils/reflect'
 
 import { CacheAdapterInterface } from './CacheAdapterInterface'
 
@@ -9,14 +11,31 @@ export class CacheAdapterRuntime extends CacheAdapterInterface {
   protected readonly tagKeys: Map<string, Set<string>> = new Map()
   protected readonly ttls: Map<string, number> = new Map()
 
-  public async get(key: string, defaultValue?: unknown): Promise<unknown | undefined> {
+  public async get<T>(key: string, defaultValue?: T): Promise<T | undefined> {
     await this.checkExpiredByKey(key)
     const cache = this.caches.get(key)
+
     let result
     if (!cache) {
       result = defaultValue
     } else {
       result = cache
+    }
+
+    if (isNonPrimitive(result)) {
+      if (Array.isArray(result)) {
+        const clonedArray: any = []
+        for (const item of result) {
+          if (isNonPrimitive(item)) {
+            clonedArray.push(Cloner.getInstance().clone(item))
+          } else {
+            clonedArray.push(item)
+          }
+        }
+        result = clonedArray
+      } else {
+        result = Cloner.getInstance().clone(result)
+      }
     }
 
     return result
@@ -30,6 +49,10 @@ export class CacheAdapterRuntime extends CacheAdapterInterface {
    * @param tags
    */
   public set(key: string, value: unknown, ttl?: number | null, tags?: string[]): Promise<void> {
+    if (!Cloner.isCloneable(value)) {
+      throw new Error('Non Cloneable object cannot be cached in Runtime, because it will lose its behaviour')
+    }
+
     this.caches.set(key, value)
 
     if (ttl) {

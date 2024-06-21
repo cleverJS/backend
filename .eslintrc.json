@@ -21,7 +21,6 @@
     "jest",
     "no-loops",
     "node",
-    "optimize-regex",
     "promise",
     "security",
     "sonarjs",
@@ -30,7 +29,6 @@
   "extends": [
     "eslint:recommended",
     "airbnb-base",
-    "airbnb-typescript/base",
     "plugin:eslint-comments/recommended",
     "plugin:promise/recommended",
     "plugin:jest/recommended",
@@ -42,9 +40,9 @@
     // Disable rules from packages above that could interfere with prettier
     "prettier",
     "plugin:prettier/recommended",
-    "plugin:security/recommended",
     "plugin:sort-export-all/recommended",
-    "plugin:sonarjs/recommended"
+    "plugin:sonarjs/recommended-legacy",
+    "plugin:security/recommended-legacy"
   ],
   "rules": {
     "@typescript-eslint/no-unused-vars": 0,
@@ -84,7 +82,6 @@
     "no-plusplus": 0,
     "security/detect-non-literal-fs-filename": 0,
     "dot-notation": 0,
-    "optimize-regex/optimize-regex": "warn",
     "quotes": ["warn", "single"],
     "no-useless-escape": ["off"],
     "no-console": ["error"],

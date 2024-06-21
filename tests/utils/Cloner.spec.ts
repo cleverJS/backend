@@ -23,6 +23,15 @@ describe('Cloner', () => {
     expect(clone.date).toBeInstanceOf(Date)
   })
 
+  it('should clone Set', () => {
+    const item = new Set([1])
+    expect(item.size).toEqual(1)
+    const clone = cloner('v8').clone(item)
+    clone.clear()
+    expect(item.size).toEqual(1)
+    expect(clone.size).toEqual(0)
+  })
+
   it('should keep Date type with JSONCloner', () => {
     const item = { date: new Date() }
     expect(item.date).toBeInstanceOf(Date)

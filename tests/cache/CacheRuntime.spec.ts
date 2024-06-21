@@ -180,4 +180,27 @@ describe('Test Cache Runtime', () => {
     await cache.clear('test3')
     await cache.clear()
   })
+
+  it('should not change cached object by reference', async () => {
+    const cache = new Cache(cacheAdapter)
+
+    const cached = await cache.getOrSet('test1', () => {
+      return Promise.resolve({
+        a: 1,
+      })
+    })
+
+    if (cached) {
+      expect(cached?.a).toEqual(1)
+      cached.a = 2
+    }
+
+    const cached2 = await cache.getOrSet('test1', () => {
+      return Promise.resolve({
+        a: 1,
+      })
+    })
+
+    expect(cached2?.a).toEqual(1)
+  })
 })
