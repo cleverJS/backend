@@ -5,7 +5,8 @@ import { ICloner } from './ICloner'
 export class V8Cloner implements ICloner {
   public clone<T>(data: T): T {
     const cloned = deserialize(serialize(data))
-    return this.restoreTypes(data, cloned)
+    this.restoreTypes(data, cloned)
+    return cloned
   }
 
   private restoreTypes(data: any, cloned: any) {
@@ -14,7 +15,9 @@ export class V8Cloner implements ICloner {
         cloned[key] = new Date(cloned[key])
       }
     }
-
-    return cloned
   }
+  //
+  // #streamToString(stream: Stream) {
+  //   return
+  // }
 }

@@ -1,3 +1,4 @@
+import 'jest-extended'
 import path from 'path'
 
 import { ILoggerConfig } from '../../core/logger/config'

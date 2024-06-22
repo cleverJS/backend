@@ -79,6 +79,21 @@ describe('Cloner', () => {
     expect(clone.date).toBeInstanceOf(Date)
   })
 
+  it('should clone Cloneable with V8Cloner', () => {
+    cloner('v8')
+    const item = new TestEntity()
+    item.setData({ title: 'title1' })
+
+    const clone = cloner('v8').clone(item)
+
+    item.title = 'title2'
+
+    expect(clone).toBeInstanceOf(TestEntity)
+    expect(clone.title).toEqual('title1')
+    expect(item.title).toEqual('title2')
+    expect(clone.date).toBeInstanceOf(Date)
+  })
+
   it('should clone Entity with JSONCloner', () => {
     cloner('json')
     const item = new TestEntity()
@@ -92,5 +107,28 @@ describe('Cloner', () => {
     expect(clone.title).toEqual('title1')
     expect(item.title).toEqual('title2')
     expect(clone.date).toBeInstanceOf(Date)
+  })
+
+  it('should clone Cloneable with JSONCloner', () => {
+    cloner('json')
+    const item = new TestEntity()
+    item.setData({ title: 'title1' })
+
+    const clone = cloner('json').clone(item)
+
+    item.title = 'title2'
+
+    expect(clone).toBeInstanceOf(TestEntity)
+    expect(clone.title).toEqual('title1')
+    expect(item.title).toEqual('title2')
+    expect(clone.date).toBeInstanceOf(Date)
+  })
+
+  it('should clone Buffer', async () => {
+    const obj = Buffer.from([1, 2, 3])
+    const cloned = cloner('v8').clone(obj)
+
+    expect(obj).toBeInstanceOf(Buffer)
+    expect(cloned).toBeInstanceOf(Buffer)
   })
 })

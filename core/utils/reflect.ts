@@ -1,3 +1,6 @@
+import { ICloneable } from './clone/ICloneable'
+import { isInstanceOf } from './common'
+
 export function getOwnMethodNames(obj: any) {
   const prototypeFields: Set<string> = new Set([
     'constructor',
@@ -39,4 +42,11 @@ export function hasOwnMethods(obj: any) {
 
 export function isNonPrimitive(value: any) {
   return (typeof value === 'object' && value !== null) || typeof value === 'function'
+}
+
+export function isInstanceOfICloneable(object: any): object is ICloneable {
+  return isInstanceOf<ICloneable>(object, (item: any) => {
+    const methods = getOwnMethodNames(item)
+    return methods.has('clone')
+  })
 }

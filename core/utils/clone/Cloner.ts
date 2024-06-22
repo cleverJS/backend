@@ -1,7 +1,8 @@
-import { isInstanceOf } from '../common'
-import { hasOwnMethods, isNonPrimitive } from '../reflect'
+import { Stream } from 'node:stream'
 
-import { ICloneable } from './ICloneable'
+import { isInstanceOf } from '../common'
+import { hasOwnMethods, isInstanceOfICloneable, isNonPrimitive } from '../reflect'
+
 import { ICloner } from './strategy/ICloner'
 import { V8Cloner } from './strategy/V8Cloner'
 
@@ -27,7 +28,7 @@ export class Cloner {
 
   public clone<T>(data: T): T {
     let result
-    if (isInstanceOf<ICloneable>(data, 'clone')) {
+    if (isInstanceOfICloneable(data)) {
       result = data.clone(data)
     } else {
       if (!Cloner.isCloneable(data)) {
@@ -41,35 +42,62 @@ export class Cloner {
   }
 
   public static isCloneable(obj: any) {
-    let result = true
+    if (!isNonPrimitive(obj) || isInstanceOf(obj, 'clone')) {
+      return true
+    }
 
-    if (isNonPrimitive(obj) && !isInstanceOf(obj, 'clone')) {
-      if (Array.isArray(obj)) {
-        for (const item of obj) {
-          if (!this.isCloneable(item)) {
-            result = false
-            break
-          }
+    if (obj instanceof Date) {
+      return true
+    }
+
+    if (obj instanceof Stream) {
+      return false
+    }
+
+    if (obj instanceof Buffer) {
+      return true
+    }
+
+    if (Array.isArray(obj)) {
+      for (const item of obj) {
+        if (!this.isCloneable(item)) {
+          return false
         }
-      } else if (obj instanceof Set) {
-        for (const item of obj) {
-          if (!this.isCloneable(item)) {
-            result = false
-            break
-          }
+      }
+
+      return true
+    }
+
+    if (obj instanceof Set) {
+      for (const item of obj) {
+        if (!this.isCloneable(item)) {
+          return false
         }
-      } else if (obj instanceof Map) {
-        for (const [, item] of obj) {
-          if (!this.isCloneable(item)) {
-            result = false
-            break
-          }
+      }
+
+      return true
+    }
+
+    if (obj instanceof Map) {
+      for (const [, item] of obj) {
+        if (!this.isCloneable(item)) {
+          return false
         }
-      } else if (hasOwnMethods(obj)) {
-        result = false
+      }
+
+      return true
+    }
+
+    if (hasOwnMethods(obj)) {
+      return false
+    }
+
+    for (const item of Object.values(obj)) {
+      if (!this.isCloneable(item)) {
+        return false
       }
     }
 
-    return result
+    return true
   }
 }

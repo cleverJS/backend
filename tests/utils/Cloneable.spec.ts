@@ -1,4 +1,6 @@
 // eslint-disable-next-line max-classes-per-file
+import { Readable } from 'stream'
+
 import { Cloner } from '../../core/utils/clone/Cloner'
 import { ICloneable } from '../../core/utils/clone/ICloneable'
 
@@ -69,6 +71,62 @@ describe('Check Cloneable', () => {
     expect(Cloner.isCloneable(instance)).toBe(true)
   })
 
+  test('returns true for an object with Map of Cloneable', () => {
+    class Parent implements ICloneable {
+      clone(nextData?: any): this {
+        throw new Error('Method not implemented.')
+      }
+
+      public parentMethod() {
+        return 'foo'
+      }
+    }
+
+    const instance = new Parent()
+    const obj = { primitive: 'foo', items: new Map([[1, instance]]) }
+    expect(Cloner.isCloneable(obj)).toBe(true)
+  })
+
+  test('returns false for an object with Map of Non Cloneable', () => {
+    class Parent {
+      public parentMethod() {
+        return 'foo'
+      }
+    }
+
+    const instance = new Parent()
+    const obj = { primitive: 'foo', items: new Map([[1, instance]]) }
+    expect(Cloner.isCloneable(obj)).toBe(false)
+  })
+
+  test('returns true for an object with primitive and cloneable properties', () => {
+    class Parent implements ICloneable {
+      clone(nextData?: any): this {
+        throw new Error('Method not implemented.')
+      }
+
+      public parentMethod() {
+        return 'foo'
+      }
+    }
+
+    const instance = new Parent()
+    const obj = { primitive: 'foo', items: [instance] }
+    expect(Cloner.isCloneable(obj)).toBe(true)
+  })
+
+  test('returns false for an object with primitive and non cloneable properties', () => {
+    class Parent {
+      public parentMethod() {
+        return 'foo'
+      }
+    }
+
+    const instance = new Parent()
+    const obj = { primitive: 'foo', items: [instance] }
+    expect(Cloner.isCloneable(obj)).toBe(false)
+  })
+
   test('returns false for null', () => {
     expect(Cloner.isCloneable(null)).toBe(true)
   })
@@ -112,5 +170,23 @@ describe('Check Cloneable', () => {
 
     const arr = [1, 2, 3, instance]
     expect(Cloner.isCloneable(arr)).toBe(true)
+  })
+
+  test('returns false for an stream', () => {
+    const obj = Readable.from([1, 2, 3])
+
+    expect(Cloner.isCloneable(obj)).toBe(false)
+  })
+
+  test('returns true for an Date', () => {
+    const obj = new Date()
+
+    expect(Cloner.isCloneable(obj)).toBe(true)
+  })
+
+  test('returns true for an Buffer', () => {
+    const obj = Buffer.from([1, 2, 3])
+
+    expect(Cloner.isCloneable(obj)).toBe(true)
   })
 })
