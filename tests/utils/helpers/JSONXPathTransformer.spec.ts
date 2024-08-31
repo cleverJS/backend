@@ -87,6 +87,22 @@ describe('Test JSONXPathTransformerHelper', () => {
       logger.error(e)
     }
   })
+
+  it('should stringify only value when one parameter and no any explicit', async () => {
+    const config: JSONXpathTransformConfig = {
+      'stringify(parse(user/other)/skills)': 'skills',
+    }
+
+    try {
+      const result = JSONXPathTransformerHelper.transform(input, config)
+
+      expect({
+        skills: '[{"name":"Communication"},{"name":"Adaptability"}]',
+      }).toEqual(result)
+    } catch (e) {
+      logger.error(e)
+    }
+  })
 })
 
 const input = {
@@ -97,6 +113,7 @@ const input = {
       street: '123 Main St',
       city: 'Anytown',
     },
+    other: '{"skills":[{"name":"Communication"},{"name":"Adaptability"}]}',
   },
   job: {
     title: 'Developer',

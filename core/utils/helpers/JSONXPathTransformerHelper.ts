@@ -51,7 +51,7 @@ export class JSONXPathTransformerHelper {
 
         let nextValue: string | undefined = value
 
-        if (!nextValue) {
+        if (nextValue === undefined) {
           if (key.startsWith('parse(')) {
             const match = key.match(parseRegex)
 
@@ -69,7 +69,7 @@ export class JSONXPathTransformerHelper {
           }
         }
 
-        if (!nextValue) {
+        if (nextValue === undefined) {
           throw new Error('Cannot assemble keys to config')
         }
 
@@ -135,7 +135,14 @@ export class JSONXPathTransformerHelper {
 
     const keys = match[1].split(',')
     const config = this.#stringifyKeysToConfig(keys)
-    const output = JSONXPathTransformerHelper.transform(input, config)
+    let output = JSONXPathTransformerHelper.transform(input, config)
+
+    if (keys.length === 1 && keys[0].search(':') === -1) {
+      for (const target of Object.values(config)) {
+        output = output[target]
+      }
+    }
+
     return JSON.stringify(output)
   }
 }
