@@ -1,6 +1,6 @@
 {
   "name": "@cleverjs/backend",
-  "version": "1.11.10",
+  "version": "1.11.11",
   "description": "CleverJS Backend",
   "author": "",
   "license": "MIT",
@@ -24,22 +24,22 @@
   "dependencies": {
     "@types/pretty-hrtime": "^1.0.3",
     "@types/uuid": "^9.0.8",
-    "@types/ws": "^8.5.10",
+    "@types/ws": "^8.5.12",
     "@elastic/elasticsearch": "=7.17.13",
-    "fastify": "^4.28.0",
-    "ws": "^8.16.0",
+    "fastify": "^4.28.1",
+    "ws": "^8.18.0",
     "knex": "=3.1.0",
-    "axios": "=1.7.2",
-    "typescript": "=5.4.5",
-    "fastest-validator": "^1.18.0",
-    "redis": "^4.6.14",
+    "axios": "=1.7.6",
+    "typescript": "=5.5.4",
+    "fastest-validator": "^1.19.0",
+    "redis": "^4.7.0",
     "typed-emitter": "^2.1.0",
     "dotenv": "^16.4.5",
     "path": "^0.12.7",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "uuid": "^9.0.1",
-    "winston": "^3.13.0",
+    "winston": "^3.14.2",
     "telegraf": "^4.16.3",
     "piscina": "^4.1.0"
   },
@@ -89,13 +89,13 @@
   },
   "peerDependencies": {
     "knex": "=3.1.0",
-    "typescript": "=5.5.2",
-    "redis": "^4.6.13",
-    "fastify": "^4.28.0",
+    "typescript": "=5.5.4",
+    "redis": "^4.7.0",
+    "fastify": "^4.28.1",
     "@elastic/elasticsearch": "=7.17.13",
-    "axios": "=1.7.2",
-    "ws": "^8.16.0",
+    "axios": "=1.7.6",
+    "ws": "^8.18.0",
     "telegraf": "^4.16.3",
-    "winston": "^3.13.0"
+    "winston": "^3.14.2"
   }
 }
