@@ -1,3 +1,6 @@
+import { Cache } from '../../cache/Cache'
+import { loggerNamespace } from '../../logger/logger'
+
 const parseRegex = /^parse\((.+)\)(\/.+)?$/
 
 export type JSONXpathTransformConfig = {
@@ -5,6 +8,26 @@ export type JSONXpathTransformConfig = {
 }
 
 export class JSONXPathTransformerHelper {
+  static #instance: JSONXPathTransformerHelper
+  #cache: Cache
+  protected readonly logger = loggerNamespace('ConditionDbParser')
+
+  public static instance(cache?: Cache): JSONXPathTransformerHelper {
+    if (!JSONXPathTransformerHelper.#instance) {
+      if (!cache) {
+        throw new Error('Cache should be passed on first instance call')
+      }
+
+      JSONXPathTransformerHelper.#instance = new JSONXPathTransformerHelper(cache)
+    }
+
+    return JSONXPathTransformerHelper.#instance
+  }
+
+  protected constructor(cache: Cache) {
+    this.#cache = cache
+  }
+
   /**
    * Transform json object from one structure to another
    *
@@ -24,14 +47,14 @@ export class JSONXPathTransformerHelper {
    * @param {Record<string, any>} input
    * @param {JSONXpathTransformConfig} config
    */
-  static transform(input: Record<string, any>, config: JSONXpathTransformConfig): any {
+  async transform(input: Record<string, any>, config: JSONXpathTransformConfig): Promise<Record<string, any>> {
     const output: Record<string, any> = {}
     for (const [source, target] of Object.entries(config)) {
       let value
       if (source.startsWith('stringify(')) {
-        value = this.#stringify(input, source)
+        value = await this.#stringify(input, source)
       } else if (source.startsWith('parse(')) {
-        value = this.#parse(input, source)
+        value = await this.#parse(input, source)
       } else {
         value = this.#getValueByPath(input, source)
       }
@@ -44,7 +67,7 @@ export class JSONXPathTransformerHelper {
     return output
   }
 
-  static #stringifyKeysToConfig(keys: string[]) {
+  #stringifyKeysToConfig(keys: string[]) {
     return keys.reduce(
       (acc, item) => {
         const [key, value] = item.split(':')
@@ -80,7 +103,7 @@ export class JSONXPathTransformerHelper {
     )
   }
 
-  static #getValueByPath(obj: any, path: string): any {
+  #getValueByPath(obj: any, path: string): any {
     const keys = path.split('/')
     let result = obj
     for (const key of keys) {
@@ -93,7 +116,7 @@ export class JSONXPathTransformerHelper {
     return result
   }
 
-  static #setValueByPath(obj: any, path: string, value: any): void {
+  #setValueByPath(obj: any, path: string, value: any): void {
     const keys = path.split('/')
     let current = obj
     for (let i = 0; i < keys.length; i++) {
@@ -109,7 +132,7 @@ export class JSONXPathTransformerHelper {
     }
   }
 
-  static #parse(input: any, source: string) {
+  async #parse(input: any, source: string) {
     const match = source.match(parseRegex)
     if (!match?.[1]) {
       throw new Error(`keys for parsing were not matched: ${source}`)
@@ -117,7 +140,13 @@ export class JSONXPathTransformerHelper {
 
     const key = match[1]
     let value = this.#getValueByPath(input, key)
-    value = JSON.parse(value)
+    value = await this.#cache.getOrSet(
+      `JSONXPath_parse_${key}`,
+      () => {
+        return JSON.parse(value)
+      },
+      Cache.TTL_1MIN
+    )
 
     if (match?.[2]) {
       value = this.#getValueByPath(value, match?.[2].slice(1))
@@ -126,7 +155,7 @@ export class JSONXPathTransformerHelper {
     return value
   }
 
-  static #stringify(input: any, source: string): string {
+  async #stringify(input: any, source: string): Promise<string> {
     const match = source.match(/stringify\((.*)\)/)
 
     if (!match?.[1]) {
@@ -135,7 +164,7 @@ export class JSONXPathTransformerHelper {
 
     const keys = match[1].split(',')
     const config = this.#stringifyKeysToConfig(keys)
-    let output = JSONXPathTransformerHelper.transform(input, config)
+    let output = await this.transform(input, config)
 
     if (keys.length === 1 && keys[0].search(':') === -1) {
       for (const target of Object.values(config)) {

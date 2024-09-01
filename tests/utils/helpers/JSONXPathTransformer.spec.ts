@@ -1,14 +1,19 @@
 import { logger } from '../../../core/logger/logger'
 import { JSONXpathTransformConfig, JSONXPathTransformerHelper } from '../../../core/utils/helpers/JSONXPathTransformerHelper'
+import { cacheContainer } from '../../../demo/CacheContainer'
 
 describe('Test JSONXPathTransformerHelper', () => {
+  beforeAll(async () => {
+    JSONXPathTransformerHelper.instance(cacheContainer.cacheRuntime)
+  })
+
   it('should stringify target node', async () => {
     const config: JSONXpathTransformConfig = {
       'stringify(user/address/street:street,user/address/city:city)': 'location',
     }
 
     try {
-      const result = JSONXPathTransformerHelper.transform(input, config)
+      const result = await JSONXPathTransformerHelper.instance().transform(input, config)
 
       expect({
         location: '{"street":"123 Main St","city":"Anytown"}',
@@ -24,7 +29,7 @@ describe('Test JSONXPathTransformerHelper', () => {
     }
 
     try {
-      const result = JSONXPathTransformerHelper.transform(input, config)
+      const result = await JSONXPathTransformerHelper.instance().transform(input, config)
 
       expect({
         location: '{"street":"123 Main St","city":"Anytown","country":"Slovenia"}',
@@ -40,7 +45,7 @@ describe('Test JSONXPathTransformerHelper', () => {
     }
 
     try {
-      const result = JSONXPathTransformerHelper.transform(input, config)
+      const result = await JSONXPathTransformerHelper.instance().transform(input, config)
 
       expect({
         location: `{\"street\":\"123 Main St\",\"city\":\"Anytown\",\"settings\":{\"theme\":\"dark\",\"notifications\":true,\"country\":\"Slovenia\"}}`,
@@ -64,7 +69,7 @@ describe('Test JSONXPathTransformerHelper', () => {
     }
 
     try {
-      const result = JSONXPathTransformerHelper.transform(input, config)
+      const result = await JSONXPathTransformerHelper.instance().transform(input, config)
 
       expect({
         fullName: 'John Doe',
@@ -94,7 +99,7 @@ describe('Test JSONXPathTransformerHelper', () => {
     }
 
     try {
-      const result = JSONXPathTransformerHelper.transform(input, config)
+      const result = await JSONXPathTransformerHelper.instance().transform(input, config)
 
       expect({
         skills: '[{"name":"Communication"},{"name":"Adaptability"}]',
