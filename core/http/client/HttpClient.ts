@@ -1,5 +1,6 @@
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, Canceler, CancelToken, Method } from 'axios'
 import fs from 'fs'
+import { IncomingMessage } from 'http'
 import { Stream } from 'node:stream'
 import { types } from 'util'
 
@@ -82,7 +83,10 @@ export class HttpClient {
           if (error.response.status === 404) {
             responseErrorParams.message = error.response?.statusText
           } else {
-            responseErrorParams.data = error.response?.data || {}
+            if (error.response?.data && !(error.response.data instanceof IncomingMessage)) {
+              responseErrorParams.data = error.response?.data || {}
+            }
+
             responseErrorParams.message = error.response?.statusText
           }
         } else if (error.request) {
@@ -154,7 +158,10 @@ export class HttpClient {
           if (error.response.status === 404) {
             responseErrorParams.message = error.response?.statusText
           } else {
-            responseErrorParams.data = error.response?.data || {}
+            if (error.response?.data && !(error.response.data instanceof IncomingMessage)) {
+              responseErrorParams.data = error.response?.data || {}
+            }
+
             responseErrorParams.message = error.response?.statusText
           }
         } else if (error.request) {
@@ -173,7 +180,7 @@ export class HttpClient {
               }
             }
           }
-          responseErrorParams.message = error.request
+          responseErrorParams.message = error?.request?.message || ''
         } else {
           // Something happened in setting up the request that triggered an Error
           responseErrorParams.message = error.message

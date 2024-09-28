@@ -1,3 +1,5 @@
+import crypto from 'node:crypto'
+
 import { Cache } from '../../cache/Cache'
 import { loggerNamespace } from '../../logger/logger'
 
@@ -9,7 +11,7 @@ export type JSONXpathTransformConfig = {
 
 export class JSONXPathTransformerHelper {
   static #instance: JSONXPathTransformerHelper
-  #cache: Cache
+  // #cache: Cache
   protected readonly logger = loggerNamespace('ConditionDbParser')
 
   public static instance(cache?: Cache): JSONXPathTransformerHelper {
@@ -25,7 +27,7 @@ export class JSONXPathTransformerHelper {
   }
 
   protected constructor(cache: Cache) {
-    this.#cache = cache
+    // this.#cache = cache
   }
 
   /**
@@ -48,13 +50,14 @@ export class JSONXPathTransformerHelper {
    * @param {JSONXpathTransformConfig} config
    */
   async transform(input: Record<string, any>, config: JSONXpathTransformConfig): Promise<Record<string, any>> {
+    const inputHash = crypto.createHash('md5').update(JSON.stringify(input)).digest('hex')
     const output: Record<string, any> = {}
     for (const [source, target] of Object.entries(config)) {
       let value
       if (source.startsWith('stringify(')) {
         value = await this.#stringify(input, source)
       } else if (source.startsWith('parse(')) {
-        value = await this.#parse(input, source)
+        value = await this.#parse(input, source, inputHash)
       } else {
         value = this.#getValueByPath(input, source)
       }
@@ -132,7 +135,7 @@ export class JSONXPathTransformerHelper {
     }
   }
 
-  async #parse(input: any, source: string) {
+  async #parse(input: any, source: string, inputHash: string) {
     const match = source.match(parseRegex)
     if (!match?.[1]) {
       throw new Error(`keys for parsing were not matched: ${source}`)
@@ -140,13 +143,14 @@ export class JSONXPathTransformerHelper {
 
     const key = match[1]
     let value = this.#getValueByPath(input, key)
-    value = await this.#cache.getOrSet(
-      `JSONXPath_parse_${key}`,
-      () => {
-        return JSON.parse(value)
-      },
-      Cache.TTL_1MIN
-    )
+    // value = await this.#cache.getOrSet(
+    //   `parse_${inputHash}_${key}`,
+    //   () => {
+    //     return JSON.parse(value)
+    //   },
+    //   Cache.TTL_1MIN
+    // )
+    value = JSON.parse(value)
 
     if (match?.[2]) {
       value = this.#getValueByPath(value, match?.[2].slice(1))
