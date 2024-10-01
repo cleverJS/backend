@@ -1,4 +1,4 @@
-import { createClient } from 'redis'
+import { createClient, RedisClientType } from 'redis'
 
 import { loggerNamespace } from '../../logger/logger'
 
@@ -27,7 +27,7 @@ export enum ESetTTLMode {
 }
 
 export class Redis {
-  public readonly client
+  public readonly client: RedisClientType
   protected logger = loggerNamespace('Redis')
 
   public constructor(config: IRedisConfig) {
