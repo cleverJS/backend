@@ -46,7 +46,13 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
 
   public async findAll(condition?: Condition, pagination?: Paginator, connection?: Knex): Promise<E[]> {
     const rows = await this.findAllRaw<TEntityFrom<E>>(condition, pagination, undefined, connection)
-    return this.createEntityList(rows.map(this.map.bind(this)), false)
+
+    const promises = []
+    for (const row of rows) {
+      promises.push(this.map(row))
+    }
+
+    return this.createEntityList(await Promise.all(promises), false)
   }
 
   public async findAllRaw<T extends Record<string, any> = Record<string, any>>(
@@ -115,7 +121,7 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
   }
 
   public async insert(item: E, connection?: Knex): Promise<any | null> {
-    const data = this.mapToDB(item)
+    const data = await this.mapToDB(item)
 
     const queryBuilder: Knex.QueryBuilder = connection ? connection(this.table) : this.connection(this.table)
 
@@ -154,7 +160,7 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
   }
 
   public async update(condition: Readonly<Condition>, item: E, connection?: Knex): Promise<boolean> {
-    const data = this.mapToDB(item)
+    const data = await this.mapToDB(item)
 
     const result = await this.updateRaw(condition, data, connection)
 
@@ -186,7 +192,7 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
 
   public async batchInsert(items: E[], chunkSize?: number, connection?: Knex): Promise<string[] | number[] | any> {
     const rows = items.map((i) => this.mapToDB(i))
-    return this.batchInsertRaw(rows, chunkSize, connection)
+    return this.batchInsertRaw(await Promise.all(rows), chunkSize, connection)
   }
 
   public async batchInsertRaw(rows: Record<string, any>[], chunkSize?: number, connection?: Knex): Promise<string[] | number[] | any> {
@@ -266,7 +272,7 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     return result
   }
 
-  public map(data: Record<string, any>): any {
+  public async map(data: Record<string, any>): Promise<any> {
     if (this.primaryKey !== 'id' && data?.[this.primaryKey]) {
       data.id = data[this.primaryKey]
     }
@@ -274,7 +280,7 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     return data
   }
 
-  public mapToDB(item: E): any {
+  public async mapToDB(item: E): Promise<any> {
     const { id, [this.primaryKey]: primaryKey, ...data } = item.getData(true)
     return data
   }
@@ -313,9 +319,9 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     return condition
   }
 
-  protected changeEntity(item: E, data: Record<string, any>, id?: any) {
+  protected async changeEntity(item: E, data: Record<string, any>, id?: any) {
     id = id || item.id
-    item.setData(this.map(data), true)
+    item.setData(await this.map(data), true)
     item.id = id
 
     if (this.primaryKey && this.primaryKey !== 'id') {

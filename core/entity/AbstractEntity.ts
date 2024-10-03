@@ -1,6 +1,6 @@
 import { logger } from '../logger/logger'
 import { Cloner } from '../utils/clone/Cloner'
-import { ICloneable } from "../utils/clone/ICloneable";
+import { ICloneable } from '../utils/clone/ICloneable'
 
 export interface IEntity {
   id?: any
