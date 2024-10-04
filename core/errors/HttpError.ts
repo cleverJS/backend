@@ -25,6 +25,7 @@ export type TRequestErrorParams = {
 
 export type TResponseErrorParams = {
   status: number | null
+  code: string
   data: Record<string, any>
   message: string
 }

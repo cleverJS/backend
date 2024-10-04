@@ -4,7 +4,7 @@ import { File, TFile } from '../File'
 export class FileResource extends AbstractDBResource<File> {
   protected table = 'file'
 
-  mapToDB(item: File): any {
+  async mapToDB(item: File) {
     if (!item.createdAt) {
       const currentDate = new Date()
       currentDate.setMilliseconds(0)
@@ -17,7 +17,7 @@ export class FileResource extends AbstractDBResource<File> {
       item.updatedAt = currentDate
     }
 
-    const { data, ...dataDB } = super.mapToDB(item)
+    const { data, ...dataDB } = await super.mapToDB(item)
 
     if (dataDB.updatedAt) {
       dataDB.updatedAt = dataDB.updatedAt.toISOString()
@@ -33,8 +33,8 @@ export class FileResource extends AbstractDBResource<File> {
     }
   }
 
-  map(data: Record<string, any>): TFile {
-    const { data: fileData, ...dataDB } = super.map(data)
+  async map(data: Record<string, any>): Promise<TFile> {
+    const { data: fileData, ...dataDB } = await super.map(data)
 
     if (dataDB.updatedAt) {
       dataDB.updatedAt = new Date(data.updatedAt)

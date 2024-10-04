@@ -64,57 +64,10 @@ export class HttpClient {
         writer.on('error', reject)
       })
     } catch (error: any) {
-      const isAxiosError = (candidate: any): candidate is AxiosError => {
-        return candidate.isAxiosError === true
-      }
-
-      const responseErrorParams: TResponseErrorParams = {
-        status: null,
-        data: {},
-        message: '',
-      }
-
-      if (isAxiosError(error)) {
-        if (error.response) {
-          // The request was made and the server responded with a status code
-          // that falls out of the range of 2xx
-          responseErrorParams.status = error.response?.status || null
-
-          if (error.response.status === 404) {
-            responseErrorParams.message = error.response?.statusText
-          } else {
-            if (error.response?.data && !(error.response.data instanceof IncomingMessage)) {
-              responseErrorParams.data = error.response?.data || {}
-            }
-
-            responseErrorParams.message = error.response?.statusText
-          }
-        } else if (error.request) {
-          // The request was made but no response was received
-          // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-          // http.ClientRequest in node.js
-          responseErrorParams.message = error.request
-        } else {
-          // Something happened in setting up the request that triggered an Error
-          responseErrorParams.message = error.message
-        }
-      } else if (types.isNativeError(error)) {
-        responseErrorParams.message = error.message
-      }
-
-      const requestErrorParams = {
-        method: 'stream',
-        url,
-        payload: { ...config.params, ...config.data },
-      }
-
-      if (payload instanceof Stream || payload instanceof Buffer) {
-        requestErrorParams.payload = '[Stream]'
-      }
-
-      throw new HttpError(requestErrorParams, responseErrorParams)
+      throw HttpClient.handleError(error, url, 'GET', config, payload)
     }
   }
+
   public setHeaders(headers: Record<string, any>) {
     this.headers = headers
   }
@@ -139,68 +92,75 @@ export class HttpClient {
       const { data } = await this.client({ ...config, ...this.extendedConfig })
       return data || {}
     } catch (error: any) {
-      const isAxiosError = (candidate: any): candidate is AxiosError => {
-        return candidate.isAxiosError === true
-      }
+      throw HttpClient.handleError(error, url, method, config, payload)
+    }
+  }
 
-      const responseErrorParams: TResponseErrorParams = {
-        status: null,
-        data: {},
-        message: '',
-      }
+  public static handleError(error: any, url: string, method: Method | string, config: AxiosRequestConfig, payload: Record<string, any>) {
+    const isAxiosError = (candidate: any): candidate is AxiosError => {
+      return candidate.isAxiosError === true
+    }
 
-      if (isAxiosError(error)) {
-        if (error.response) {
-          // The request was made and the server responded with a status code
-          // that falls out of the range of 2xx
-          responseErrorParams.status = error.response?.status || null
+    const responseErrorParams: TResponseErrorParams = {
+      status: null,
+      data: {},
+      message: '',
+      code: '',
+    }
 
-          if (error.response.status === 404) {
-            responseErrorParams.message = error.response?.statusText
-          } else {
-            if (error.response?.data && !(error.response.data instanceof IncomingMessage)) {
-              responseErrorParams.data = error.response?.data || {}
-            }
+    if (isAxiosError(error)) {
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        responseErrorParams.status = error.response?.status || null
 
-            responseErrorParams.message = error.response?.statusText
-          }
-        } else if (error.request) {
-          // The request was made but no response was received
-          // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-          // http.ClientRequest in node.js
-
-          if (error.code === 'ETIMEDOUT') {
-            responseErrorParams.status = 408
-            responseErrorParams.message = error.message
-          } else {
-            for (const [key, value] of Object.entries(error)) {
-              responseErrorParams.status = 520
-              if (typeof value !== 'object') {
-                responseErrorParams.data[key] = value
-              }
-            }
-          }
-          responseErrorParams.message = error?.request?.message || ''
+        if (error.response.status === 404) {
+          responseErrorParams.message = error.response?.statusText
         } else {
-          // Something happened in setting up the request that triggered an Error
-          responseErrorParams.message = error.message
+          if (error.response?.data && !(error.response.data instanceof IncomingMessage)) {
+            responseErrorParams.data = error.response?.data || {}
+          }
+
+          responseErrorParams.message = error.response?.statusText
         }
-      } else if (types.isNativeError(error)) {
+      } else if (error.request) {
+        // The request was made but no response was received
+        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+        // http.ClientRequest in node.js
+
+        responseErrorParams.message = error.message
+        responseErrorParams.code = error.code || ''
+
+        if (error.code === 'ETIMEDOUT') {
+          responseErrorParams.status = 408
+        } else {
+          for (const [key, value] of Object.entries(error)) {
+            responseErrorParams.status = 520
+            if (typeof value !== 'object' && !['code', 'message'].includes(key)) {
+              responseErrorParams.data[key] = value
+            }
+          }
+        }
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        responseErrorParams.code = error?.code || ''
         responseErrorParams.message = error.message
       }
-
-      const requestErrorParams = {
-        method,
-        url,
-        payload: { ...config.params, ...config.data },
-      }
-
-      if (payload instanceof Stream) {
-        requestErrorParams.payload = '[Stream]'
-      }
-
-      throw new HttpError(requestErrorParams, responseErrorParams)
+    } else if (types.isNativeError(error)) {
+      responseErrorParams.message = error.message
     }
+
+    const requestErrorParams = {
+      method,
+      url,
+      payload: { ...config.params, ...config.data },
+    }
+
+    if (payload instanceof Stream) {
+      requestErrorParams.payload = '[Stream]'
+    }
+
+    return new HttpError(requestErrorParams, responseErrorParams)
   }
 
   protected cancelToken(cancelObject?: RequestCancel): CancelToken {

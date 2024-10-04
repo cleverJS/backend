@@ -24,14 +24,14 @@ export class ArticleResource extends AbstractDBResource<Article> {
     return this.connection.raw(query)
   }
 
-  public mapToDB(item: Article): any {
+  public async mapToDB(item: Article) {
     if (!item.created) {
       const currentDate = new Date()
       currentDate.setMilliseconds(0)
       item.created = currentDate
     }
 
-    const data = super.mapToDB(item)
+    const data = await super.mapToDB(item)
     data.created = data.created.toISOString()
 
     if (data.from) {

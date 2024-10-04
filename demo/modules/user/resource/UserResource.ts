@@ -58,8 +58,8 @@ export class UserResource extends AbstractDBResource<User> {
     return this.createEntity(rows[0])
   }
 
-  public mapToDB(item: User): any {
-    const userData = super.mapToDB(item)
+  public async mapToDB(item: User) {
+    const userData = await super.mapToDB(item)
     return {
       ...userData,
       data: JSON.stringify(userData.data || {}),

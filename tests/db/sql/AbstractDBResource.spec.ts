@@ -98,13 +98,13 @@ describe('Test AbstractDBResource', () => {
 
     const resource = new TestResource(connection, conditionDBParse, factory)
 
-    const data = resource.mapToDB(item)
+    const data = await resource.mapToDB(item)
 
     const objectProperties = Object.keys(data).sort()
 
     expect(objectProperties).toIncludeAllMembers(['from', 'modifiedBy', 'title', 'to'])
 
-    const dataDB = resource.map({
+    const dataDB = await resource.map({
       id: '1',
       title: 'test',
     })
@@ -116,7 +116,7 @@ describe('Test AbstractDBResource', () => {
 
     const resource2 = new Test2Resource(connection, conditionDBParse, factory)
 
-    const dataDB2 = resource2.map({
+    const dataDB2 = await resource2.map({
       entryId: '1',
       title: 'test',
     })
@@ -134,7 +134,7 @@ describe('Test AbstractDBResource', () => {
     })
     const resource3 = new Test3Resource(connection, conditionDBParse, factory2)
 
-    const data2 = resource3.mapToDB(item2)
+    const data2 = await resource3.mapToDB(item2)
 
     const objectProperties2 = Object.keys(data2).sort()
 
@@ -265,8 +265,8 @@ class Test2 extends AbstractEntity<TTest2> implements TTest2 {
 class TestResource extends AbstractDBResource<Test> {
   protected table: string = 'test'
 
-  mapToDB(item: Test): any {
-    const data = super.mapToDB(item)
+  public async mapToDB(item: Test) {
+    const data = await super.mapToDB(item)
 
     data.modifiedBy = 'Modifier'
 
@@ -281,8 +281,8 @@ class TestResource extends AbstractDBResource<Test> {
     return data
   }
 
-  public map(data: Record<string, any>): any {
-    data = super.map(data)
+  public async map(data: Record<string, any>) {
+    data = await super.map(data)
 
     if (data.from) {
       data.from = new Date(data.from)
