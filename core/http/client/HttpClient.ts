@@ -1,4 +1,4 @@
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, Canceler, CancelToken, Method } from 'axios'
+import axios, { AxiosInstance, AxiosRequestConfig, Canceler, CancelToken, isAxiosError, Method } from 'axios'
 import fs from 'fs'
 import { IncomingMessage } from 'http'
 import { Stream } from 'node:stream'
@@ -97,10 +97,6 @@ export class HttpClient {
   }
 
   public static handleError(error: any, url: string, method: Method | string, config: AxiosRequestConfig, payload: Record<string, any>) {
-    const isAxiosError = (candidate: any): candidate is AxiosError => {
-      return candidate.isAxiosError === true
-    }
-
     const responseErrorParams: TResponseErrorParams = {
       status: null,
       data: {},
@@ -147,17 +143,17 @@ export class HttpClient {
         responseErrorParams.message = error.message
       }
     } else if (types.isNativeError(error)) {
-      responseErrorParams.message = error.message
+      if (!Buffer.isBuffer(error.message)) {
+        responseErrorParams.message = error.message
+      } else {
+        responseErrorParams.message = '[Buffer]'
+      }
     }
 
     const requestErrorParams = {
       method,
       url,
-      payload: { ...config.params, ...config.data },
-    }
-
-    if (payload instanceof Stream) {
-      requestErrorParams.payload = '[Stream]'
+      payload: payload instanceof Stream || Buffer.isBuffer(payload) ? '[Stream]' : { ...config.params, ...config.data },
     }
 
     return new HttpError(requestErrorParams, responseErrorParams)

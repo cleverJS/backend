@@ -150,7 +150,7 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
       }
 
       if (identificator) {
-        this.changeEntity(item, data, identificator)
+        await this.changeEntity(item, data, identificator)
         await this.afterInsert(item)
         result = true
       }
@@ -165,7 +165,7 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     const result = await this.updateRaw(condition, data, connection)
 
     if (result) {
-      this.changeEntity(item, data)
+      await this.changeEntity(item, data)
       await this.afterUpdate(item)
     }
 
