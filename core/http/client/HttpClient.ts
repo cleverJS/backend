@@ -60,7 +60,7 @@ export class HttpClient {
         const writer = fs.createWriteStream(destination)
         response.data.pipe(writer)
 
-        writer.on('finish', resolve)
+        writer.on('finish', () => resolve(true))
         writer.on('error', reject)
       })
     } catch (error: any) {
