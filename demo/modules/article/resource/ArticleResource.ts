@@ -18,7 +18,7 @@ export class ArticleResource extends AbstractDBResource<Article> {
   public findWithAuthorRaw(): Promise<any> {
     const query = `
       SELECT t.*, a.name FROM ${this.table}
-      LEFT JOIN author a ON t.authorId = a.id
+                                LEFT JOIN author a ON t.authorId = a.id
       WHERE id = 1;
     `
     return this.connection.raw(query)
@@ -45,8 +45,8 @@ export class ArticleResource extends AbstractDBResource<Article> {
     return data
   }
 
-  public map(data: Record<string, any>): any {
-    data = super.map(data)
+  public async map(data: Record<string, any>) {
+    data = await super.map(data)
 
     if (data.created) {
       data.created = new Date(data.created)

@@ -166,6 +166,25 @@ describe('Test AbstractDBResource', () => {
     expect({ title: 'test' }).toEqual(items[0])
   })
 
+  it('should stream data', async () => {
+    const factory = new EntityFactory(Test, castTest)
+
+    const resource = new TestResource(connection, conditionDBParse, factory)
+
+    const item = await resource.createEntity({ id: 1, title: 'test' })
+    await resource.insert(item)
+
+    const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: 'id', value: 1 }] })
+
+    const stream = resource.stream(condition)
+
+    for await (const element of stream) {
+      expect({ id: 1, title: 'test' }).toEqual({ id: element.id, title: element.title })
+    }
+
+    expect(true).toBeTrue()
+  })
+
   it('should change referenced object during mapToDB', async () => {
     const factory = new EntityFactory(Test, castTest)
     const item = await factory.create({

@@ -182,7 +182,7 @@ export class FileService {
     })
 
     return new Promise((resolve, reject) => {
-      writer.on('finish', resolve)
+      writer.on('finish', () => resolve(true))
       writer.on('error', reject)
     })
   }

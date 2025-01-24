@@ -1,4 +1,5 @@
 import { Knex } from 'knex'
+import { PassThrough, Transform } from 'stream'
 import { types } from 'util'
 
 import { IEntity } from '../../entity/AbstractEntity'
@@ -254,6 +255,46 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
     return response > 0
   }
 
+  public stream(condition?: Condition, select?: string[], paginator?: Paginator, connection?: Knex): PassThrough & AsyncIterable<E> {
+    const stream = this.streamRaw<TEntityFrom<E>>(condition, select, paginator, connection)
+    const map = this.map.bind(this)
+    const createEntity = this.createEntity.bind(this)
+    const transform = new Transform({
+      objectMode: true,
+      async transform(chunk: TEntityFrom<E>, encoding, callback) {
+        try {
+          const mappedChunk = await map(chunk)
+          const nextChunk = await createEntity(mappedChunk)
+          this.push(nextChunk)
+          callback()
+        } catch (e: any) {
+          callback(e)
+        }
+      },
+    })
+
+    return stream.pipe(transform)
+  }
+
+  public streamRaw<T>(condition?: Condition, select?: string[], paginator?: Paginator, connection?: Knex): PassThrough & AsyncIterable<T> {
+    const queryBuilder: Knex.QueryBuilder = connection ? connection(this.table) : this.connection(this.table)
+
+    if (select) {
+      queryBuilder.select(select)
+    }
+
+    if (paginator) {
+      this.applyPagination(paginator, condition, queryBuilder)
+      condition = this.addDefaultSortIfNotSet(paginator, condition)
+    }
+
+    if (condition) {
+      this.conditionParser.parse(queryBuilder, condition)
+    }
+
+    return queryBuilder.stream()
+  }
+
   public createEntity(data: Partial<TEntityFrom<E>>, clone: boolean = true): Promise<E> {
     return <Promise<E>>this.entityFactory.create(data, clone)
   }
@@ -321,7 +362,8 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractReso
 
   protected async changeEntity(item: E, data: Record<string, any>, id?: any) {
     id = id || item.id
-    item.setData(await this.map(data), true)
+    const mappedData = await this.map(data)
+    item.setData(mappedData, true)
     item.id = id
 
     if (this.primaryKey && this.primaryKey !== 'id') {

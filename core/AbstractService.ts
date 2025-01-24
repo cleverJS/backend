@@ -1,3 +1,5 @@
+import { PassThrough } from 'stream'
+
 import { AbstractResource } from './db/AbstractResource'
 import { Condition } from './db/Condition'
 import { IEntity } from './entity/AbstractEntity'
@@ -75,8 +77,12 @@ export abstract class AbstractService<GEntity extends IEntity, GResource extends
     return result
   }
 
-  public createEntity(data: Partial<TEntityFrom<GEntity>>, clone: boolean = true): Promise<GEntity> {
+  public async createEntity(data: Partial<TEntityFrom<GEntity>>, clone: boolean = true): Promise<GEntity> {
     return this.resource.createEntity(data, clone)
+  }
+
+  public async createEntityList(rows: Partial<TEntityFrom<GEntity>>[], clone: boolean = true) {
+    return this.resource.createEntityList(rows, clone)
   }
 
   public async list(paginator: Readonly<Paginator>, condition?: Readonly<Condition>): Promise<GEntity[]> {
@@ -121,5 +127,13 @@ export abstract class AbstractService<GEntity extends IEntity, GResource extends
 
   public async truncate(requestor?: string): Promise<any> {
     return this.resource.truncate(requestor)
+  }
+
+  public stream(condition?: Condition, select?: string[], paginator?: Readonly<Paginator>): PassThrough & AsyncIterable<GEntity> {
+    return this.resource.stream(condition, select, paginator)
+  }
+
+  public streamRaw<T>(condition?: Condition, select?: string[], paginator?: Readonly<Paginator>): PassThrough & AsyncIterable<T> {
+    return this.resource.streamRaw<T>(condition, select, paginator)
   }
 }

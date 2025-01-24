@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import * as fs from 'fs'
 import jwt, { VerifyOptions } from 'jsonwebtoken'
+import type { StringValue } from 'ms'
 import { v4 as uuidV4 } from 'uuid'
 
 import { logger } from '../../../core/logger/logger'
@@ -52,7 +53,7 @@ export class SecurityHelper {
     return result
   }
 
-  public static generateToken(userData: IUserData, expiration: string = '6h'): string {
+  public static generateToken(userData: IUserData, expiration: StringValue | number = '6h'): string {
     const key = Buffer.from(fs.readFileSync(settings.security.jwtToken.privateKey, 'utf8'))
     const data = {
       id: userData.id,
