@@ -1,4 +1,4 @@
-import { AbstractDBResource } from '../../../../../core/db/sql/AbstractDBResource'
+import { DBEntityResource } from '../../../../../core/db/sql/DBEntityResource'
 import { AuthToken } from '../AuthToken'
 
 export enum AuthTokenResourceColumns {
@@ -11,6 +11,5 @@ export enum AuthTokenResourceColumns {
   updatedAtColumn = 'updatedAt',
 }
 
-export class AuthTokenResource extends AbstractDBResource<AuthToken> {
-  protected table = 'auth_token'
+export class AuthTokenEntityResource extends DBEntityResource<AuthToken> {
 }

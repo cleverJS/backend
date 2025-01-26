@@ -2,7 +2,7 @@ import { logger } from '../logger/logger'
 import { Cloner } from '../utils/clone/Cloner'
 import { ICloneable } from '../utils/clone/ICloneable'
 
-export interface IEntity {
+export interface IEntity extends Record<string, any> {
   id?: any
   setData(data: Partial<any>, shouldClone?: boolean): void
   getData(shouldClone?: boolean): any

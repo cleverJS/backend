@@ -8,13 +8,13 @@ import { Paginator } from '../../../core/utils/Paginator'
 import { cacheContainer } from '../../CacheContainer'
 
 import { Article } from './Article'
-import { ArticleResource } from './resource/ArticleResource'
+import { ArticleEntityResource } from './resource/ArticleEntityResource'
 
 export type ArticleEvents = {
   new: (item: Article) => void
 }
 
-export class ArticleService extends AbstractService<Article, ArticleResource> {
+export class ArticleService extends AbstractService<Article, ArticleEntityResource> {
   public readonly eventEmitter: TypedEmitter<ArticleEvents> = new EventEmitter() as TypedEmitter<ArticleEvents>
 
   public async findWithAuthor() {
@@ -33,7 +33,7 @@ export class ArticleService extends AbstractService<Article, ArticleResource> {
     )
   }
 
-  public async fetchAuthorList(paginator: Readonly<Paginator>): Promise<string[]> {
+  public async fetchAuthorList(paginator: Paginator): Promise<string[]> {
     return cacheContainer.cacheRuntime.getOrSet(
       'authors',
       async () => {

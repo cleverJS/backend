@@ -1,12 +1,12 @@
 import { PassThrough } from 'stream'
 
-import { AbstractResource } from './db/AbstractResource'
 import { Condition } from './db/Condition'
+import { DBEntityResource } from './db/sql/DBEntityResource'
 import { IEntity } from './entity/AbstractEntity'
 import { Paginator } from './utils/Paginator'
 import { TEntityFrom } from './utils/types'
 
-export abstract class AbstractService<GEntity extends IEntity, GResource extends AbstractResource<GEntity>> {
+export abstract class AbstractService<GEntity extends IEntity, GResource extends DBEntityResource<GEntity>> {
   protected resource: GResource
 
   public constructor(resource: GResource) {
@@ -17,31 +17,31 @@ export abstract class AbstractService<GEntity extends IEntity, GResource extends
     return this.resource.findById(id)
   }
 
-  public async findOne(condition: Readonly<Condition>): Promise<GEntity | null> {
+  public async findOne(condition: Condition): Promise<GEntity | null> {
     return this.resource.findOne(condition)
   }
 
-  public async findAll(condition?: Readonly<Condition>, paginator?: Readonly<Paginator>): Promise<GEntity[]> {
+  public async findAll(condition?: Condition, paginator?: Paginator): Promise<GEntity[]> {
     return this.resource.findAll(condition, paginator)
   }
 
   public async findAllRaw<GRaw extends Record<string, any> = Record<string, any>>(
-    condition?: Readonly<Condition>,
-    paginator?: Readonly<Paginator>,
+    condition?: Condition,
+    paginator?: Paginator,
     select?: string[]
   ): Promise<GRaw[]> {
     return this.resource.findAllRaw<GRaw>(condition, paginator, select)
   }
 
-  public async count(condition?: Readonly<Condition>): Promise<number> {
+  public async count(condition?: Condition): Promise<number> {
     return this.resource.count(condition)
   }
 
-  public delete(id: string | number, requestor?: string): Promise<boolean> {
+  public delete(id: string | number, requestor: string = ''): Promise<boolean> {
     return this.resource.delete(id, requestor)
   }
 
-  public deleteAll(condition: Readonly<Condition>, requestor?: string): Promise<boolean> {
+  public deleteAll(condition: Condition, requestor: string = ''): Promise<boolean> {
     return this.resource.deleteAll(condition, requestor)
   }
 
@@ -85,7 +85,7 @@ export abstract class AbstractService<GEntity extends IEntity, GResource extends
     return this.resource.createEntityList(rows, clone)
   }
 
-  public async list(paginator: Readonly<Paginator>, condition?: Readonly<Condition>): Promise<GEntity[]> {
+  public async list(paginator: Paginator, condition?: Condition): Promise<GEntity[]> {
     const total = paginator.getTotal()
     let totalPromise
     if (!total && !paginator.isSkipTotal()) {
@@ -104,8 +104,8 @@ export abstract class AbstractService<GEntity extends IEntity, GResource extends
   }
 
   public async listRaw<T extends Record<string, any> = Record<string, any>>(
-    paginator: Readonly<Paginator>,
-    condition?: Readonly<Condition>,
+    paginator: Paginator,
+    condition?: Condition,
     select?: string[]
   ): Promise<T[]> {
     const total = paginator.getTotal()
@@ -125,15 +125,15 @@ export abstract class AbstractService<GEntity extends IEntity, GResource extends
     return result as T[]
   }
 
-  public async truncate(requestor?: string): Promise<any> {
+  public async truncate(requestor: string = ''): Promise<any> {
     return this.resource.truncate(requestor)
   }
 
-  public stream(condition?: Condition, select?: string[], paginator?: Readonly<Paginator>): PassThrough & AsyncIterable<GEntity> {
-    return this.resource.stream(condition, select, paginator)
+  public stream(condition?: Condition, select?: string[]): PassThrough & AsyncIterable<GEntity> {
+    return this.resource.stream(condition, select)
   }
 
-  public streamRaw<T>(condition?: Condition, select?: string[], paginator?: Readonly<Paginator>): PassThrough & AsyncIterable<T> {
-    return this.resource.streamRaw<T>(condition, select, paginator)
+  public streamRaw<T>(condition?: Condition, select?: string[]): PassThrough & AsyncIterable<T> {
+    return this.resource.streamRaw<T>(condition, select)
   }
 }

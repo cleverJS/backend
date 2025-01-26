@@ -11,16 +11,16 @@ import { logger, loggerNamespace } from '../../../core/logger/logger'
 import { FSWrapper } from '../../../core/utils/fsWrapper'
 
 import { File } from './File'
-import { FileResource } from './resource/FileResource'
+import { FileEntityResource } from './resource/FileEntityResource'
 
 export class FileService {
   protected readonly logger = loggerNamespace('FileService')
-  protected resource: FileResource
+  protected resource: FileEntityResource
   protected baseDir: string
   protected baseUrl: string = '/usr'
   protected tmpDir: string = ''
 
-  public constructor(baseDir: string, resource: FileResource) {
+  public constructor(baseDir: string, resource: FileEntityResource) {
     this.resource = resource
     this.baseDir = baseDir
 

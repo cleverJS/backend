@@ -4,10 +4,10 @@ import { EntityFactory } from '../../../core/entity/EntityFactory'
 import { SecurityHelper } from '../security/SecurityHelper'
 
 import { castUser } from './helper'
-import { UserResource, UserResourceColumns } from './resource/UserResource'
+import { UserEntityResource, UserResourceColumns } from './resource/UserEntityResource'
 import { EUserRoles, User } from './User'
 
-export class UserService extends AbstractService<User, UserResource> {
+export class UserService extends AbstractService<User, UserEntityResource> {
   public findByRestoreToken(token: string): Promise<User | null> {
     const { restoreTokenColumn } = UserResourceColumns
     const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: restoreTokenColumn, value: token }] })

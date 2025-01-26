@@ -3,11 +3,6 @@ import type { Config } from '@jest/types'
 export default async (): Promise<Config.InitialOptions> => {
   return {
     // extensionsToTreatAsEsm: ['.ts'],
-    // globals: {
-    //   'ts-jest': {
-    //     tsconfig: 'tsconfig.json',
-    //   },
-    // },
     transform: {
       '^.+\\.(ts)$': ['ts-jest', { tsconfig: './tsconfig.json' }],
     },

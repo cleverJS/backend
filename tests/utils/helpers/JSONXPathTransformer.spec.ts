@@ -7,6 +7,14 @@ describe('Test JSONXPathTransformerHelper', () => {
     JSONXPathTransformerHelper.instance(cacheContainer.cacheRuntime)
   })
 
+  afterEach(() => {
+    jest.clearAllTimers()
+  })
+
+  afterAll(() => {
+    cacheContainer.cacheRuntime.clear()
+  })
+
   it('should stringify target node', async () => {
     const config: JSONXpathTransformConfig = {
       'stringify(user/address/street:street,user/address/city:city)': 'location',

@@ -1,4 +1,4 @@
-import { AbstractDBResource } from '../../../../core/db/sql/AbstractDBResource'
+import { DBEntityResource } from '../../../../core/db/sql/DBEntityResource'
 import { User } from '../User'
 
 export enum UserResourceColumns {
@@ -18,13 +18,10 @@ export enum UserResourceColumns {
   updatedAtColumn = 'updatedAt',
 }
 
-export class UserResource extends AbstractDBResource<User> {
-  protected table = 'user'
-
+export class UserEntityResource extends DBEntityResource<User> {
   public async findByTelegramId(id: number): Promise<User | null> {
-    const query = this.connection(this.table).whereJsonPath(UserResourceColumns.dataColumn, '$.telegramId', '=', id)
-
-    const rows = await query
+    const sql = `select * from ${this.resource.getTable()} where JSON_VALUE(${UserResourceColumns.dataColumn}, '$.telegramId') = :id`
+    const rows = await this.resource.query(sql, { id })
 
     if (rows.length > 1) {
       throw new Error(`Found two identical telegram users ${id}`)
@@ -40,12 +37,13 @@ export class UserResource extends AbstractDBResource<User> {
   public async findByGoogleId(id: string, email?: string): Promise<User | null> {
     const { loginColumn } = UserResourceColumns
 
-    const query = this.connection(this.table).whereJsonPath(UserResourceColumns.dataColumn, '$.googleId', '=', id)
+    let sql = `select * from ${this.resource.getTable()} where JSON_VALUE(${UserResourceColumns.dataColumn}, '$.googleId') = :id`
+
     if (email) {
-      query.orWhere(loginColumn, '=', email)
+      sql += ` OR ${loginColumn} = :email`
     }
 
-    const rows = await query
+    const rows = await this.resource.query(sql, { id, email })
 
     if (rows.length > 1) {
       throw new Error(`Found two identical google users ${id}`)

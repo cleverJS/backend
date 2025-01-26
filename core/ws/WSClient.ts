@@ -12,7 +12,7 @@ export const EVENT_CLOSE = 'event_close'
 export const EVENT_TERMINATED = 'event_terminated'
 
 const types = ['response', 'event', 'error'] as ['response', 'event', 'error']
-type ResponseType = typeof types[number]
+type ResponseType = (typeof types)[number]
 
 interface IRequestHeader {
   uuid: string

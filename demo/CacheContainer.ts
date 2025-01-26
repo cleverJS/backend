@@ -9,9 +9,12 @@ class CacheContainer {
   protected intervalTimerId: NodeJS.Timeout
 
   constructor() {
-    this.intervalTimerId = setInterval(() => {
-      this.cacheRuntime.checkExpired().catch(logger.error)
-    }, parseInt(process.env.CACHE_CLEAR_INTERVAL || '1000', 10))
+    this.intervalTimerId = setInterval(
+      () => {
+        this.cacheRuntime.checkExpired().catch(logger.error)
+      },
+      parseInt(process.env.CACHE_CLEAR_INTERVAL || '1000', 10)
+    )
   }
 
   public async clear(): Promise<void> {

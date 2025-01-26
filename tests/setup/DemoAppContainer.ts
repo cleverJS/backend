@@ -10,7 +10,6 @@ import { WSServer } from '../../core/ws/WSServer'
 import { cacheContainer } from '../../demo/CacheContainer'
 import { settings as demoSettings } from '../../demo/configs'
 import { ISettings } from '../../demo/configs/SettingsInterface'
-import { ResourceContainer } from '../../demo/ResourceContainer'
 import { ServiceContainer } from '../../demo/ServiceContainer'
 import { AppEvents } from '../../demo/types/Events'
 
@@ -19,7 +18,6 @@ export class DemoAppContainer {
   public readonly elasticClient: Client
   public readonly connectionConfig: Knex.Sqlite3ConnectionConfig
   public readonly connection
-  public readonly resourceContainer: ResourceContainer
   public readonly serviceContainer: ServiceContainer
   public readonly httpServer: HttpServer
   protected readonly logger = loggerNamespace('App')
@@ -38,8 +36,7 @@ export class DemoAppContainer {
 
     this.connection = knex(settings.connection)
 
-    this.resourceContainer = new ResourceContainer(this.connection)
-    this.serviceContainer = new ServiceContainer(this.resourceContainer, this.appEventBus)
+    this.serviceContainer = new ServiceContainer(this.connection, this.appEventBus)
   }
 
   public async run(): Promise<void> {

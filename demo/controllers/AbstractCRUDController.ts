@@ -1,8 +1,8 @@
 import { ValidationError } from 'fastest-validator'
 
 import { AbstractService } from '../../core/AbstractService'
-import { AbstractResource } from '../../core/db/AbstractResource'
 import { Condition } from '../../core/db/Condition'
+import { DBEntityResource } from '../../core/db/sql/DBEntityResource'
 import { IEntity } from '../../core/entity/AbstractEntity'
 import { loggerNamespace } from '../../core/logger/logger'
 import { Paginator } from '../../core/utils/Paginator'
@@ -15,7 +15,7 @@ import { controllerValidator } from './validators/ControllerValidator'
 import { EValidator } from './validators/enum/ValidatorNameList'
 import { GlobalControllerValidator } from './validators/GlobalControllerValidator'
 
-export abstract class AbstractCRUDController<T extends AbstractService<IEntity, AbstractResource<any>>> extends AbstractController {
+export abstract class AbstractCRUDController<T extends AbstractService<IEntity, DBEntityResource<any>>> extends AbstractController {
   protected readonly logger = loggerNamespace(`AbstractCRUDController:${this.constructor.name}`)
   protected controllerName: string
   protected shouldAuthorized = true

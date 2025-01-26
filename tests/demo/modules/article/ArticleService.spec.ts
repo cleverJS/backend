@@ -1,5 +1,6 @@
 import { Condition, TConditionOperator } from '../../../../core/db/Condition'
 import { Paginator } from '../../../../core/utils/Paginator'
+import { ArticleInitializer } from '../../../../demo/modules/article'
 import { TArticle } from '../../../../demo/modules/article/Article'
 import { createArticleTable } from '../../../migrations/tables'
 import { demoAppContainer } from '../../../setup/DemoAppContainer'
@@ -12,7 +13,7 @@ const AUTHOR_I = 'G. M. Fikhtengolts'
 describe('Test AbstractDBResource and AbstractService', () => {
   const connection = demoAppContainer.connection
   const service = demoAppContainer.serviceContainer.articleService
-  const resource = demoAppContainer.resourceContainer.articleResource
+  const resource = new ArticleInitializer(connection).resource
 
   const payload1: TArticle = {
     id: null,

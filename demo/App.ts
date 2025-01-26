@@ -9,7 +9,6 @@ import { WSServer } from '../core/ws/WSServer'
 
 import { cacheContainer } from './CacheContainer'
 import { ISettings } from './configs/SettingsInterface'
-import { ResourceContainer } from './ResourceContainer'
 import { RouteContainer } from './RouteContainer'
 import { ServiceContainer } from './ServiceContainer'
 import { AppEvents } from './types/Events'
@@ -30,8 +29,7 @@ export class App {
     const config = settings.connection
     this.connection = knex(config)
 
-    const resourceContainer = new ResourceContainer(this.connection)
-    const serviceContainer = new ServiceContainer(resourceContainer, this.appEventBus)
+    const serviceContainer = new ServiceContainer(this.connection, this.appEventBus)
     new RouteContainer(serviceContainer, this.wsServer, this.httpServer)
   }
 

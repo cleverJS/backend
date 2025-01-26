@@ -17,7 +17,7 @@ services. See also [Service (systems architecture)](https://en.wikipedia.org/wik
 to a specialized [Factory](https://en.wikipedia.org/wiki/Factory_method_pattern) object such that
 alternative implementations may be easily interchanged.
 
-[Resource(Repository)](../core/db/AbstractResource.ts) - Methods for retrieving domain objects
+[Resource(Repository)](../core/db/sql/AbstractEntityResource.ts) - Methods for retrieving domain objects
 should delegate to a specialized Repository object such that alternative storage implementations
 may be easily interchanged.
 

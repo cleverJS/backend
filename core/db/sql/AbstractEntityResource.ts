@@ -1,11 +1,10 @@
 import { PassThrough } from 'stream'
 
-import { Paginator } from '../utils/Paginator'
-import { TEntityFrom } from '../utils/types'
+import { Paginator } from '../../utils/Paginator'
+import { TEntityFrom } from '../../utils/types'
+import { Condition } from '../Condition'
 
-import { Condition } from './Condition'
-
-export abstract class AbstractResource<E> {
+export abstract class AbstractEntityResource<E> {
   public abstract findById(id: string | number, connection?: unknown): Promise<E | null>
   public abstract findOne(condition: Readonly<Condition>, connection?: unknown): Promise<E | null>
   public abstract findAll(condition?: Readonly<Condition>, paginator?: Readonly<Paginator>, connection?: unknown): Promise<E[]>

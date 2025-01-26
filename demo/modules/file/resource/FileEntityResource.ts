@@ -1,9 +1,7 @@
-import { AbstractDBResource } from '../../../../core/db/sql/AbstractDBResource'
+import { DBEntityResource } from '../../../../core/db/sql/DBEntityResource'
 import { File, TFile } from '../File'
 
-export class FileResource extends AbstractDBResource<File> {
-  protected table = 'file'
-
+export class FileEntityResource extends DBEntityResource<File> {
   async mapToDB(item: File) {
     if (!item.createdAt) {
       const currentDate = new Date()
