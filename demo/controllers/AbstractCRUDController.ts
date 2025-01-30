@@ -2,7 +2,7 @@ import { ValidationError } from 'fastest-validator'
 
 import { AbstractService } from '../../core/AbstractService'
 import { Condition } from '../../core/db/Condition'
-import { DBEntityResource } from '../../core/db/sql/DBEntityResource'
+import { DBEntityResource } from '../../core/db/sql'
 import { IEntity } from '../../core/entity/AbstractEntity'
 import { loggerNamespace } from '../../core/logger/logger'
 import { Paginator } from '../../core/utils/Paginator'

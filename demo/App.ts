@@ -3,7 +3,7 @@ import { EventEmitter } from 'events'
 import knex, { Knex } from 'knex'
 import TypedEmitter from 'typed-emitter'
 
-import { HttpServer } from '../core/http/HttpServer'
+import { HttpServerFactory, THttpServer } from '../core/http/HttpServerFactory'
 import { loggerNamespace } from '../core/logger/logger'
 import { WSServer } from '../core/ws/WSServer'
 
@@ -15,15 +15,16 @@ import { AppEvents } from './types/Events'
 
 export class App {
   protected readonly logger = loggerNamespace('App')
-  protected readonly httpServer: HttpServer
+  protected readonly httpServer
   protected readonly connection
   protected readonly wsServer: WSServer
   protected readonly appEventBus: TypedEmitter<AppEvents> = new EventEmitter() as TypedEmitter<AppEvents>
 
   public constructor(settings: ISettings) {
-    this.httpServer = new HttpServer({ port: settings.websocket.port, host: 'localhost' })
+    const httpServerFactory = new HttpServerFactory()
+    this.httpServer = httpServerFactory.get(THttpServer.fastify, { port: settings.websocket.port, host: 'localhost' })
     this.registerFastifyPlugins()
-    const server = this.httpServer.getInstance()
+    const server = this.httpServer.getInstance().server
     this.wsServer = new WSServer(settings.websocket, server)
 
     const config = settings.connection
@@ -54,7 +55,7 @@ export class App {
   }
 
   protected registerFastifyPlugins(): void {
-    this.httpServer.getServer().register(cors, {
+    this.httpServer.getInstance().register(cors, {
       origin: true,
       credentials: true,
       allowedHeaders: ['Access-Control-Allow-Origin', 'Access-Control-Allow-Headers', 'authorization', 'Content-Type'],

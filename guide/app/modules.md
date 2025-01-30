@@ -2,7 +2,7 @@
 
 The main idea is to build application on independent modules
 
-Module could be simple as shown in 'Structure' section or even more easiest (contains only Entity.ts)
+Module could be simple as shown in 'Structure' section.
 
 Module could be complex. For example aggregates several modules if business logic is required to process
 with some intersection entities

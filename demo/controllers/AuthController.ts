@@ -1,14 +1,14 @@
 import { RouteHandlerMethod } from 'fastify'
 import { types } from 'util'
 
-import { HttpServer } from '../../core/http/HttpServer'
+import { HttpServer } from '../../core/http'
 import { loggerNamespace } from '../../core/logger/logger'
 import { WSRequest } from '../../core/ws/WSRequest'
 import { WSServer } from '../../core/ws/WSServer'
 import { MSG_ACCESS_DENIED, MSG_EXISTS } from '../configs/messages'
 import { AuthService, ITelegramPayload } from '../modules/security/auth/AuthService'
+import { UserService } from '../modules/user'
 import { EUserRoles, User } from '../modules/user/User'
-import { UserService } from '../modules/user/UserService'
 import { IAppConnectionInfo } from '../types/WSConnection'
 
 import { AbstractController, IJSendResponse } from './AbstractController'
@@ -403,8 +403,7 @@ export class AuthController extends AbstractController {
   }
 
   protected init(): void {
-    const instance = this.http.getServer()
-    instance.get('/google/auth', this.actionGoogleAuth)
+    this.http.get('/google/auth', this.actionGoogleAuth)
 
     this.wsServer.onRequest('auth', 'google', this.actionGoogle)
     this.wsServer.onRequest('auth', 'telegram', this.actionTelegram)

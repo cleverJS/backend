@@ -1,43 +1,32 @@
-import fastify, { FastifyInstance } from 'fastify'
-import { IncomingMessage, Server, ServerResponse } from 'http'
+import { Server } from 'http'
 
 import { loggerNamespace } from '../logger/logger'
 
 import { IHttpServerConfig } from './config'
 
-export class HttpServer {
-  public readonly port: number = 5000
-  public readonly host: string = '0.0.0.0'
-  protected readonly logger = loggerNamespace('HttpServer')
-  protected readonly instance: FastifyInstance<Server, IncomingMessage, ServerResponse>
+export abstract class HttpServer {
+  protected readonly config: IHttpServerConfig
+  protected readonly logger = loggerNamespace(`HttpServer:${this.constructor.name}`)
 
-  constructor(config: IHttpServerConfig) {
-    this.instance = fastify({})
-    this.port = config.port
-    this.host = config.host
+  public constructor(config: IHttpServerConfig) {
+    this.config = config
   }
 
-  public async start(): Promise<void> {
-    try {
-      await this.instance.listen({ port: this.port, host: this.host })
-      this.logger.info(`listening on ${this.host}:${this.port}`)
-    } catch (err) {
-      this.logger.error(err)
-      // eslint-disable-next-line no-process-exit
-      process.exit(1)
-    }
-  }
+  public abstract start(callback: () => void): void
+  public abstract destroy(callback: () => void): void
+  public abstract get(path: string, handler: (req: any, res: any) => void): void
+  public abstract post(path: string, handler: (req: any, res: any) => void): void
+  public abstract put(path: string, handler: (req: any, res: any) => void): void
+  public abstract delete(path: string, handler: (req: any, res: any) => void): void
 
-  public getServer(): FastifyInstance<Server, IncomingMessage, ServerResponse> {
-    return this.instance
-  }
-
-  public getInstance(): Server {
-    return this.instance.server
-  }
-
-  public async destroy(): Promise<void> {
-    await this.getServer().close()
-    this.logger.info('closed')
-  }
+  public abstract getInstance(): unknown
+  public abstract getServer(): Server
 }
+
+export type THttpRoute = {
+  method: THttpMethod
+  path: string
+  handler: (req: any, res: any) => void
+}
+
+export type THttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS' | 'HEAD'
