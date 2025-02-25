@@ -77,8 +77,6 @@ export class HttpClient {
       method,
       url,
       headers: this.headers,
-      params: {},
-      data: {},
       cancelToken: this.cancelToken(cancelObject),
     }
 
