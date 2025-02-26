@@ -1,6 +1,6 @@
 {
   "name": "@cleverjs/backend",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "CleverJS Backend",
   "author": "",
   "license": "MIT",
@@ -61,7 +61,6 @@
     "piscina": "^4.1.0",
     "@jest/globals": "^29.7.0",
     "@types/jest": "^29.5.12",
-    "@jest/types": "^29.6.3",
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "@types/jsonwebtoken": "^9.0.6",
     "@typescript-eslint/eslint-plugin": "^7.13.1",
