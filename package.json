@@ -1,6 +1,6 @@
 {
   "name": "@cleverjs/backend",
-  "version": "1.2.3",
+  "version": "1.11.13",
   "description": "CleverJS Backend",
   "author": "",
   "license": "MIT",
@@ -9,7 +9,7 @@
     "url": "https://github.com/cleverJS/backend"
   },
   "scripts": {
-    "build": "(rm -rf libs || npx rimraf libs) && tsc -d --project tsconfig.prod.json && node -r ts-node/register/transpile-only core/info.ts",
+    "build": "(rm -rf libs || npx rimraf libs) && tsc -d --project tsconfig.prod.json",
     "server-dev": "ts-node -r tsconfig-paths/register -r dotenv/config  demo/index.ts",
     "server-node-swc-dev": "TS_NODE_PROJECT=./tsconfig.prod.json node -r tsconfig-paths/register -r dotenv/config -r ts-node/register/transpile-only -r ts-node/transpilers/swc-experimental demo/index.ts",
     "inspect": "node --inspect node_modules/.bin/ts-node -r tsconfig-paths/register -r dotenv/config demo/index.ts",
