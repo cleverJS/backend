@@ -1,6 +1,6 @@
 {
   "name": "@cleverjs/backend",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "CleverJS Backend",
   "author": "",
   "license": "MIT",
@@ -15,7 +15,7 @@
     "inspect": "node --inspect node_modules/.bin/ts-node -r tsconfig-paths/register -r dotenv/config demo/index.ts",
     "test": "npx jest --runInBand --detectOpenHandles --colors --verbose --reporters=default",
     "test:cov": "npx jest --runInBand --detectOpenHandles --colors --verbose --reporters=default --coverage",
-    "postinstall": "tsc -d --project tsconfig.prod.json && ts-node -T core/info.ts"
+    "postinstall": "tsc -d --project tsconfig.prod.json"
   },
   "engines": {
     "node": ">=16.20",
@@ -26,8 +26,8 @@
     "@types/uuid": "^10.0.0",
     "@types/ws": "^8.5.14",
     "ws": "^8.18.0",
-    "axios": "=1.7.9",
-    "fastest-validator": "^1.19.0",
+    "axios": "^1.12.2",
+    "fastest-validator": "^1.19.1",
     "redis": "^4.7.0",
     "typed-emitter": "^2.1.0",
     "dotenv": "^16.4.7",
