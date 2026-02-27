@@ -109,7 +109,7 @@ export class CacheAdapterRuntime extends CacheAdapterInterface {
       const now = new Date().getTime()
       const clearPromise: Promise<void>[] = []
       for (const [key, ttl] of this.ttls) {
-        if (ttl && ttl < now) {
+        if (ttl && ttl <= now) {
           clearPromise.push(this.clear(key))
         }
       }
@@ -125,7 +125,7 @@ export class CacheAdapterRuntime extends CacheAdapterInterface {
         now = new Date().getTime()
       }
       const ttl = this.ttls.get(key)
-      if (ttl && ttl < now) {
+      if (ttl && ttl <= now) {
         this.clear(key).catch(this.logger.error)
       }
 

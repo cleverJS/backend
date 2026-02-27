@@ -15,6 +15,7 @@ class CacheContainer {
       },
       parseInt(process.env.CACHE_CLEAR_INTERVAL || '1000', 10)
     )
+    this.intervalTimerId.unref()
   }
 
   public async clear(): Promise<void> {
