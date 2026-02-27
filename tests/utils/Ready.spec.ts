@@ -6,7 +6,6 @@ describe('Ready', () => {
 
     ready.resolve()
 
-
     expect(await ready.isReady()).toBeTrue()
   })
 })

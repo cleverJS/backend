@@ -1,6 +1,6 @@
 /.idea/
 /.github/
-/demo/
+/guide/
 /runtime/
 /tests/
 /.editorconfig
@@ -10,8 +10,13 @@
 /.gitignore
 /.npmignore
 /.prettierrc
+/.swcrc
 /jest.config.ts
 /knexfile.ts
 /LICENSE
 /package-lock.json
+/pnpm-lock.yaml
+/pnpm-workspace.yaml
 /tsconfig.json
+/tsconfig.prod.json
+/CLAUDE.md

@@ -1,42 +1,21 @@
-import Validator, { AsyncCheckFunction, SyncCheckFunction } from 'fastest-validator'
+import { IWSRequest } from '../WSRequest'
 
-import { WSRequest } from '../WSRequest'
+export function validateWSRequest(request: IWSRequest): boolean {
+  const { header, payload } = request ?? {}
 
-class WSRequestValidator {
-  public validator: SyncCheckFunction | AsyncCheckFunction
-
-  public constructor() {
-    const schema = {
-      header: {
-        type: 'object',
-        strict: 'remove',
-        props: {
-          uuid: { type: 'string' },
-          service: { type: 'string' },
-          action: { type: 'string' },
-        },
-      },
-      payload: {
-        type: 'object',
-        optional: true,
-      },
-      $$strict: true,
-      $$async: true,
-    }
-
-    const validator = new Validator()
-    this.validator = validator.compile(schema)
+  if (typeof header !== 'object' || header === null) {
+    return false
   }
 
-  /**
-   *
-   * @param {WSRequest} request
-   * @throws Error
-   */
-  public async validate(request: WSRequest): Promise<boolean> {
-    const result = await this.validator(request)
-    return result === true
+  const { uuid, service, action } = header
+
+  if ((typeof uuid !== 'string' && typeof uuid !== 'number') || typeof service !== 'string' || typeof action !== 'string') {
+    return false
   }
+
+  if (payload !== undefined && (typeof payload !== 'object' || payload === null)) {
+    return false
+  }
+
+  return true
 }
-
-export const wsRequestValidator = new WSRequestValidator()

@@ -1,6 +1,5 @@
-import { logger } from '../../core/logger/logger';
-import { argsStringify, convertToBoolean } from '../../core/utils/common';
-
+import { logger } from '../../core/logger/logger'
+import { argsStringify, convertToBoolean } from '../../core/utils/common'
 
 describe('Test common', () => {
   test('should concatenate primitives', () => {

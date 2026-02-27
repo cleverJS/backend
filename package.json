@@ -1,12 +1,15 @@
 {
   "name": "@cleverjs/backend",
-  "version": "1.11.13",
+  "version": "2.0.0",
   "description": "CleverJS Backend",
   "author": "",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/cleverJS/backend"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
   },
   "main": "dist/index.js",
   "types": "dist/types/index.d.ts",
@@ -34,15 +37,13 @@
   "files": [
     "dist/**/*",
     "core/**/*",
-    "guide/**/*",
-    "demo/**/*",
     "README.md"
   ],
   "scripts": {
     "build": "swc ./core -d ./dist --strip-leading-paths --source-maps && tsc -p tsconfig.prod.json --emitDeclarationOnly",
     "prebuild": "pnpm clean",
     "clean": "rm -rf dist tsconfig.build.tsbuildinfo",
-    "prepublishOnly": "npm run build",
+    "prepublishOnly": "pnpm run build",
     "test": "npx jest --runInBand --detectOpenHandles --colors --verbose --reporters=default",
     "test:cov": "npx jest --runInBand --detectOpenHandles --colors --verbose --reporters=default --coverage"
   },
@@ -50,19 +51,12 @@
     "node": ">=22"
   },
   "dependencies": {
-    "ws": "^8.18.0",
-    "axios": "^1.12.2",
-    "fastest-validator": "^1.19.1",
-    "redis": "^4.7.0",
     "typed-emitter": "^2.1.0",
-    "dotenv": "^16.4.7",
-    "path": "^0.12.7",
-    "tsconfig-paths": "^4.2.0",
-    "uuid": "^11.0.5",
-    "winston": "^3.17.0",
-    "ms": "^2.1.3"
+    "uuid": "^11.0.5"
   },
   "devDependencies": {
+    "@swc/cli": "^0.7.10",
+    "@swc/core": "^1.15.10",
     "@types/ms": "^2.1.0",
     "@jest/types": "^30.2.0",
     "@types/pretty-hrtime": "^1.0.3",
@@ -118,20 +112,47 @@
     "prettier": "^3.3.2",
     "pretty-hrtime": "^1.0.3",
     "ts-jest": "^29.1.5",
-    "jest-environment-node": "^29.7.0"
+    "jest-environment-node": "^29.7.0",
+    "fastest-validator": "^1.19.1"
   },
   "peerDependencies": {
     "knex": "=3.1.0",
-    "typescript": "=5.7.3",
     "redis": "^4.7.0",
     "fastify": "^5.2.1",
     "express": "^4.21.2",
     "@elastic/elasticsearch": "=7.17.13",
-    "axios": "=1.7.9",
-    "ws": "^8.18.0",
+    "axios": "^1.12.2",
+    "ws": "^8.19.0",
     "telegraf": "^4.16.3",
-    "winston": "^3.16.0",
-    "@swc/cli": "^0.7.10",
-    "@swc/core": "^1.15.10"
+    "winston": "^3.16.0"
+  },
+  "peerDependenciesMeta": {
+    "@elastic/elasticsearch": {
+      "optional": true
+    },
+    "redis": {
+      "optional": true
+    },
+    "telegraf": {
+      "optional": true
+    },
+    "express": {
+      "optional": true
+    },
+    "fastify": {
+      "optional": true
+    },
+    "axios": {
+      "optional": true
+    },
+    "ws": {
+      "optional": true
+    },
+    "winston": {
+      "optional": true
+    },
+    "knex": {
+      "optional": true
+    }
   }
 }

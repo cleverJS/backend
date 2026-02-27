@@ -1,14 +1,16 @@
-import { WebSocket } from 'ws'
 import { randomInt } from 'crypto'
-import { WSServer } from '../../core/ws/WSServer'
-import { WSRequest } from '../../core/ws/WSRequest'
-import { loggerNamespace } from '../../core/logger/logger'
-import { ArticleService } from '../modules/article/ArticleService'
-import { Paginator } from '../../core/utils/Paginator'
-import { WSResponse } from '../../core/ws/WSResponse'
-import { IAppConnectionInfo } from '../types/WSConnection'
+import { WebSocket } from 'ws'
+
 import { route } from '../../core/decorators/routes'
+import { loggerNamespace } from '../../core/logger/logger'
+import { Paginator } from '../../core/utils/Paginator'
 import { sleep } from '../../core/utils/sleep'
+import { WSRequest } from '../../core/ws/WSRequest'
+import { WSResponse } from '../../core/ws/WSResponse'
+import { WSServer } from '../../core/ws/WSServer'
+import { ArticleService } from '../modules/article/ArticleService'
+import { IAppConnectionInfo } from '../types/WSConnection'
+
 import { AbstractCRUDController } from './AbstractCRUDController'
 
 interface IArticleReplacePayload {

@@ -8,13 +8,14 @@ import WebSocket, { WebSocketServer } from 'ws'
 import { loggerNamespace } from '../logger/logger'
 
 import { IWSConfig } from './config'
-import { wsRequestValidator } from './validator/WSRequestValidator'
+import { validateWSRequest } from './validator/WSRequestValidator'
 import { IWSRequest, WSRequest } from './WSRequest'
 import { WSResponse } from './WSResponse'
 
 export const WS_DEBUG = (process.env.WS_DEBUG || 'false') === 'true'
 
 const KEEP_ALIVE_DEFAULT = 1000 * 60
+const MAX_MESSAGE_SIZE = 1024 * 1024 // 1 MB
 const EVENT_CONNECT = 'WS_CONNECT'
 const EVENT_DISCONNECT = 'WS_DISCONNECT'
 const MESSAGE_SYSTEM_ERROR = 'System error'
@@ -45,6 +46,7 @@ export class WSServer {
   protected readonly keepAliveTimeout: number
   protected keepAliveTimer: NodeJS.Timeout | null = null
   protected readonly handlers: Map<string, RequestHandler<any>> = new Map()
+  private readonly aliveMap: WeakMap<WebSocket, boolean> = new WeakMap()
 
   public constructor(config: IWSConfig, server?: Server) {
     this.bus = new EventEmitter() as TypedEmitter<IWSServerEvents>
@@ -71,7 +73,7 @@ export class WSServer {
       try {
         if (client.readyState === WebSocket.CONNECTING) {
           this.logger.warn('connecting')
-          await WSServer.waitForSocketState(client, WebSocket.CONNECTING)
+          await WSServer.waitForSocketState(client, WebSocket.OPEN)
         }
 
         if (client.readyState === WebSocket.OPEN) {
@@ -109,22 +111,34 @@ export class WSServer {
     }
   }
 
-  public broadcast(cb: (connectionInfo: IConnectionInfo, client: WebSocket) => Promise<WSResponse | null>, clients?: Set<WebSocket>): void {
+  public async broadcast(
+    cb: (connectionInfo: IConnectionInfo, client: WebSocket) => Promise<WSResponse | null>,
+    clients?: Set<WebSocket>
+  ): Promise<void> {
     if (!clients) {
       clients = this.ws.clients
     }
 
-    clients.forEach(async (client) => {
+    const promises: Promise<void>[] = []
+    for (const client of clients) {
       if (client.readyState === WebSocket.OPEN) {
         const connectionInfo = this.connectionInfoMap.get(client)
         if (connectionInfo) {
-          const response = await cb(connectionInfo, client)
-          if (response) {
-            this.send(client, response).catch(this.logger.error)
-          }
+          promises.push(
+            cb(connectionInfo, client)
+              .then((response) => {
+                if (response) {
+                  const serialized = response.toString()
+                  client.send(serialized)
+                }
+              })
+              .catch((e) => this.logger.error(e))
+          )
         }
       }
-    })
+    }
+
+    await Promise.allSettled(promises)
   }
 
   /**
@@ -152,7 +166,7 @@ export class WSServer {
         return
       }
 
-      const isValid = await wsRequestValidator.validate(requestObject)
+      const isValid = validateWSRequest(requestObject)
       if (!isValid) {
         this.logger.error(requestObject)
         // TODO: We cannot do anything ?
@@ -227,6 +241,7 @@ export class WSServer {
       if (connectionInfo) {
         this.connectionInfoMap.delete(client)
       }
+      client.terminate()
     })
   }
 
@@ -234,9 +249,9 @@ export class WSServer {
     const { port, path } = config
     let ws: WebSocket.Server
     if (server) {
-      ws = new WebSocketServer({ server, path })
+      ws = new WebSocketServer({ server, path, maxPayload: MAX_MESSAGE_SIZE })
     } else {
-      ws = new WebSocketServer({ path, port, noServer: true })
+      ws = new WebSocketServer({ path, port, noServer: true, maxPayload: MAX_MESSAGE_SIZE })
     }
 
     this.logger.info(`started on ws://0.0.0.0:${port}${path}`)
@@ -288,14 +303,12 @@ export class WSServer {
     }, this.keepAliveTimeout)
   }
 
-  protected setKeepAlive(client: WebSocket, value: boolean) {
-    // @ts-ignore
-    client.keepAlive = value
+  protected setKeepAlive(client: WebSocket, value: boolean): void {
+    this.aliveMap.set(client, value)
   }
 
-  protected isAlive(client: WebSocket) {
-    // @ts-ignore
-    return client.keepAlive
+  protected isAlive(client: WebSocket): boolean {
+    return this.aliveMap.get(client) ?? false
   }
 
   protected requestMessageToObject(message: any) {
@@ -321,21 +334,33 @@ export class WSServer {
     await WSServer.waitForSocketState(client, client.CLOSED)
   }
 
-  public static async waitForSocketState(client: WebSocket, state: 0 | 1 | 2 | 3, maxNumberOfAttempts: number = 200): Promise<true> {
-    return new Promise((resolve, reject) => {
-      const intervalTime = 200 // ms
+  public static async waitForSocketState(client: WebSocket, state: 0 | 1 | 2 | 3, timeoutMs: number = 40000): Promise<true> {
+    if (client.readyState === state) {
+      return true
+    }
 
-      let currentAttempt = 0
-      const interval = setInterval(() => {
-        if (currentAttempt > maxNumberOfAttempts - 1) {
-          clearInterval(interval)
-          reject(new Error('Maximum number of attempts exceeded'))
-        } else if (client.readyState === state) {
-          clearInterval(interval)
-          resolve(true)
-        }
-        currentAttempt++
-      }, intervalTime)
+    const eventMap: Record<number, string> = {
+      [WebSocket.OPEN]: 'open',
+      [WebSocket.CLOSED]: 'close',
+    }
+
+    const event = eventMap[state]
+    if (!event) {
+      throw new Error(`Cannot wait for socket state: ${state}`)
+    }
+
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        client.removeListener(event, onEvent)
+        reject(new Error('Timeout waiting for socket state'))
+      }, timeoutMs)
+
+      const onEvent = () => {
+        clearTimeout(timeout)
+        resolve(true)
+      }
+
+      client.once(event, onEvent)
     })
   }
 }

@@ -11,5 +11,4 @@ export enum AuthTokenResourceColumns {
   updatedAtColumn = 'updatedAt',
 }
 
-export class AuthTokenEntityResource extends DBEntityResource<AuthToken> {
-}
+export class AuthTokenEntityResource extends DBEntityResource<AuthToken> {}

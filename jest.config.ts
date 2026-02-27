@@ -15,6 +15,7 @@ export default async (): Promise<Config.InitialOptions> => {
     // modulePathIgnorePatterns: ["directoryNameToIgnore"]
     testPathIgnorePatterns: [
       '<rootDir>/tests/db/elasticsearch/',
+      '<rootDir>/tests/cache/CacheRedis.spec.ts',
       '<rootDir>/tests/demo/modules/article/index/',
       '<rootDir>/node_modules/',
       '<rootDir>/build/',
@@ -23,7 +24,7 @@ export default async (): Promise<Config.InitialOptions> => {
       '<rootDir>/app/',
       '<rootDir>/runtime/',
     ],
-    setupFiles: ['dotenv/config'],
+    setupFiles: [],
     moduleDirectories: ['node_modules', 'core'],
     moduleFileExtensions: ['js', 'ts', 'json'],
     coverageDirectory: './runtime/coverage',

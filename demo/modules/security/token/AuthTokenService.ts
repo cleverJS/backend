@@ -20,7 +20,7 @@ export class AuthTokenService extends AbstractService<AuthToken, AuthTokenEntity
 
   public cleanUserToken(id: number): Promise<boolean> {
     const { userIdColumn } = AuthTokenResourceColumns
-    const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: userIdColumn, value: id }] });
+    const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: userIdColumn, value: id }] })
     return this.deleteAll(condition)
   }
 }
