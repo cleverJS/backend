@@ -1,0 +1,148 @@
+name: Release Package
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (skip actual publish)'
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: release-package-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: 24
+  POSTGRES_USER: test_db
+  POSTGRES_PASSWORD: test_db
+  POSTGRES_DB: test_db
+
+jobs:
+  test:
+    name: Validate (install, typecheck, test, build)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+      - name: Install dependencies (immutable)
+        run: pnpm install --frozen-lockfile
+      - name: Typecheck
+        run: pnpm exec tsc --noEmit -p tsconfig.build.json
+      - name: Run tests
+        run: pnpm run tests
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5433
+      - name: Build package
+        run: pnpm run build
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 1
+
+  publish-gpr:
+    name: Publish to GitHub Packages
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+      id-token: write
+      attestations: write
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      NODE_ENV: production
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify tag matches package version
+        if: github.event_name == 'release'
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          # Strip 'v' prefix if present (e.g., v1.0.0 -> 1.0.0)
+          # Both formats are supported: v1.0.0 or 1.0.0
+          if [[ "$TAG" =~ ^v?([0-9]+\.[0-9]+\.[0-9]+(-.+)?)$ ]]; then
+            VERSION_IN_TAG="${BASH_REMATCH[1]}"
+          else
+            echo "❌ Release tag '$TAG' does not match semver format." >&2
+            echo "Expected format: 1.0.0 or v1.0.0 (with optional pre-release suffix)" >&2
+            exit 1
+          fi
+          VERSION_IN_PKG=$(node -p "require('./package.json').version")
+          echo "📌 Tag version: $VERSION_IN_TAG"
+          echo "📦 Package.json version: $VERSION_IN_PKG"
+          if [ "$VERSION_IN_TAG" != "$VERSION_IN_PKG" ]; then
+            echo "❌ Tag version and package.json version mismatch." >&2
+            exit 1
+          fi
+          echo "✅ Version verification passed"
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+          registry-url: https://npm.pkg.github.com/
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - name: Verify build artifacts
+        run: |
+          if [ ! -d "dist" ] || [ -z "$(ls -A dist)" ]; then
+            echo "❌ Build artifacts missing or empty" >&2
+            exit 1
+          fi
+          echo "✅ Build artifacts verified"
+      - name: Install dependencies (immutable)
+        run: pnpm install --frozen-lockfile --prod
+      - name: Determine npm tag
+        id: npm-tag
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [[ "$VERSION" == *-* ]]; then
+            echo "tag=next" >> $GITHUB_OUTPUT
+            echo "📌 Pre-release version detected, using 'next' tag"
+          else
+            echo "tag=latest" >> $GITHUB_OUTPUT
+            echo "📌 Stable version detected, using 'latest' tag"
+          fi
+      - name: Dry run publish
+        if: inputs.dry_run == true
+        run: |
+          echo "🔍 Dry run mode - skipping actual publish"
+          pnpm publish --dry-run --no-git-checks --ignore-scripts
+      - name: Publish to GitHub Packages
+        if: inputs.dry_run != true
+        run: |
+          echo "📦 Publishing to GitHub Packages..."
+          pnpm publish --tag=${{ steps.npm-tag.outputs.tag }} --access public --no-git-checks --provenance --ignore-scripts

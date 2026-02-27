@@ -8,23 +8,48 @@
     "type": "git",
     "url": "https://github.com/cleverJS/backend"
   },
+  "main": "dist/index.js",
+  "types": "dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "require": "./dist/index.js",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./http": {
+      "types": "./dist/types/http/index.d.ts",
+      "require": "./dist/http/index.js",
+      "import": "./dist/http/index.js",
+      "default": "./dist/http/index.js"
+    },
+    "./db/sql": {
+      "types": "./dist/types/db/sql/index.d.ts",
+      "require": "./dist/db/sql/index.js",
+      "import": "./dist/db/sql/index.js",
+      "default": "./dist/db/sql/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist/**/*",
+    "core/**/*",
+    "guide/**/*",
+    "demo/**/*",
+    "README.md"
+  ],
   "scripts": {
-    "build": "(rm -rf libs || npx rimraf libs) && tsc -d --project tsconfig.prod.json",
-    "server-dev": "ts-node -r tsconfig-paths/register -r dotenv/config  demo/index.ts",
-    "server-node-swc-dev": "TS_NODE_PROJECT=./tsconfig.prod.json node -r tsconfig-paths/register -r dotenv/config -r ts-node/register/transpile-only -r ts-node/transpilers/swc-experimental demo/index.ts",
-    "inspect": "node --inspect node_modules/.bin/ts-node -r tsconfig-paths/register -r dotenv/config demo/index.ts",
+    "build": "swc ./core -d ./dist --strip-leading-paths --source-maps && tsc -p tsconfig.prod.json --emitDeclarationOnly",
+    "prebuild": "pnpm clean",
+    "clean": "rm -rf dist tsconfig.build.tsbuildinfo",
+    "prepublishOnly": "npm run build",
     "test": "npx jest --runInBand --detectOpenHandles --colors --verbose --reporters=default",
-    "test:cov": "npx jest --runInBand --detectOpenHandles --colors --verbose --reporters=default --coverage",
-    "postinstall": "tsc -d --project tsconfig.prod.json"
+    "test:cov": "npx jest --runInBand --detectOpenHandles --colors --verbose --reporters=default --coverage"
   },
   "engines": {
-    "node": ">=16.20",
-    "npm": ">=8.11"
+    "node": ">=22"
   },
   "dependencies": {
-    "@types/pretty-hrtime": "^1.0.3",
-    "@types/uuid": "^10.0.0",
-    "@types/ws": "^8.5.14",
     "ws": "^8.18.0",
     "axios": "^1.12.2",
     "fastest-validator": "^1.19.1",
@@ -34,9 +59,16 @@
     "path": "^0.12.7",
     "tsconfig-paths": "^4.2.0",
     "uuid": "^11.0.5",
-    "winston": "^3.17.0"
+    "winston": "^3.17.0",
+    "ms": "^2.1.3"
   },
   "devDependencies": {
+    "@types/ms": "^2.1.0",
+    "@jest/types": "^30.2.0",
+    "@types/pretty-hrtime": "^1.0.3",
+    "@types/uuid": "^10.0.0",
+    "@types/ws": "^8.5.14",
+    "@types/node": "^22.19.13",
     "@elastic/elasticsearch": "=7.17.13",
     "knex": "=3.1.0",
     "fastify": "^5.2.1",
@@ -45,8 +77,8 @@
     "@fastify/session": "^11.1.0",
     "google-auth-library": "^9.11.0",
     "sqlite3": "^5.1.7",
-    "yup": "^1.6.1",
     "bcrypt": "^5.1.1",
+    "yup": "^1.6.1",
     "@types/bcrypt": "^5.0.2",
     "@swc/wasm": "^1.6.3",
     "express": "^4.21.2",
@@ -57,7 +89,6 @@
     "typescript": "=5.7.3",
     "ts-node": "^10.9.2",
     "telegraf": "^4.16.3",
-
     "piscina": "^4.1.0",
     "@jest/globals": "^29.7.0",
     "@types/jest": "^29.5.12",
@@ -99,6 +130,8 @@
     "axios": "=1.7.9",
     "ws": "^8.18.0",
     "telegraf": "^4.16.3",
-    "winston": "^3.16.0"
+    "winston": "^3.16.0",
+    "@swc/cli": "^0.7.10",
+    "@swc/core": "^1.15.10"
   }
 }

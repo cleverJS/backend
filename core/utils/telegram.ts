@@ -45,7 +45,7 @@ export class TelegramMessenger {
     if (channelID) {
       if (message.length >= limit) {
         const chunks = chunkString(message, limit)
-        const promises = []
+        const promises: Promise<any>[] = []
         for (let i = 0; i < chunks.length; i++) {
           promises.push(this.bot.telegram.sendMessage(channelID, chunks[i]).catch(this.logger.error))
         }

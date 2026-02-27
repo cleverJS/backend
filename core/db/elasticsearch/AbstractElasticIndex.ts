@@ -84,12 +84,12 @@ export abstract class AbstractElasticIndex {
 
   public async save<T extends IndexData>(item: T, refresh?: 'wait_for' | boolean): Promise<string | null> {
     const { id } = item
-    let dbItem = null
+    let dbItem: T | null = null
     if (id) {
       dbItem = await this.fetchById<T>(id)
     }
 
-    let result = null
+    let result: string | null = null
     const { id: skipId, ...data } = item
     if (dbItem && dbItem.id) {
       const resultUpdate = await this.updateDocument(dbItem.id, data, { refresh, retry_on_conflict: 6 })
@@ -178,7 +178,7 @@ export abstract class AbstractElasticIndex {
    * @return {Promise<string[]>} ids
    */
   public async bulkIndexDocument(dataset: Record<string, any>[], params?: Omit<Bulk, 'body'>): Promise<string[]> {
-    const result = []
+    const result: string[] = []
 
     const body = dataset.flatMap((doc) => [{ index: { _index: this.alias } }, doc]) as any
     try {
@@ -313,7 +313,7 @@ export abstract class AbstractElasticIndex {
 
   public async updateAlias(newIndex: string): Promise<void> {
     try {
-      const actions = []
+      const actions: Record<string, any>[] = []
 
       const index = await this.getIndexByAlias(this.alias)
       let createAlias = true
@@ -343,8 +343,8 @@ export abstract class AbstractElasticIndex {
     }
   }
 
-  public async getIndexByAlias(alias: string) {
-    let index = null
+  public async getIndexByAlias(alias: string): Promise<string | null> {
+    let index: string | null = null
     try {
       const response = await this.client.indices.getAlias(
         {

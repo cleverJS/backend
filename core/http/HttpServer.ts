@@ -21,6 +21,10 @@ export abstract class HttpServer {
 
   public abstract getInstance(): unknown
   public abstract getServer(): Server
+
+  public getConfig(): IHttpServerConfig {
+    return this.config
+  }
 }
 
 export type THttpRoute = {

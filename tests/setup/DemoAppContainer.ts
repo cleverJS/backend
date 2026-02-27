@@ -3,6 +3,7 @@ import { EventEmitter } from 'events'
 import knex, { Knex } from 'knex'
 import TypedEmitter from 'typed-emitter'
 
+import { HttpServerFastify } from '../../core'
 import { HttpServer } from '../../core/http/HttpServer'
 import { logger, loggerNamespace } from '../../core/logger/logger'
 import { FSWrapper } from '../../core/utils/fsWrapper'
@@ -27,8 +28,8 @@ export class DemoAppContainer {
     this.elasticClient = new Client({
       node: 'http://localhost:9200',
     })
-    this.httpServer = new HttpServer({ port: settings.websocket.port, host: 'localhost' })
-    const server = this.httpServer.getInstance()
+    this.httpServer = new HttpServerFastify({ port: settings.websocket.port, host: 'localhost' })
+    const server = this.httpServer.getServer()
     this.wsServer = new WSServer(settings.websocket, server)
 
     this.connectionConfig = settings.connection.connection as Knex.Sqlite3ConnectionConfig
@@ -52,14 +53,14 @@ export class DemoAppContainer {
       process.exit(1)
     }
 
-    await this.httpServer.start()
+    await this.httpServer.start(() => {})
   }
 
   // This will be called on process finish and terminate http server
   public destroy() {
     return async (): Promise<void> => {
       await this.wsServer.destroy()
-      await this.httpServer.destroy()
+      await this.httpServer.destroy(() => {})
       await new Promise((resolve) => {
         this.connection.destroy(() => {
           resolve(true)

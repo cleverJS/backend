@@ -1,4 +1,4 @@
-import { WSServer } from 'core/ws/WSServer'
+import { WSServer } from '../ws/WSServer'
 
 export const routes: any[] = []
 

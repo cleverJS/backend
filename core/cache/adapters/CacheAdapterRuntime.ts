@@ -107,7 +107,7 @@ export class CacheAdapterRuntime extends CacheAdapterInterface {
   public checkExpired(): Promise<void> {
     return new Promise((resolve) => {
       const now = new Date().getTime()
-      const clearPromise = []
+      const clearPromise: Promise<void>[] = []
       for (const [key, ttl] of this.ttls) {
         if (ttl && ttl < now) {
           clearPromise.push(this.clear(key))

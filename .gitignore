@@ -8,3 +8,6 @@ libs
 build
 runtime
 tmp
+core/**/*.d.ts
+core/**/*.d.ts.map
+dist

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json.schemastore.org/swcrc",
+  "isModule": true,
+  "sourceMaps": true,
+  "module": {
+    "type": "commonjs",
+    "strict": true,
+    "noInterop": false
+  },
+  "jsc": {
+    "parser": {
+      "syntax": "typescript",
+      "decorators": false,
+      "tsx": false
+    },
+    "transform": {
+      "decoratorMetadata": false,
+      "legacyDecorator": false
+    },
+    "target": "es2022",
+    "minify": {
+      "compress": {
+        "unused": true
+      },
+      "mangle": false
+    }
+  },
+  "minify": false
+}

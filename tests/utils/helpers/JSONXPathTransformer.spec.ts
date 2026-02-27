@@ -11,8 +11,8 @@ describe('Test JSONXPathTransformerHelper', () => {
     jest.clearAllTimers()
   })
 
-  afterAll(() => {
-    cacheContainer.cacheRuntime.clear()
+  afterAll(async () => {
+    await cacheContainer.clear()
   })
 
   it('should stringify target node', async () => {

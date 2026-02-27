@@ -29,7 +29,7 @@ export function getLastItem<T>(items: T[]): T | undefined {
 }
 
 export const chunkArray = <T = any>(array: T[], size: number): T[][] => {
-  const results = []
+  const results: T[][] = []
 
   if (array.length > size) {
     while (array.length) {
@@ -260,8 +260,8 @@ export function isStringifiedObject(string: string) {
   return result
 }
 
-export function prepareSQLIn(items: (string | number)[]) {
-  let result = null
+export function prepareSQLIn(items: (string | number)[]): string | null {
+  let result: string | null = null
   if (typeof items[0] === 'number') {
     result = items.join(',')
   }

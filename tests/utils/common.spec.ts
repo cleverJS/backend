@@ -1,5 +1,6 @@
-import { logger } from '../../core/logger/logger'
-import { argsStringify, convertToBoolean } from '../../core/utils/common'
+import { logger } from '../../core/logger/logger';
+import { argsStringify, convertToBoolean } from '../../core/utils/common';
+
 
 describe('Test common', () => {
   test('should concatenate primitives', () => {
@@ -39,9 +40,7 @@ describe('Test common', () => {
   test('should stringify AggregateError', () => {
     const error = new AggregateError([new Error('Test1'), new Error('Test2')])
     const result = argsStringify(error)
-    logger.info(result)
-
-    expect(true).toBeTruthy()
+    expect(result).toBeTruthy()
   })
 
   test('should return true', async () => {

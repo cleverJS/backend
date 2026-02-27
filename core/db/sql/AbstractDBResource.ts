@@ -48,7 +48,7 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractEnti
   public async findAll(condition?: Condition, pagination?: Paginator, connection?: Knex): Promise<E[]> {
     const rows = await this.findAllRaw<TEntityFrom<E>>(condition, pagination, undefined, connection)
 
-    const promises = []
+    const promises: Promise<any>[] = []
     for (const row of rows) {
       promises.push(this.map(row))
     }
@@ -302,7 +302,7 @@ export abstract class AbstractDBResource<E extends IEntity> extends AbstractEnti
   public async createEntityList(rows: Partial<TEntityFrom<E>>[], clone: boolean = true) {
     let result: E[] = []
 
-    const promises = []
+    const promises: Promise<E>[] = []
     for (const row of rows) {
       const entity = this.createEntity(row, clone)
       promises.push(entity)

@@ -40,7 +40,8 @@ describe('Test HttpClient', () => {
 
   test('should GET', async () => {
     const client = new HttpClient()
-    const response = await client.get<IResponseArticleList>(`http://${httpServer.host}:${httpServer.port}/api/article/list`)
+    const { host, port } = httpServer.getConfig()
+    const response = await client.get<IResponseArticleList>(`http://${host}:${port}/api/article/list`)
     expect(response.success).toBeTruthy()
     expect(response.data.result).toHaveLength(2)
   })

@@ -2,6 +2,7 @@ import { randomInt } from 'crypto'
 import hrtime from 'pretty-hrtime'
 import { WebSocket } from 'ws'
 
+import { HttpServerFastify } from '../../core'
 import { HttpServer } from '../../core/http/HttpServer'
 import { logger } from '../../core/logger/logger'
 import { Ready } from '../../core/utils/ready'
@@ -76,12 +77,12 @@ describe('Test WSServer', () => {
   const keepAliveTimeout = 2000
 
   beforeAll(async () => {
-    httpServer = new HttpServer({ port: 8000, host: 'localhost' })
-    wsServer = new WSServer({ port: 8000, keepalive: keepAliveTimeout, path: '/ws' }, httpServer.getServer().server)
+    httpServer = new HttpServerFastify({ port: 8000, host: 'localhost' })
+    wsServer = new WSServer({ port: 8000, keepalive: keepAliveTimeout, path: '/ws' }, httpServer.getServer())
 
     initActions(wsServer)
 
-    await httpServer.start()
+    await httpServer.start(() => {})
     logger.info('started')
   })
 
@@ -96,7 +97,7 @@ describe('Test WSServer', () => {
 
   afterAll(async () => {
     await wsServer.destroy()
-    await httpServer.destroy()
+    await httpServer.destroy(() => {})
   })
 
   test('should connect and disconnect', async () => {

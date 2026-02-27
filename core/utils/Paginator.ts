@@ -61,7 +61,7 @@ export class Paginator {
   }
 
   public getCurrentPages(): number[] {
-    const result = []
+    const result: number[] = []
     const pageCurrent = this.getCurrentPage()
     const pageCount = this.getPageCount()
 

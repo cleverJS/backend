@@ -44,7 +44,7 @@ export abstract class DBEntityResource<E extends IEntity> extends AbstractEntity
   public async findAll(condition?: Condition, paginator?: Paginator, select?: string[], connection?: unknown): Promise<E[]> {
     const rows = await this.resource.findAll<TEntityFrom<E>>(condition, paginator, select, connection)
 
-    const promises = []
+    const promises: Promise<any>[] = []
     for (const row of rows) {
       promises.push(this.map(row))
     }
@@ -163,7 +163,7 @@ export abstract class DBEntityResource<E extends IEntity> extends AbstractEntity
   public async createEntityList(rows: Partial<TEntityFrom<E>>[], clone: boolean = true) {
     let result: E[] = []
 
-    const promises = []
+    const promises: Promise<E>[] = []
     for (const row of rows) {
       const entity = this.createEntity(row, clone)
       promises.push(entity)
