@@ -13,8 +13,10 @@ In simple case module has the following structure:
 
 - modules/article/[resource](../../demo/modules/article/resource)/* - Classes for working (CRUD) with resource (MSSQL, Mongo, FileSystem)
 
-- modules/article/[ArticleController.ts](../../demo/controllers/ArticleController.ts) - Article controller for handling request/response. 
+- controllers/[ArticleHTTPController.ts](../../demo/controllers/ArticleHTTPController.ts) - HTTP controller for handling request/response.
 Uses for handle data, validation, transfer to appropriate Service and response back
+
+- controllers/[ArticleWSController.ts](../../demo/controllers/ArticleWSController.ts) - WebSocket controller for handling request/response.
 
 - modules/article/[ArticleService.ts](../../demo/modules/article/ArticleService.ts) - Service responsible for operation does not conceptually belong to
 any object
@@ -26,4 +28,4 @@ Read more
 2. [Controller](module/controller.md)
 3. [Resource](module/resource.md)
 
-[Example](../app/modules/article)
+[Example](../../demo/modules/article)

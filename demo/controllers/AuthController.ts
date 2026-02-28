@@ -1,7 +1,7 @@
-import { RouteHandlerMethod } from 'fastify'
+import { FastifyReply, FastifyRequest } from 'fastify'
 import { types } from 'util'
 
-import { HttpServer } from '../../core/http'
+import { HttpServerFastify } from '../../core/http/servers/HttpServerFastify'
 import { loggerNamespace } from '../../core/logger/logger'
 import { WSRequest } from '../../core/ws/WSRequest'
 import { WSServer } from '../../core/ws/WSServer'
@@ -18,11 +18,11 @@ import { EValidator } from './validators/enum/ValidatorNameList'
 
 export class AuthController extends AbstractController {
   protected readonly logger = loggerNamespace('AuthController')
-  protected http: HttpServer
+  protected http: HttpServerFastify
   protected authService: AuthService
   protected userService: UserService
 
-  public constructor(wsServer: WSServer, http: HttpServer, authService: AuthService, userService: UserService) {
+  public constructor(wsServer: WSServer, http: HttpServerFastify, authService: AuthService, userService: UserService) {
     super(wsServer)
     this.http = http
     this.authService = authService
@@ -337,7 +337,7 @@ export class AuthController extends AbstractController {
     })
   }
 
-  public actionGoogleAuth: RouteHandlerMethod = async (request, response): Promise<void> => {
+  public actionGoogleAuth = async (_request: FastifyRequest, response: FastifyReply): Promise<void> => {
     return response.send()
   }
 
@@ -403,7 +403,7 @@ export class AuthController extends AbstractController {
   }
 
   protected init(): void {
-    this.http.get('/google/auth', this.actionGoogleAuth)
+    this.http.route({ method: 'GET', path: '/google/auth', handler: this.actionGoogleAuth })
 
     this.wsServer.onRequest('auth', 'google', this.actionGoogle)
     this.wsServer.onRequest('auth', 'telegram', this.actionTelegram)

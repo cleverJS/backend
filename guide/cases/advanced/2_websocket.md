@@ -17,86 +17,97 @@ any other necessary data which you do not want to get from a DB on every user re
 The better place to put data into state is Controller. There are `sign in` and `sign in by token` actions in this example:
 
 ```ts
-public actionSingIn = async (request: WSRequest, connection: IConnection): Promise<IJSendResponse> => {
+public actionSingIn = async (request: WSRequest, connectionInfo: IConnectionInfo): Promise<Record<string, any>> => {
   const { login, password } = request.payload
 
   const { user, accessToken, refreshToken } = await this.deps.authService.signIn(login, password)
-  
-  connection.state.userId = user.id
-  connection.state.token = accessToken
 
-  return this.responseSuccess({
-                                accessToken,
-                                refreshToken,
-                                user: user.getNonSecureData(),
-                              })
+  connectionInfo.state.userId = user.id
+  connectionInfo.state.token = accessToken
+
+  return {
+    status: 'success',
+    data: {
+      accessToken,
+      refreshToken,
+      user: user.getNonSecureData(),
+    },
+  }
 }
 
-public actionSingInByToken = async (request: WSRequest, connection: IConnection): Promise<IJSendResponse> => {
+public actionSingInByToken = async (request: WSRequest, connectionInfo: IConnectionInfo): Promise<Record<string, any>> => {
   const { token } = request.payload
 
   const { user } = await this.deps.authService.authByToken(token)
 
-  connection.state.userId = user.id
-  connection.state.token = token
+  connectionInfo.state.userId = user.id
+  connectionInfo.state.token = token
 
-  return this.responseSuccess({
-                                user: user.getNonSecureData(),
-                              })
+  return {
+    status: 'success',
+    data: {
+      user: user.getNonSecureData(),
+    },
+  }
 }
 ```
 
-You want to have `state` autocomplete while you write code. Create IAppConnection `interface` which extends IConnection and then 
+You want to have `state` autocomplete while you write code. Create IAppConnectionInfo `interface` which extends IConnectionInfo and then
 your action will become as the following:
 
 ```ts
+import { IConnectionInfo } from '@cleverjs/backend/core/ws/WSServer'
+
 export interface IConnectionState {
   userId: number
   token: string
 }
 
-export interface IAppConnection extends IConnection {
+export interface IAppConnectionInfo extends IConnectionInfo {
   state: IConnectionState
 }
 
-public actionSingIn = async (request: WSRequest, connection: IAppConnection): Promise<IJSendResponse> => {
+public actionSingIn = async (request: WSRequest, connectionInfo: IAppConnectionInfo): Promise<Record<string, any>> => {
   const { login, password } = request.payload
 
   const { user, accessToken, refreshToken } = await this.deps.authService.signIn(login, password)
-  
-  connection.state.userId = user.id
-  connection.state.token = accessToken
 
-  return this.responseSuccess({
-                                accessToken,
-                                refreshToken,
-                                user: user.getNonSecureData(),
-                              })
+  connectionInfo.state.userId = user.id
+  connectionInfo.state.token = accessToken
+
+  return {
+    status: 'success',
+    data: {
+      accessToken,
+      refreshToken,
+      user: user.getNonSecureData(),
+    },
+  }
 }
 ```
 
-## Events and Broadcast 
+## Events and Broadcast
 
 Websocket give you ability to send events on a frontend. This could be useful in case of data changes which is necessary for established connections.
 
 Let's see an example, where frontend subscribes to article changes and should get an event about that.
 
-Assume that we trigger an event on `Article` save. For that we add event emitter into our [ArticleService](demo/modules/article/ArticleService.ts)
+Assume that we trigger an event on `Article` save. For that we add event emitter into our [ArticleService](../../../demo/modules/article/ArticleService.ts)
 and override `save` method
 
 ```ts
 import TypedEmitter from 'typed-emitter'
 import { EventEmitter } from 'events'
-import { AbstractService } from '../../../core/AbstractService'
+import { AbstractService } from '@cleverjs/backend/core/AbstractService'
 import { Article } from './Article'
-import { ArticleResource } from './resource/ArticleResource'
+import { ArticleEntityResource } from './resource/ArticleEntityResource'
 
-export interface ArticleEvents {
+export type ArticleEvents = {
   new: (item: Article) => void
 }
 
-export class ArticleService extends AbstractService<Article, ArticleResource> {
-  public readonly eventEmitter: TypedEmitter<ArticleEvents> = new EventEmitter()
+export class ArticleService extends AbstractService<Article, ArticleEntityResource> {
+  public readonly eventEmitter: TypedEmitter<ArticleEvents> = new EventEmitter() as TypedEmitter<ArticleEvents>
 
   public async save(item: Article): Promise<boolean> {
     const result = await super.save(item)
@@ -110,28 +121,27 @@ export class ArticleService extends AbstractService<Article, ArticleResource> {
 }
 ```
 
-From the other side [ArticleController](demo/controllers/ArticleWSController.ts) should listen for that event (see method `onEvents`)
+From the other side [ArticleWSController](../../../demo/controllers/ArticleWSController.ts) should listen for that event (see method `onEvents`)
 
 ```ts
-import { WSServer } from '../../core/ws/WSServer'
+import { WSServer } from '@cleverjs/backend/core/ws/WSServer'
 import { ArticleService } from '../modules/article/ArticleService'
-import { WSResponse } from '../../core/ws/WSResponse'
-import { IAppConnection } from '../types/WSConnection'
-
-interface IDependencies {
-  wsServer: WSServer
-  articleService: ArticleService
-}
+import { WSResponse } from '@cleverjs/backend/core/ws/WSResponse'
+import { IAppConnectionInfo } from '../types/WSConnection'
 
 export class ArticleWSController {
-  public constructor(deps: IDependencies) {
-    this.deps = deps
+  protected readonly wsServer: WSServer
+  protected readonly service: ArticleService
+
+  public constructor(wsServer: WSServer, service: ArticleService) {
+    this.wsServer = wsServer
+    this.service = service
     this.onEvents()
   }
 
   protected onEvents(): void {
-    this.deps.articleService.eventEmitter.on('new', (item) => {
-      // This will be execute on Article changes
+    this.service.eventEmitter.on('new', (item) => {
+      // This will be executed on Article changes
     })
   }
 }
@@ -152,86 +162,90 @@ export interface IConnectionState {
 Add action for subscribing
 
 ```ts
-import { WSServer } from '../../core/ws/WSServer'
+import { WSServer } from '@cleverjs/backend/core/ws/WSServer'
+import { WSRequest } from '@cleverjs/backend/core/ws/WSRequest'
 import { ArticleService } from '../modules/article/ArticleService'
-import { WSResponse } from '../../core/ws/WSResponse'
-import { IAppConnection } from '../types/WSConnection'
-
-interface IDependencies {
-  wsServer: WSServer
-  articleService: ArticleService
-}
+import { WSResponse } from '@cleverjs/backend/core/ws/WSResponse'
+import { IAppConnectionInfo } from '../types/WSConnection'
 
 export class ArticleWSController {
-  public constructor(deps: IDependencies) {
-    this.deps = deps
+  protected readonly wsServer: WSServer
+  protected readonly service: ArticleService
+
+  public constructor(wsServer: WSServer, service: ArticleService) {
+    this.wsServer = wsServer
+    this.service = service
+    this.init()
     this.onEvents()
   }
 
-  public actionSubscribe = async (request: WSRequest, connection: IAppConnection): Promise<Record<string, any>> => {
-    connection.state.subscriptions.article = true
+  public actionSubscribe = async (request: WSRequest, connectionInfo: IAppConnectionInfo): Promise<Record<string, any>> => {
+    connectionInfo.state.subscriptions.article = true
 
     return {
       success: true,
     }
-  }  
+  }
 
   protected onEvents(): void {
-    this.deps.articleService.eventEmitter.on('new', (item) => {
-      // This will be execute on new Article changes
+    this.service.eventEmitter.on('new', (item) => {
+      // This will be executed on new Article changes
     })
   }
 
   protected init(): void {
-    this.deps.wsServer.onRequest('article', 'subscribe', this.actionSubscribe)
+    this.wsServer.onRequest('article', 'subscribe', this.actionSubscribe)
   }
 }
 ```
 
-Send broadcast event by all connections where frontend is subscribed
+Send broadcast event by all connections where frontend is subscribed.
+
+The `broadcast` callback receives two arguments: `connectionInfo` and `client` (WebSocket instance).
+It should return `Promise<WSResponse | null>`.
 
 ```ts
-import { WSServer } from '../../core/ws/WSServer'
+import { WSServer, IConnectionInfo } from '@cleverjs/backend/core/ws/WSServer'
+import { WSRequest } from '@cleverjs/backend/core/ws/WSRequest'
 import { ArticleService } from '../modules/article/ArticleService'
-import { WSResponse } from '../../core/ws/WSResponse'
-import { IAppConnection } from '../types/WSConnection'
-
-interface IDependencies {
-  wsServer: WSServer
-  articleService: ArticleService
-}
+import { WSResponse } from '@cleverjs/backend/core/ws/WSResponse'
+import { IAppConnectionInfo } from '../types/WSConnection'
+import WebSocket from 'ws'
 
 export class ArticleWSController {
-  public constructor(deps: IDependencies) {
-    this.deps = deps
+  protected readonly wsServer: WSServer
+  protected readonly service: ArticleService
+
+  public constructor(wsServer: WSServer, service: ArticleService) {
+    this.wsServer = wsServer
+    this.service = service
+    this.init()
     this.onEvents()
   }
 
-  public actionSubscribe = async (request: WSRequest, connection: IAppConnection): Promise<Record<string, any>> => {
-    connection.state.subscriptions.article = true
+  public actionSubscribe = async (request: WSRequest, connectionInfo: IAppConnectionInfo): Promise<Record<string, any>> => {
+    connectionInfo.state.subscriptions.article = true
 
     return {
       success: true,
     }
-  }  
+  }
 
   protected onEvents(): void {
-    this.deps.articleService.eventEmitter.on('new', (item) => {
-      this.deps.wsServer.broadcast((connection: IAppConnection) => {
-        return new Promise((resolve) => {
-          let result = null
-          if (connection.state.subscriptions.article) {
-            result = WSResponse.createEventResponse('article:new', { data: item })
-          }
+    this.service.eventEmitter.on('new', (item) => {
+      this.wsServer.broadcast(async (connectionInfo: IAppConnectionInfo, client: WebSocket) => {
+        let result = null
+        if (connectionInfo.state.subscriptions.article) {
+          result = WSResponse.createEventResponse('article:new', { data: item })
+        }
 
-          resolve(result)
-        })
+        return result
       })
     })
   }
 
   protected init(): void {
-    this.deps.wsServer.onRequest('article', 'subscribe', this.actionSubscribe)
+    this.wsServer.onRequest('article', 'subscribe', this.actionSubscribe)
   }
 }
 ```

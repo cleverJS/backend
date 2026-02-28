@@ -4,20 +4,18 @@ Add dependencies to package.json
 ```json
 {
   "dependencies": {
-    "cleverJS": "github:cleverJS/backend#1.4.3"
+    "@cleverjs/backend": "^2.0.0"
   }
 }
 ```
 
-Add a path and include to tsconfig.json
+Add a path to tsconfig.json
 
 ```json
 {
     "paths": {
-      "cleverJS/*": ["./node_modules/cleverJS/build/*"]
-    },
-    
-    "include": ["node_modules/cleverJS/**/*"]
+      "@cleverjs/backend/*": ["./node_modules/@cleverjs/backend/dist/*"]
+    }
 }
 ```
 

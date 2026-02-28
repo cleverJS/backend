@@ -15,21 +15,34 @@ const scheme = object()
     content: string().defined().default(''),
   })
 
-type TArticle = yup.InferType<typeof scheme>
+type TArticle = {
+  id: number | null
+  title: string
+  author: string
+  content: string
+}
 
 export class Article extends AbstractEntity<TArticle> implements TArticle {
   public id: number | null = null
   public title = ''
   public author = ''
   public content = ''
+}
 
-  public static cast(data: unknown): TArticle {
-    return scheme.noUnknown().cast(data)
-  }
+// Cast function must return a Promise — used by EntityFactory
+export const castArticle = (data: unknown): Promise<TArticle> => {
+  return scheme.noUnknown().validate(data)
 }
 ```
 
-Method cast is used for making sure that all raw data is valid and there is no unexpected fields
-on return.
+The cast function is used for making sure that all raw data is valid and there is no unexpected fields
+on return. It is passed to `EntityFactory` as the second argument:
 
-Pay attention that it could return TypeError exception in case of unconvertable data
+```typescript
+import { EntityFactory } from '../../../core/entity/EntityFactory'
+
+const factory = new EntityFactory(Article, castArticle)
+const item = await factory.create({ title: 'hello', author: 'test', content: '' })
+```
+
+Pay attention that `validate()` returns a Promise that may reject with a TypeError in case of unconvertable data.

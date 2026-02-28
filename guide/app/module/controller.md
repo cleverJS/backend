@@ -3,39 +3,36 @@
 In controller we defines a way to catch and handle request. With the help of WebSocket or HTTP(s) Server
 
 ```typescript
-import { HttpServer } from '../../../core/http/HttpServer'
-import { logger } from '../../../core/logger/logger'
+import { HttpServerFastify } from '../../../core/http/servers/HttpServerFastify'
+import { loggerNamespace } from '../../../core/logger/logger'
 import { ArticleService } from './ArticleService'
-import { ServerResponse } from 'http'
 import { FastifyReply, FastifyRequest } from 'fastify'
-import { Redis } from '../../../core/db/redis/Redis'
 import { WSServer } from '../../../core/ws/WSServer'
 import { WSRequest } from '../../../core/ws/WSRequest'
-import { Cache } from '../../../tmp/cache/Cache'
+import { Cache } from '../../../core/cache/Cache'
 import { Article } from './Article'
 import { EntityFactory } from '../../../core/entity/EntityFactory'
 
 interface IDependencies {
   articleService: ArticleService
   wsServer: WSServer
-  http: HttpServer
+  http: HttpServerFastify
   cache: Cache
-  redis: Redis
 }
 
 export class ArticleController {
+  protected readonly logger = loggerNamespace('ArticleController')
   protected readonly deps: IDependencies
 
   public constructor(deps: IDependencies) {
     this.deps = deps
-    this.init().catch(logger.error)
+    this.init().catch(this.logger.error)
   }
 
   private async init() {
     this.deps.wsServer.onRequest('article', 'get', this.actionWSGet)
-    const instance = this.deps.http.getServer()
-    instance.get('/article', this.actionGet)
-    instance.get('/articleService/save', this.actionSave)
+    this.deps.http.route({ method: 'GET', path: '/article', handler: this.actionGet })
+    this.deps.http.route({ method: 'GET', path: '/articleService/save', handler: this.actionSave })
   }
 
   private actionWSGet = async (request: WSRequest) => {
@@ -50,9 +47,9 @@ export class ArticleController {
     }
   }
 
-  private actionGet = async (request: FastifyRequest, response: FastifyReply<ServerResponse>) => {
-    logger.info(request)
-    const result = await this.deps.articleService.findById('5d47fe7f8246db8ab76b475e')
+  private actionGet = async (request: FastifyRequest, response: FastifyReply) => {
+    this.logger.info(request.url)
+    const result = await this.deps.articleService.findById(1)
 
     response.send({
       status: 'success',
@@ -63,8 +60,8 @@ export class ArticleController {
   }
 
   private actionSave = async () => {
-    const factory = new EntityFactory(Article, Article.cast)
-    const item = factory.create({
+    const factory = new EntityFactory(Article)
+    const item = await factory.create({
       title: 'hello',
     })
     const result = await this.deps.articleService.save(item)

@@ -1,12 +1,12 @@
 import { FastifyRequest } from 'fastify'
 
-import { HttpServer } from '../../core/http/HttpServer'
+import { HttpServerFastify } from '../../core/http/servers/HttpServerFastify'
 import { loggerNamespace } from '../../core/logger/logger'
 import { Paginator } from '../../core/utils/Paginator'
 import { ArticleService } from '../modules/article'
 
 interface IDependencies {
-  http: HttpServer
+  http: HttpServerFastify
   service: ArticleService
 }
 
@@ -67,10 +67,9 @@ export class ArticleHTTPController {
   }
 
   protected init(): void {
-    const instance = this.deps.http
-    instance.post('/api/article/replace', this.actionReplace)
-    instance.get('/api/article/authors', this.actionAuthorList)
-    instance.get('/api/article/list', this.actionArticleList)
+    this.deps.http.route({ method: 'POST', path: '/api/article/replace', handler: this.actionReplace })
+    this.deps.http.route({ method: 'GET', path: '/api/article/authors', handler: this.actionAuthorList })
+    this.deps.http.route({ method: 'GET', path: '/api/article/list', handler: this.actionArticleList })
   }
 }
 

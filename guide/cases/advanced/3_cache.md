@@ -2,8 +2,8 @@
 
 You may use `Cache` module for increasing application performance.
 
-There interface [CacheAdapterInterface](core/cache/adapters/CacheAdapterInterface.ts)
-and realization which stores data in runtime [CacheAdapterRuntime](core/cache/adapters/CacheAdapterRuntime.ts)
+There interface [CacheAdapterInterface](../../../core/cache/adapters/CacheAdapterInterface.ts)
+and realization which stores data in runtime [CacheAdapterRuntime](../../../core/cache/adapters/CacheAdapterRuntime.ts)
 
 You may write you own realization for example to store data in [Redis](https://redis.io)
 
@@ -12,13 +12,26 @@ We suggest using it in the following way:
 Create singleton container with cache initialization and cleaning by an interval:
 
 ```ts
+import { CacheAdapterRuntime } from '@cleverjs/backend/core/cache/adapters/CacheAdapterRuntime'
+import { Cache } from '@cleverjs/backend/core/cache/Cache'
+import { logger } from '@cleverjs/backend/core/logger/logger'
+
 class CacheContainer {
   public cacheRuntime: Cache = new Cache(new CacheAdapterRuntime())
+  protected intervalTimerId: NodeJS.Timeout
 
   constructor() {
-    setInterval(() => {
+    this.intervalTimerId = setInterval(() => {
       this.cacheRuntime.checkExpired().catch(logger.error)
-    }, 60_000)
+    }, 1000)
+    this.intervalTimerId.unref()
+  }
+
+  public async clear(): Promise<void> {
+    if (this.intervalTimerId) {
+      clearInterval(this.intervalTimerId)
+    }
+    await this.cacheRuntime.clear()
   }
 }
 
@@ -28,14 +41,14 @@ export const cacheContainer = new CacheContainer()
 Call where it is necessary:
 
 ```ts
-import { AbstractService } from 'cleverJS/core/AbstractService'
-import { Condition, TConditionOperator } from 'cleverJS/core/db/Condition'
-import { Cache } from 'cleverJS/core/cache/Cache'
+import { AbstractService } from '@cleverjs/backend/core/AbstractService'
+import { Condition, TConditionOperator } from '@cleverjs/backend/core/db/Condition'
+import { Cache } from '@cleverjs/backend/core/cache/Cache'
 import { Article } from './Article'
-import { ArticleResource } from './resource/ArticleResource'
+import { ArticleEntityResource } from './resource/ArticleEntityResource'
 import { cacheContainer } from '../../CacheContainer'
 
-export class ArticleService extends AbstractService<Article, ArticleResource> {
+export class ArticleService extends AbstractService<Article, ArticleEntityResource> {
   public async findByAuthor(author: string): Promise<Article | null> {
     return cacheContainer.cacheRuntime.getOrSet(
       author,
@@ -49,7 +62,7 @@ export class ArticleService extends AbstractService<Article, ArticleResource> {
 }
 ```
 
-You may use tag when caching something. It is useful when you need to clear some dependant data: 
+You may use tag when caching something. It is useful when you need to clear some dependant data:
 
 ```ts
 public async findByAuthor(author: string): Promise<Article | null> {
@@ -78,7 +91,7 @@ public async fetchAuthorList(paginator: Readonly<Paginator>): Promise<string[]> 
 
 public async replaceAuthor(text: string, author: string): Promise<string> {
   const result = text.replace('{{author}}', author)
-  await cacheContainer.cacheRuntime.clearByTag('article')
+  await cacheContainer.cacheRuntime.clearByTag(['article'])
   return result
 }
 ```

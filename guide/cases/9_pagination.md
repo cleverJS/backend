@@ -17,7 +17,7 @@ which works with [AbstractDBResource](../../core/db/sql/AbstractDBResource.ts) a
 2. Change actionAuthorList to use paginator in ArticleWSController.ts
 
 ```ts
-    public actionAuthorList = async (request: WSRequest, connection: IConnection) => {
+    public actionAuthorList = async (request: WSRequest, connectionInfo: IConnectionInfo) => {
       const { page = 1, itemsPerPage = 25 } = request.payload
     
       const paginator = new Paginator()
@@ -38,7 +38,7 @@ which works with [AbstractDBResource](../../core/db/sql/AbstractDBResource.ts) a
 3. Add actionList to use paginator in ArticleWSController.ts
 
 ```ts
-    public actionFetchList = async (request: WSRequest, connection: IConnection) => {
+    public actionFetchList = async (request: WSRequest, connectionInfo: IConnectionInfo) => {
       const { page = 1, itemsPerPage = 25 } = request.payload
     
       const paginator = new Paginator()

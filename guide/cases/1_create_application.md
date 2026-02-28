@@ -27,7 +27,7 @@
 ```json
     {
       "dependencies": {
-        "cleverJS": "github:cleverJS/backend#1.7.1"
+        "@cleverjs/backend": "^2.0.0"
       }
     }
 ```
@@ -47,10 +47,8 @@
 ```json
     {
         "paths": {
-          "cleverJS/*": ["./node_modules/cleverJS/build/*"]
-        },
-        
-        "include": ["node_modules/cleverJS/**/*"]
+          "@cleverjs/backend/*": ["./node_modules/@cleverjs/backend/dist/*"]
+        }
     }
 ```
    

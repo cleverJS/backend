@@ -11,27 +11,28 @@ As a built-in Websocket server we use [websockets/ws](https://github.com/websock
 2. Add Websocket server initialization
 
 ```ts
-    import { WSServer } from 'cleverJS/core/ws/WSServer'
-    import { HttpServer } from 'cleverJS/core/http/HttpServer'
-    import { loggerNamespace } from 'cleverJS/core/logger/logger'
-    
+    import { WSServer } from '@cleverjs/backend/core/ws/WSServer'
+    import { HttpServerFactory, THttpServer } from '@cleverjs/backend/http'
+    import { loggerNamespace } from '@cleverjs/backend/core/logger/logger'
+
     export class App {
       protected readonly logger = loggerNamespace('App')
-      protected readonly httpServer: HttpServer
+      protected readonly httpServer
       protected readonly wsServer: WSServer
-    
+
       public constructor() {
         const websocketOptions = {
           port: 8080,
           keepalive: 60 * 1000, // Check that connection is alive every 60 seconds
           path: '/ws',
         }
-   
-        this.httpServer = new HttpServer({ port: 8080, host: 'localhost' })
+
+        const httpServerFactory = new HttpServerFactory()
+        this.httpServer = httpServerFactory.get(THttpServer.fastify, { port: 8080, host: 'localhost' })
         this.httpServer.start().catch(this.logger.error)
-        this.wsServer = new WSServer(websocketOptions, this.httpServer.getServer().server)
+        this.wsServer = new WSServer(websocketOptions, this.httpServer.getInstance().server)
       }
-    
+
       // This will be called on process finish and terminate ws and http server
       public destroy() {
         return async (): Promise<void> => {
@@ -47,30 +48,30 @@ As a built-in Websocket server we use [websockets/ws](https://github.com/websock
 4. Create controller ```app/controllers/ArticleWSController.ts```
 
 ```ts
-    import { IConnection, WSServer } from 'cleverJS/core/ws/WSServer'
-    import { WSRequest } from 'cleverJS/core/ws/WSRequest'
-    import { loggerNamespace } from 'cleverJS/core/logger/logger'
+    import { IConnectionInfo, WSServer } from '@cleverjs/backend/core/ws/WSServer'
+    import { WSRequest } from '@cleverjs/backend/core/ws/WSRequest'
+    import { loggerNamespace } from '@cleverjs/backend/core/logger/logger'
     import { ArticleService } from '../modules/article/ArticleService'
-    
+
     interface IDependencies {
       wsServer: WSServer
       articleService: ArticleService
     }
-    
+
     export class ArticleWSController {
       protected readonly deps: IDependencies
       protected readonly logger = loggerNamespace('ArticleWSController')
-    
+
       public constructor(deps: IDependencies) {
         this.deps = deps
         this.init()
       }
-    
-      public actionReplace = async (request: WSRequest, connection: IConnection) => {
+
+      public actionReplace = async (request: WSRequest, connectionInfo: IConnectionInfo) => {
         const { text, author } = request.payload
-    
+
         const result = this.deps.articleService.replaceAuthor(text, author)
-    
+
         return {
           status: 'success',
           data: {
@@ -78,12 +79,12 @@ As a built-in Websocket server we use [websockets/ws](https://github.com/websock
           },
         }
       }
-    
-      public actionAuthorList = async (request: WSRequest, connection: IConnection) => {
+
+      public actionAuthorList = async (request: WSRequest, connectionInfo: IConnectionInfo) => {
         const { limit } = request.payload
-    
+
         const result = this.deps.articleService.getAuthorList(limit)
-    
+
         return {
           success: true,
           data: {
@@ -91,7 +92,7 @@ As a built-in Websocket server we use [websockets/ws](https://github.com/websock
           },
         }
       }
-    
+
       protected init(): void {
         this.deps.wsServer.onRequest('article', 'replace', this.actionReplace)
         this.deps.wsServer.onRequest('article', 'authors', this.actionAuthorList)
@@ -99,19 +100,19 @@ As a built-in Websocket server we use [websockets/ws](https://github.com/websock
     }
 ```
 
-5. Now we should initialize this controller in [App.ts](../../demo/App.ts) 
+5. Now we should initialize this controller in [App.ts](../../demo/App.ts)
 
 ```ts
-    import { HttpServer } from 'cleverJS/core/http/HttpServer'
-    import { WSServer } from 'cleverJS/core/ws/WSServer'
-    import { logger } from 'cleverJS/core/logger/logger'
+    import { HttpServerFactory, THttpServer } from '@cleverjs/backend/http'
+    import { WSServer } from '@cleverjs/backend/core/ws/WSServer'
+    import { logger } from '@cleverjs/backend/core/logger/logger'
     import { ArticleService } from './app/modules/article/ArticleService'
     import { ArticleWSController } from './controllers/ArticleWSController'
-    
+
     export class App {
-      protected readonly httpServer: HttpServer
+      protected readonly httpServer
       protected readonly wsServer: WSServer
-    
+
       public constructor() {
         const websocketOptions = {
           port: 8080,
@@ -119,17 +120,18 @@ As a built-in Websocket server we use [websockets/ws](https://github.com/websock
           path: '/ws',
         }
 
-        this.httpServer = new HttpServer({ port: 8080, host: 'localhost' })
+        const httpServerFactory = new HttpServerFactory()
+        this.httpServer = httpServerFactory.get(THttpServer.fastify, { port: 8080, host: 'localhost' })
         this.httpServer.start().catch(logger.error)
-        this.wsServer = new WSServer(websocketOptions, this.httpServer.getServer().server)
-   
+        this.wsServer = new WSServer(websocketOptions, this.httpServer.getInstance().server)
+
         // Controller initialization
         new ArticleWSController({
           wsServer: this.wsServer,
           articleService: new ArticleService(),
         })
       }
-    
+
       // This will be called on process finish and terminate ws and http server
       public destroy() {
         return async (): Promise<void> => {
@@ -143,39 +145,39 @@ As a built-in Websocket server we use [websockets/ws](https://github.com/websock
 6. Frontend could access endpoints now.
 
 Example
-    
+
 ```ts
     import { v4 as uuidV4 } from 'uuid'
-    
+
     const ws = new WebSocket('ws://localhost:8080/ws')
-    
+
     const messageReplace = {
       header: {
         uuid: uuidV4(),
         service: 'article',
         action: 'replace',
       },
-    
+
       payload: {
         text: 'This is {{author}} text',
         author: 'L. Euler',
       },
     }
-    
+
     ws.send(messageReplace)
-    
+
     const messageAuthorList = {
       header: {
         uuid: uuidV4(),
         service: 'article',
         action: 'authors',
       },
-    
+
       payload: {
         limit: 2,
       },
     }
-    
+
     ws.send(messageAuthorList)
 ```
 
@@ -187,31 +189,30 @@ Example
       service: string
       action: string
     }
-    
+
     interface TRequest {
       header: IRequestHeader
       payload: Record<string, any>
     }
 ```
 
-7. Pay attention on response object   
+7. Pay attention on response object
 
 ```ts
     interface IResponseHeader {
       uuid: string
       type: ResponseType
     }
-    
+
     interface TResponse {
       header: IResponseHeader
       payload: TResponsePayload
       error?: string
     }
-```   
+```
 
-You may have a look at our frontend ws client [WSClient.ts](../../tests/app/lib/WSClient.ts)
-    
+You may have a look at our frontend ws client [WSClient.ts](../../core/ws/WSClient.ts)
+
 The next step is to operate with [Database](./6_database.md)
-    
-[back](../wizard.md)
 
+[back](../wizard.md)

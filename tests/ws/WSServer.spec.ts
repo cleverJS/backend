@@ -3,7 +3,6 @@ import hrtime from 'pretty-hrtime'
 import { WebSocket } from 'ws'
 
 import { HttpServerFastify } from '../../core'
-import { HttpServer } from '../../core/http/HttpServer'
 import { logger } from '../../core/logger/logger'
 import { Ready } from '../../core/utils/ready'
 import { sleep } from '../../core/utils/sleep'
@@ -72,7 +71,7 @@ function initActions(server: WSServer) {
 }
 
 describe('Test WSServer', () => {
-  let httpServer: HttpServer
+  let httpServer: HttpServerFastify
   let wsServer: WSServer
   const keepAliveTimeout = 2000
 
@@ -82,7 +81,7 @@ describe('Test WSServer', () => {
 
     initActions(wsServer)
 
-    await httpServer.start(() => {})
+    await httpServer.start()
     logger.info('started')
   })
 
@@ -97,7 +96,7 @@ describe('Test WSServer', () => {
 
   afterAll(async () => {
     await wsServer.destroy()
-    await httpServer.destroy(() => {})
+    await httpServer.destroy()
   })
 
   test('should connect and disconnect', async () => {

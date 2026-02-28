@@ -25,19 +25,23 @@ may be easily interchanged.
 ### SQL Condition
 [Condition](../core/db/Condition.ts) SQL builder. Cover simple query cases:
 
-- equals 
-- not equals 
-- less than 
-- greater than 
-- less or equals 
-- greater or equals 
-- between 
-- like 
+- equals
+- not equals
+- less than
+- greater than
+- less or equals
+- greater or equals
+- between
+- not between
+- like
+- ilike
+- not like
 - in
+- not in
 - is null
 - is not null
 
-[realization](../core/db/Condition.spec.ts)  
+[realization](../tests/db/sql/condition/ConditionDbParser.spec.ts)
 
 ## Handle with SQL
 ### Abstract SQL Resource
@@ -46,6 +50,6 @@ with SQL databases (Postgres, MSSQL, MySQL, MariaDB, SQLite3, Oracle).
 
 ## Built-in servers
 
-For handles incoming connection there are [Web Socket Server](../core/ws/WSServer.ts) and [HTTP Server](../core/http/HttpServer.ts) 
+For handles incoming connection there are [Web Socket Server](../core/ws/WSServer.ts) and [HTTP Server](../core/http/HttpServer.ts) (created via [HttpServerFactory](../core/http/HttpServerFactory.ts))
 
 [back](../README.md)

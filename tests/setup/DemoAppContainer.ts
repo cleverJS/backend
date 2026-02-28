@@ -4,7 +4,6 @@ import knex, { Knex } from 'knex'
 import TypedEmitter from 'typed-emitter'
 
 import { HttpServerFastify } from '../../core'
-import { HttpServer } from '../../core/http/HttpServer'
 import { logger, loggerNamespace } from '../../core/logger/logger'
 import { FSWrapper } from '../../core/utils/fsWrapper'
 import { WSServer } from '../../core/ws/WSServer'
@@ -20,7 +19,7 @@ export class DemoAppContainer {
   public readonly connectionConfig: Knex.Sqlite3ConnectionConfig
   public readonly connection
   public readonly serviceContainer: ServiceContainer
-  public readonly httpServer: HttpServer
+  public readonly httpServer: HttpServerFastify
   protected readonly logger = loggerNamespace('App')
   protected readonly appEventBus: TypedEmitter<AppEvents> = new EventEmitter() as TypedEmitter<AppEvents>
 
@@ -53,14 +52,14 @@ export class DemoAppContainer {
       process.exit(1)
     }
 
-    await this.httpServer.start(() => {})
+    await this.httpServer.start()
   }
 
   // This will be called on process finish and terminate http server
   public destroy() {
     return async (): Promise<void> => {
       await this.wsServer.destroy()
-      await this.httpServer.destroy(() => {})
+      await this.httpServer.destroy()
       await new Promise((resolve) => {
         this.connection.destroy(() => {
           resolve(true)

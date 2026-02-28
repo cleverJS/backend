@@ -50,7 +50,7 @@ export { IHttpServerConfig } from './http/config'
 export { HttpClient } from './http/client/HttpClient'
 export { RequestCancel } from './http/client/RequestCancel'
 export { HttpServerFastify } from './http/servers/HttpServerFastify'
-export { HttpServerExpress } from './http/servers/HttpServerExpress'
+export { HttpServerExpress, TExpressRouteOpts } from './http/servers/HttpServerExpress'
 
 // WebSocket
 export { WSServer, IConnectionInfo, RequestHandler, WS_DEBUG } from './ws/WSServer'

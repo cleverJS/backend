@@ -4,7 +4,7 @@ import { loggerNamespace } from '../logger/logger'
 
 import { IHttpServerConfig } from './config'
 
-export abstract class HttpServer {
+export abstract class HttpServer<TReq = unknown, TRes = unknown, TInstance = unknown, TRouteOpts = unknown> {
   protected readonly config: IHttpServerConfig
   protected readonly logger = loggerNamespace(`HttpServer:${this.constructor.name}`)
 
@@ -12,14 +12,11 @@ export abstract class HttpServer {
     this.config = config
   }
 
-  public abstract start(callback: () => void): void
-  public abstract destroy(callback: () => void): void
-  public abstract get(path: string, handler: (req: any, res: any) => void): void
-  public abstract post(path: string, handler: (req: any, res: any) => void): void
-  public abstract put(path: string, handler: (req: any, res: any) => void): void
-  public abstract delete(path: string, handler: (req: any, res: any) => void): void
+  public abstract start(): Promise<void>
+  public abstract destroy(): Promise<void>
+  public abstract route(route: THttpRoute<TReq, TRes, TRouteOpts>): void
 
-  public abstract getInstance(): unknown
+  public abstract getInstance(): TInstance
   public abstract getServer(): Server
 
   public getConfig(): IHttpServerConfig {
@@ -27,10 +24,11 @@ export abstract class HttpServer {
   }
 }
 
-export type THttpRoute = {
+export type THttpRoute<TReq = unknown, TRes = unknown, TRouteOpts = unknown> = {
   method: THttpMethod
   path: string
-  handler: (req: any, res: any) => void
+  handler: (req: TReq, res: TRes) => unknown
+  options?: TRouteOpts
 }
 
 export type THttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS' | 'HEAD'

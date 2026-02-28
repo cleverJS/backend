@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
-    "target": "es2019",
+    "target": "es2022",
     "module": "commonjs",
     "lib": [
-      "es2019"
+      "es2022"
     ],
     "allowJs": false,
     "outDir": "./build",
@@ -31,14 +31,15 @@
     ],
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
+    "experimentalDecorators": true,
     "inlineSourceMap": true,
     "inlineSources": true,
     "declaration": true,
     "declarationMap": true,
     "sourceMap": false,
     "paths": {
-      "cleverJS/*": [
-        "./node_modules/cleverJS/build/*"
+      "@cleverjs/backend/*": [
+        "./node_modules/@cleverjs/backend/dist/*"
       ]
     }
   },
@@ -50,7 +51,6 @@
     "app/**/*",
     "tests/**/*",
     "migrations/**/*",
-    "node_modules/cleverJS/**/*",
     "knexfile.ts"
   ],
   "compileOnSave": false,

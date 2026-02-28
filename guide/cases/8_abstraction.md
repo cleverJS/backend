@@ -1,4 +1,4 @@
-# Abstraction (AbstractDBResource, AbstractService, Condition)
+# Abstraction (DBEntityResource, DBKnexResource, AbstractService, Condition)
 
 [back](../wizard.md)
 
@@ -15,7 +15,8 @@ with the following methods with some elementary conditions in parameters:
 
 The following abstractions allow to do this
 
-- [AbstractDBResource](../../core/db/sql/AbstractDBResource.ts) - abstraction for operating with DB
+- [DBKnexResource](../../core/db/sql/DBKnexResource.ts) - low-level Knex-based resource implementing [IDBResource](../../core/db/sql/IDBResource.ts)
+- [DBEntityResource](../../core/db/sql/DBEntityResource.ts) - entity-aware resource that wraps `DBKnexResource` and handles entity creation/mapping
 - [AbstractService](../../core/AbstractService.ts) - abstraction for business logic for operating with DB
 - [Condition](../../core/db/Condition.ts) - abstraction for elementary DB conditions which could be parsed into DB <b>WHERE</b> expression
 
@@ -23,7 +24,7 @@ The following abstractions allow to do this
 
 First of all we need to start from [Condition](../../core/db/Condition.ts)
 
-It is has the following interface:
+It has the following interface:
 
 ```ts
 export enum TConditionOperator {
@@ -34,9 +35,12 @@ export enum TConditionOperator {
   LESS_OR_EQUALS,
   GREATER_OR_EQUALS,
   BETWEEN,
+  NOT_BETWEEN,
   LIKE,
+  ILIKE,
   NOT_LIKE,
   IN,
+  NOT_IN,
   IS_NULL,
   IS_NOT_NULL,
 }
@@ -48,11 +52,8 @@ export interface IConditionItemList {
   conditions: (IConditionItem | IConditionItemList)[]
 }
 
-export interface IConditionItem {
-  operator: TConditionOperator
-  field: string
-  value?: string | number | string[] | number[]
-}
+// IConditionItem is a discriminated union type:
+export type IConditionItem = TConditionSimple | TConditionBetween | TConditionIN | TConditionLike | TConditionNull
 ```
 
 This allows us to describe <b>WHERE</b> expression as abstraction.
@@ -175,17 +176,17 @@ const condition = new Condition({
 With the help of Condition and AbstractService we could extend ArticleService and implement simple business logic
 
 ```ts
-import { AbstractService } from 'cleverJS/core/AbstractService'
-import { Condition, TConditionOperator } from 'cleverJS/core/db/Condition'
+import { AbstractService } from '@cleverjs/backend/core/AbstractService'
+import { Condition, TConditionOperator } from '@cleverjs/backend/core/db/Condition'
 import { Article } from './Article'
-import { ArticleResource } from './resource/ArticleResource'
+import { ArticleEntityResource } from './resource/ArticleEntityResource'
 
 // Article service is extended with AbstractService
-export class ArticleService extends AbstractService<Article, ArticleResource> {
-  // This method use condition and inherited findAll
+export class ArticleService extends AbstractService<Article, ArticleEntityResource> {
+  // This method uses condition and inherited findOne
   public async findByAuthor(author: string): Promise<Article | null> {
     const condition = new Condition({ conditions: [{ operator: TConditionOperator.EQUALS, field: 'author', value: author }] })
-    return this.deps.resource.findAll(condition)
+    return this.resource.findOne(condition)
   }
 
   public async getAuthorList(itemsPerPage: number): { items: string[]; total: number } {
@@ -203,33 +204,58 @@ export class ArticleService extends AbstractService<Article, ArticleResource> {
 }
 ```
 
-## AbstractDBResource
+## DBEntityResource + DBKnexResource
 
-In the same time ArticleResource service should be extended with AbstractDBResource, and we need to specify DB table and primary key
-if it is not 'id' in inherited fields `table` and `primaryKey`
+The resource layer is split into two classes:
+
+- `DBKnexResource` — low-level SQL operations using Knex (implements `IDBResource`)
+- `DBEntityResource` — entity-aware wrapper that uses `DBKnexResource` and `EntityFactory`
+
+ArticleEntityResource should extend `DBEntityResource`:
 
 ```ts
-import { AbstractDBResource } from 'cleverJS/core/db/sql/AbstractDBResource'
+import { DBEntityResource } from '@cleverjs/backend/core/db/sql/DBEntityResource'
 import { Article } from '../Article'
 
-export class ArticleResource extends AbstractDBResource<Article> {
-  protected table = 'article'
+export class ArticleEntityResource extends DBEntityResource<Article> {
 }
-``` 
+```
+
+Module initialization brings the pieces together:
+
+```ts
+import { Knex } from 'knex'
+import { ConditionDbParser } from '@cleverjs/backend/core/db/sql/condition/ConditionDbParser'
+import { DBKnexResource } from '@cleverjs/backend/core/db/sql/DBKnexResource'
+import { EntityFactory } from '@cleverjs/backend/core/entity/EntityFactory'
+import { Article } from './Article'
+import { ArticleService } from './ArticleService'
+import { ArticleEntityResource } from './resource/ArticleEntityResource'
+
+// Create DBKnexResource with connection, condition parser, and table info
+const resource = new DBKnexResource(connection, ConditionDbParser.getInstance(), { table: 'article' })
+
+// Create DBEntityResource with the low-level resource and entity factory
+const articleEntityResource = new ArticleEntityResource(resource, new EntityFactory(Article))
+
+// Pass resource directly to AbstractService
+const articleService = new ArticleService(articleEntityResource)
+```
 
 Our [App.ts](../../demo/App.ts) should be changed in the following way:
 
 ```ts
 import knex, { Knex } from 'knex'
 import connections from '../knexfile'
-import cors from 'fastify-cors'
-import { HttpServer } from 'cleverJS/core/http/HttpServer'
-import { WSServer } from 'cleverJS/core/ws/WSServer'
-import { EntityFactory } from 'cleverJS/core/entity/EntityFactory'
-import { ConditionDbParser } from 'cleverJS/core/db/sql/condition/ConditionDbParser'
-import { loggerNamespace } from 'cleverJS/core/logger/logger'
+import cors from '@fastify/cors'
+import { HttpServerFactory, THttpServer } from '@cleverjs/backend/http'
+import { WSServer } from '@cleverjs/backend/core/ws/WSServer'
+import { EntityFactory } from '@cleverjs/backend/core/entity/EntityFactory'
+import { ConditionDbParser } from '@cleverjs/backend/core/db/sql/condition/ConditionDbParser'
+import { DBKnexResource } from '@cleverjs/backend/core/db/sql/DBKnexResource'
+import { loggerNamespace } from '@cleverjs/backend/core/logger/logger'
 import { ArticleService } from './app/modules/article/ArticleService'
-import { ArticleResource } from './app/modules/article/resource/ArticleResource'
+import { ArticleEntityResource } from './app/modules/article/resource/ArticleEntityResource'
 import { ArticleWSController } from './controllers/ArticleWSController'
 import { ArticleHTTPController } from './controllers/ArticleHTTPController'
 
@@ -239,7 +265,7 @@ const knexConfig = (connections as any)[
 
 export class App {
   protected readonly connection: Knex
-  protected readonly httpServer: HttpServer
+  protected readonly httpServer
   protected readonly wsServer: WSServer
   protected readonly logger = loggerNamespace('App')
 
@@ -250,31 +276,27 @@ export class App {
       path: '/ws',
     }
 
-    this.httpServer = new HttpServer({ port: 8080, host: 'localhost' })
+    const httpServerFactory = new HttpServerFactory()
+    this.httpServer = httpServerFactory.get(THttpServer.fastify, { port: 8080, host: 'localhost' })
     // Register fastify cors plugin
     this.registerFastifyPlugins()
     this.httpServer.start().catch(this.logger.error)
     this.wsServer = new WSServer(
       websocketOptions,
-      this.httpServer.getServer().server
+      this.httpServer.getInstance().server
     )
 
     // DB connection initialization
     this.connection = knex(knexConfig)
 
-    const conditionDbParser = new ConditionDbParser()
-
-    // Pass DB connection, condition DB parser and EntityFactory for create Article Entity
-    const articleResource = new ArticleResource(this.connection, conditionDbParser, new EntityFactory(Article))
-
-    // Pass ArticleResource to ArticleService
-    const articleService = new ArticleService({
-      resource: articleResource,
-    })
+    // Create low-level DB resource, entity resource, and service
+    const dbResource = new DBKnexResource(this.connection, ConditionDbParser.getInstance(), { table: 'article' })
+    const articleEntityResource = new ArticleEntityResource(dbResource, new EntityFactory(Article))
+    const articleService = new ArticleService(articleEntityResource)
 
     // Controller initialization
     new ArticleHTTPController({
-      articleService,
+      service: articleService,
       http: this.httpServer,
     })
 
@@ -299,7 +321,7 @@ export class App {
   }
 
   protected registerFastifyPlugins(): void {
-    this.httpServer.getServer().register(cors, {
+    this.httpServer.getInstance().register(cors, {
       origin: true,
       credentials: true,
       allowedHeaders: [
