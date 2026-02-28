@@ -41,13 +41,13 @@ export class HttpServerExpress extends HttpServer<Request, Response, Express, TE
       return
     }
 
-    return new Promise((resolve, reject) => {
+    await new Promise((resolve, reject) => {
       this.#server!.close((err) => {
         this.started = false
         if (err) {
           reject(err)
         } else {
-          resolve()
+          resolve(true)
         }
       })
     })

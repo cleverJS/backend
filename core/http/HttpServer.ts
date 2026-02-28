@@ -24,10 +24,10 @@ export abstract class HttpServer<TReq = unknown, TRes = unknown, TInstance = unk
   }
 }
 
-export type THttpRoute<TReq = unknown, TRes = unknown, TRouteOpts = unknown> = {
+export interface THttpRoute<TReq = unknown, TRes = unknown, TRouteOpts = unknown> {
   method: THttpMethod
   path: string
-  handler: (req: TReq, res: TRes) => unknown
+  handler(req: TReq, res: TRes): unknown
   options?: TRouteOpts
 }
 

@@ -19,8 +19,8 @@ export class ArticleHTTPController {
     this.init()
   }
 
-  protected actionReplace = async (request: FastifyRequest): Promise<Record<string, any>> => {
-    const { text, author } = request.body as IReplaceBodyRequest
+  protected actionReplace = async (request: FastifyRequest<{ Body: IReplaceBodyRequest }>): Promise<Record<string, any>> => {
+    const { text, author } = request.body
 
     const result = this.deps.service.replaceAuthor(text, author)
 
