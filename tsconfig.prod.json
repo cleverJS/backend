@@ -5,6 +5,7 @@
     "noEmitHelpers": true,
     "declaration": true,
     "declarationDir": "./dist/types",
+    "rootDir": "./core",
     "declarationMap": true,
     "sourceMap": true,
     "removeComments": true,
