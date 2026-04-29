@@ -25,6 +25,29 @@ jobs:
     permissions:
       contents: read
       packages: read
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.17.13
+        env:
+          discovery.type: single-node
+          ES_JAVA_OPTS: -Xms512m -Xmx512m
+          xpack.security.enabled: 'false'
+        ports:
+          - 9200:9200
+        options: >-
+          --health-cmd "curl -fsSL http://localhost:9200/_cluster/health || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -37,7 +60,7 @@ jobs:
       - name: Typecheck
         run: pnpm exec tsc --noEmit -p tsconfig.prod.json
       - name: Run tests
-        run: pnpm run test
+        run: pnpm run tests
       - name: Build package
         run: pnpm run build
       - name: Upload build artifacts
