@@ -102,7 +102,7 @@ describe('Test AbstractDBResource', () => {
 
     const objectProperties = Object.keys(data).sort()
 
-    expect(objectProperties).toIncludeAllMembers(['from', 'modifiedBy', 'title', 'to'])
+    expect(objectProperties).toEqual(expect.arrayContaining(['from', 'modifiedBy', 'title', 'to']))
 
     const dataDB = await resource.map({
       id: '1',
@@ -138,7 +138,7 @@ describe('Test AbstractDBResource', () => {
 
     const objectProperties2 = Object.keys(data2).sort()
 
-    expect(objectProperties2).toIncludeAllMembers(['entryId', 'title'])
+    expect(objectProperties2).toEqual(expect.arrayContaining(['entryId', 'title']))
   })
 
   it('should not change condition during findAllRaw', () => {
@@ -182,7 +182,7 @@ describe('Test AbstractDBResource', () => {
       expect({ id: 1, title: 'test' }).toEqual({ id: element.id, title: element.title })
     }
 
-    expect(true).toBeTrue()
+    expect(true).toBeTruthy()
   })
 
   it('should change referenced object during mapToDB', async () => {
@@ -230,7 +230,7 @@ describe('Test AbstractDBResource', () => {
         trx.rollback()
       }
     } catch (e) {
-      expect(true).toBeTrue()
+      expect(true).toBeTruthy()
     }
 
     const itemNext = await resource.findById(item.id)
@@ -260,7 +260,7 @@ describe('Test AbstractDBResource', () => {
         trx.rollback()
       }
     } catch (e) {
-      expect(true).toBeTrue()
+      expect(true).toBeTruthy()
     }
 
     const count = await resource.count()

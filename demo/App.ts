@@ -24,8 +24,7 @@ export class App {
     const httpServerFactory = new HttpServerFactory()
     this.httpServer = httpServerFactory.get(THttpServer.fastify, { port: settings.websocket.port, host: 'localhost' })
     this.registerFastifyPlugins()
-    const server = this.httpServer.getInstance().server
-    this.wsServer = new WSServer(settings.websocket, server)
+    this.wsServer = new WSServer(settings.websocket, this.httpServer.getServer())
 
     const config = settings.connection
     this.connection = knex(config)

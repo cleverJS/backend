@@ -19,14 +19,14 @@ Here you will find step by step guide how to create application and meet with co
 1. [Complicated DB query](./cases/advanced/1_complicated_DB_query.md) 
 2. [Websocket](./cases/advanced/2_websocket.md)
 3. [Cache](./cases/advanced/3_cache.md)
-4. [ElasticSearch](./cases/advanced) - TODO
-5. [Redis](./cases/advanced) - TODO
-6. [Authorization module](./cases/advanced) - TODO  
-    - [Security](./cases/advanced)
-    - [Token](./cases/advanced)     
-    - [Registration](./cases/advanced)     
-    - [Authorization](./cases/advanced)     
-    - [Forgot/Reset password](./cases/advanced)     
+4. ElasticSearch — TODO
+5. Redis — TODO
+6. Authorization module — TODO
+    - Security
+    - Token
+    - Registration
+    - Authorization
+    - Forgot/Reset password
 
 [back](../README.md)
 

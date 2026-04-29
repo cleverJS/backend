@@ -281,10 +281,7 @@ export class App {
     // Register fastify cors plugin
     this.registerFastifyPlugins()
     this.httpServer.start().catch(this.logger.error)
-    this.wsServer = new WSServer(
-      websocketOptions,
-      this.httpServer.getInstance().server
-    )
+    this.wsServer = new WSServer(websocketOptions, this.httpServer.getServer())
 
     // DB connection initialization
     this.connection = knex(knexConfig)

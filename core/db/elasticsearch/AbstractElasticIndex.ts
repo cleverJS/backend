@@ -1,16 +1,5 @@
 import { Client } from '@elastic/elasticsearch'
-import {
-  Bulk,
-  Count,
-  Delete,
-  DeleteByQuery,
-  Index,
-  IndicesCreate,
-  Msearch,
-  Search,
-  Update,
-  UpdateByQuery,
-} from '@elastic/elasticsearch/api/requestParams'
+import { Bulk, Count, Delete, DeleteByQuery, Index, IndicesCreate, Search, Update, UpdateByQuery } from '@elastic/elasticsearch/api/requestParams'
 import { ApiResponse, TransportRequestOptions } from '@elastic/elasticsearch/lib/Transport'
 
 import { loggerNamespace } from '../../logger/logger'
@@ -29,44 +18,42 @@ export abstract class AbstractElasticIndex {
   }
 
   public async create(index: string, updateAlias: boolean = true) {
-    let result = false
-    let responseExists
     try {
-      responseExists = await this.client.indices.exists({ index })
-      if (!responseExists || !responseExists.body) {
-        const indexParams = this.createIndexParams(index)
-        indexParams.index = index
-        const response = await this.client.indices.create(indexParams)
-        result = response && response.statusCode === 200 && response.body.acknowledged
+      const indexParams = this.createIndexParams(index)
+      indexParams.index = index
+      const response = await this.client.indices.create(indexParams)
+      const result = response && response.statusCode === 200 && response.body.acknowledged
 
-        if (result && updateAlias) {
-          await this.updateAlias(index)
-        }
+      if (result && updateAlias) {
+        await this.updateAlias(index)
       }
-    } catch (e) {
-      this.logger.error('create index', JSON.stringify(responseExists), e)
+
+      return result
+    } catch (e: any) {
+      if (e?.meta?.body?.error?.type === 'resource_already_exists_exception') {
+        return false
+      }
+
+      this.logger.error('create index', e)
       throw e
     }
-
-    return result
   }
 
   public async delete(index: string) {
     try {
-      const responseExists = await this.client.indices.exists({ index })
-      if (responseExists && responseExists.body) {
-        const responseDelete = await this.client.indices.delete({ index })
-        return responseDelete && responseDelete.statusCode === 200 && responseDelete.body.acknowledged
+      const responseDelete = await this.client.indices.delete({ index })
+      return responseDelete && responseDelete.statusCode === 200 && responseDelete.body.acknowledged
+    } catch (e: any) {
+      if (e?.meta?.statusCode === 404) {
+        return false
       }
-    } catch (e) {
+
       this.logger.error('delete index', e)
       throw e
     }
-
-    return false
   }
 
-  public async count(params?: Omit<Count, 'index'>) {
+  public async count(params?: Omit<Count, 'index'>): Promise<number> {
     const nextParams: Count = {
       ...params,
       index: this.alias,
@@ -77,9 +64,8 @@ export abstract class AbstractElasticIndex {
       return response.body.count
     } catch (e) {
       this.logger.error('count', e)
+      throw e
     }
-
-    return 0
   }
 
   public async save<T extends IndexData>(item: T, refresh?: 'wait_for' | boolean): Promise<string | null> {
@@ -114,7 +100,7 @@ export abstract class AbstractElasticIndex {
           result = response.body._id
         }
       } catch (e) {
-        this.logger.error('save', params)
+        this.logger.error('save', params, e)
       }
     }
 
@@ -273,73 +259,83 @@ export abstract class AbstractElasticIndex {
     params.index = this.alias
     params.scroll = '10s'
 
-    let response = await this.client.search(params)
+    let scrollId: string | undefined
+    try {
+      let response = await this.client.search(params)
+      scrollId = response.body._scroll_id
 
-    while (true) {
-      const sourceHits = response.body.hits.hits
+      while (true) {
+        const sourceHits = response.body.hits.hits
 
-      if (sourceHits.length === 0) {
-        break
+        if (sourceHits.length === 0) {
+          break
+        }
+
+        for (const hit of sourceHits) {
+          yield hit
+        }
+
+        if (!response.body._scroll_id) {
+          break
+        }
+
+        scrollId = response.body._scroll_id
+        response = await this.client.scroll({
+          scroll_id: response.body._scroll_id,
+          scroll: params.scroll,
+        })
       }
-
-      for (const hit of sourceHits) {
-        yield hit
+    } finally {
+      if (scrollId) {
+        try {
+          await this.client.clearScroll({ scroll_id: scrollId })
+        } catch (e) {
+          this.logger.error('clearScroll failed', e)
+        }
       }
-
-      if (!response.body._scroll_id) {
-        break
-      }
-
-      response = await this.client.scroll({
-        scroll_id: response.body._scroll_id,
-        scroll: params.scroll,
-      })
     }
   }
 
-  public multiSearch(dataset: Record<string, any>[]): Promise<ApiResponse | null> {
+  public async multiSearch(dataset: Record<string, any>[]): Promise<ApiResponse | null> {
     const body = dataset.flatMap((doc) => [{ index: this.alias }, doc]) as any
 
-    const p: Msearch = {
-      body,
+    if (body.length === 0 || body.length % 2 !== 0) {
+      return null
     }
 
-    if (body.length !== 0 && body.length % 2 === 0) {
-      return this.client.msearch(p)
+    try {
+      return await this.client.msearch({ body })
+    } catch (e) {
+      this.logger.error('multiSearch', e)
+      throw e
     }
-
-    return Promise.resolve(null)
   }
 
   public async updateAlias(newIndex: string): Promise<void> {
-    try {
-      const actions: Record<string, any>[] = []
+    const actions: Record<string, any>[] = []
 
-      const index = await this.getIndexByAlias(this.alias)
-      let createAlias = true
-      if (index) {
-        if (index !== newIndex) {
-          actions.push({
-            remove: { index, alias: this.alias },
-          })
-        } else {
-          createAlias = false
-        }
-      }
-
-      if (createAlias) {
+    const index = await this.getIndexByAlias(this.alias)
+    let createAlias = true
+    if (index) {
+      if (index !== newIndex) {
         actions.push({
-          add: { index: newIndex, alias: this.alias },
+          remove: { index, alias: this.alias },
         })
-
-        await this.client.indices.updateAliases({
-          body: {
-            actions,
-          },
-        })
+      } else {
+        createAlias = false
       }
-    } catch (e) {
-      this.logger.error(e)
+    }
+
+    if (createAlias) {
+      actions.push({
+        add: { index: newIndex, alias: this.alias },
+      })
+
+      await this.client.indices.updateAliases({
+        body: {
+          actions,
+        },
+      })
     }
   }
 

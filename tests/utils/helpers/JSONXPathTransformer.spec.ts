@@ -8,7 +8,7 @@ describe('Test JSONXPathTransformerHelper', () => {
   })
 
   afterEach(() => {
-    jest.clearAllTimers()
+    vi.clearAllTimers()
   })
 
   afterAll(async () => {

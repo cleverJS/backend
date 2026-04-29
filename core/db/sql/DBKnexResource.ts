@@ -1,6 +1,5 @@
 import { Knex } from 'knex'
 import { PassThrough } from 'stream'
-import { types } from 'util'
 
 import { loggerNamespace } from '../../logger/logger'
 import { Paginator } from '../../utils/Paginator'
@@ -26,9 +25,9 @@ export class DBKnexResource implements IDBResource {
     this.table = info.table
   }
 
-  public async query<R = Record<string, any>>(sql: string, binding?: Knex.RawBinding | Knex.RawBinding[] | Knex.ValueDict): Promise<R | null> {
+  public async query<R = Record<string, any>>(sql: string, binding?: Knex.RawBinding[] | Knex.ValueDict): Promise<R | null> {
     let result
-    if (binding) {
+    if (binding !== undefined) {
       result = await this.connection.raw<R>(sql, binding)
     } else {
       result = await this.connection.raw<R>(sql)
@@ -68,18 +67,13 @@ export class DBKnexResource implements IDBResource {
       this.conditionParser.parse(queryBuilder, condition)
     }
 
-    let rows: R[] = []
     try {
-      rows = await queryBuilder.select()
-    } catch (e: any) {
-      if (types.isNativeError(e)) {
-        this.logger.error(e.message, queryBuilder.toQuery())
-      }
-
-      throw new Error(e.message, { cause: e })
+      return (await queryBuilder.select()) as R[]
+    } catch (e) {
+      const err = e instanceof Error ? e : new Error(String(e))
+      this.logger.error(err.message, queryBuilder.toQuery())
+      throw new Error(err.message, { cause: e })
     }
-
-    return rows
   }
 
   public async count(condition?: Readonly<Condition>, connection?: Knex): Promise<number> {
@@ -91,7 +85,7 @@ export class DBKnexResource implements IDBResource {
     const queryBuilder: Knex.QueryBuilder = connection ? connection(this.table) : this.connection(this.table)
     this.conditionParser.parse(queryBuilder, conditionClone)
     const result = await queryBuilder.count<{ count: number }[]>('* as count')
-    if (result && result.length) {
+    if (result.length > 0) {
       return result[0].count
     }
 
@@ -101,37 +95,32 @@ export class DBKnexResource implements IDBResource {
   public async insert(data: Record<string, any>, connection?: Knex): Promise<boolean> {
     const queryBuilder: Knex.QueryBuilder = connection ? connection(this.table) : this.connection(this.table)
 
-    let insertResult
+    let insertResult: Array<number | Record<string, string | number>>
     try {
-      if (['pg', 'mssql', 'oracle'].includes(this.connection.client.config.client)) {
+      if (this.isReturningClient()) {
         insertResult = await queryBuilder.insert(data).returning(this.primaryKey)
       } else {
         insertResult = await queryBuilder.insert(data)
       }
-    } catch (e: any) {
-      if (types.isNativeError(e)) {
-        this.logger.error(e.message, queryBuilder.toQuery())
-      }
-
-      throw new Error(e.message, { cause: e })
+    } catch (e) {
+      const err = e instanceof Error ? e : new Error(String(e))
+      this.logger.error(err.message, queryBuilder.toQuery())
+      throw new Error(err.message, { cause: e })
     }
 
-    let result = false
-
-    if (insertResult && insertResult.length > 0) {
-      let [identificator] = insertResult
-
-      if (typeof identificator === 'object') {
-        identificator = identificator[this.primaryKey]
-      }
-
-      if (identificator) {
-        await this.changeEntity(data, identificator)
-        result = true
-      }
+    if (insertResult.length === 0) {
+      return false
     }
 
-    return result
+    const [first] = insertResult
+    const identificator = typeof first === 'object' ? first[this.primaryKey] : first
+
+    if (!identificator) {
+      return false
+    }
+
+    this.changeEntity(data, identificator)
+    return true
   }
 
   public async update(condition: Readonly<Condition>, data: Record<string, any>, connection?: Knex): Promise<boolean> {
@@ -141,45 +130,43 @@ export class DBKnexResource implements IDBResource {
   public async updateRaw(condition: Readonly<Condition>, raw: Record<string, any>, connection?: Knex): Promise<boolean> {
     const queryBuilder: Knex.QueryBuilder = connection ? connection(this.table) : this.connection(this.table)
 
-    let result = 0
     try {
       this.conditionParser.parse(queryBuilder, condition)
-      result = await queryBuilder.update(raw)
-    } catch (e: any) {
-      if (types.isNativeError(e)) {
-        this.logger.error(queryBuilder.toQuery(), e.message)
-      }
-
-      throw new Error(e.message, { cause: e })
+      const result = await queryBuilder.update(raw)
+      return result > 0
+    } catch (e) {
+      const err = e instanceof Error ? e : new Error(String(e))
+      this.logger.error(queryBuilder.toQuery(), err.message)
+      throw new Error(err.message, { cause: e })
     }
-
-    return result > 0
   }
 
-  public async batchInsert(rows: Record<string, any>[], chunkSize?: number, connection?: Knex): Promise<string[] | number[] | any> {
-    const conn = connection || this.connection
+  public async batchInsert(rows: Record<string, any>[], chunkSize?: number, connection?: Knex): Promise<string[] | number[] | boolean> {
+    const conn = connection ?? this.connection
 
-    const rowsNext = rows.map((i) => {
-      const { [this.primaryKey]: id, ...rowNext } = i
-      return rowNext
+    const rowsNext = rows.map((row) => {
+      const next: Record<string, any> = { ...row }
+      delete next[this.primaryKey]
+      return next
     })
 
-    let result
-    if (['pg', 'mssql', 'oracle'].includes(this.connection.client.config.client)) {
-      const batchInsertResult = await conn.batchInsert(this.table, rowsNext, chunkSize).returning(this.primaryKey)
+    if (this.isReturningClient()) {
+      const batchInsertResult: Array<string | number | Record<string, string | number>> = await conn
+        .batchInsert(this.table, rowsNext, chunkSize)
+        .returning(this.primaryKey)
 
-      result = batchInsertResult.map((identificator) => {
+      const ids = batchInsertResult.map((identificator) => {
         if (typeof identificator === 'object') {
           return identificator[this.primaryKey]
         }
 
         return identificator
       })
-    } else {
-      result = await conn.batchInsert(this.table, rows, chunkSize)
+
+      return ids as string[] | number[]
     }
 
-    return result
+    return conn.batchInsert(this.table, rows, chunkSize)
   }
 
   public async truncate(requestor: string, connection?: Knex) {
@@ -277,13 +264,18 @@ export class DBKnexResource implements IDBResource {
     return condition
   }
 
-  protected async changeEntity(data: Record<string, any>, id?: any) {
-    if (id && this.primaryKey) {
-      if (data?.[this.primaryKey]) {
+  protected changeEntity(data: Record<string, any>, id?: string | number) {
+    if (id !== undefined && this.primaryKey) {
+      if (data[this.primaryKey] !== undefined) {
         Object.defineProperty(data, this.primaryKey, { value: id })
       } else {
         Object.assign(data, { [this.primaryKey]: id })
       }
     }
+  }
+
+  private isReturningClient(): boolean {
+    const client = (this.connection.client as Knex.Client | undefined)?.config.client
+    return typeof client === 'string' && ['pg', 'mssql', 'oracle'].includes(client)
   }
 }

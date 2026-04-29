@@ -30,7 +30,7 @@ As a built-in Websocket server we use [websockets/ws](https://github.com/websock
         const httpServerFactory = new HttpServerFactory()
         this.httpServer = httpServerFactory.get(THttpServer.fastify, { port: 8080, host: 'localhost' })
         this.httpServer.start().catch(this.logger.error)
-        this.wsServer = new WSServer(websocketOptions, this.httpServer.getInstance().server)
+        this.wsServer = new WSServer(websocketOptions, this.httpServer.getServer())
       }
 
       // This will be called on process finish and terminate ws and http server
@@ -123,7 +123,7 @@ As a built-in Websocket server we use [websockets/ws](https://github.com/websock
         const httpServerFactory = new HttpServerFactory()
         this.httpServer = httpServerFactory.get(THttpServer.fastify, { port: 8080, host: 'localhost' })
         this.httpServer.start().catch(logger.error)
-        this.wsServer = new WSServer(websocketOptions, this.httpServer.getInstance().server)
+        this.wsServer = new WSServer(websocketOptions, this.httpServer.getServer())
 
         // Controller initialization
         new ArticleWSController({

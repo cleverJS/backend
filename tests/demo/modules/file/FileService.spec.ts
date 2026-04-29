@@ -72,7 +72,7 @@ describe('Test FileService', () => {
       await service.delete(item.id)
     }
 
-    expect(fs.existsSync(item.getFilePath())).not.toBeTrue()
+    expect(fs.existsSync(item.getFilePath())).not.toBeTruthy()
   })
 
   it('should create file from stream', async () => {

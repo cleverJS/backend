@@ -22,3 +22,14 @@ Node parameters: `--require ts-node/register --require tsconfig-paths/register`
 
 Working directory: `<PATH TO PROJECT DIRECTORY>`
 JavaScript file: `app/index.ts`
+
+# Running tests
+
+Tests run on [Vitest](https://vitest.dev). Some suites need Redis and Elasticsearch — start them with the bundled `docker-compose.yml`:
+
+```sh
+docker compose up -d redis elasticsearch
+pnpm tests
+```
+
+Suites that depend on those services (`tests/cache/CacheRedis.spec.ts`, `tests/db/elasticsearch/AbstractElasticIndex.spec.ts`) are marked `describe.skip` by default — un-skip them locally to exercise the integrations.

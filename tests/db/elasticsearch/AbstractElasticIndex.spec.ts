@@ -44,7 +44,7 @@ class TestIndex extends AbstractElasticIndex {
   }
 }
 
-describe.skip('Test AbstractElasticIndex', () => {
+describe('Test AbstractElasticIndex', () => {
   const client = demoAppContainer.elasticClient
 
   const index = new TestIndex(client)
