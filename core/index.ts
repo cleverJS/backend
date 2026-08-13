@@ -70,6 +70,7 @@ export { LogLevel, TransportInterface } from './logger/transport/TransportInterf
 export { TransportConsole } from './logger/transport/TransportConsole'
 export { TransportTelegram } from './logger/transport/TransportTelegram'
 export { TransportWinston } from './logger/transport/TransportWinston'
+export { TransportWinstonRotate, ITransportWinstonRotateConfig } from './logger/transport/TransportWinstonRotate'
 
 // Errors
 export { HttpError, TRequestErrorParams, TResponseErrorParams } from './errors/HttpError'

@@ -1,6 +1,6 @@
 {
   "name": "@cleverjs/backend",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "CleverJS Backend",
   "author": "",
   "license": "MIT",
@@ -51,9 +51,9 @@
     "pnpm": ">=10"
   },
   "dependencies": {
+    "tslib": "^2.8.1",
     "typed-emitter": "^2.1.0",
-    "uuid": "^11.1.0",
-    "tslib": "^2.8.1"
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@elastic/elasticsearch": "^7.17.13",
@@ -74,6 +74,7 @@
     "@types/pretty-hrtime": "^1.0.3",
     "@types/uuid": "^10.0.0",
     "@types/ws": "^8.18.1",
+    "@vitest/coverage-v8": "^4.0.18",
     "bcrypt": "^5.1.1",
     "eslint": "^10.2.1",
     "eslint-config-prettier": "^10.1.8",
@@ -98,10 +99,10 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.59.1",
-    "yup": "^1.7.1",
-    "@vitest/coverage-v8": "^4.0.18",
+    "unplugin-swc": "^1.5.9",
     "vitest": "^4.0.18",
-    "unplugin-swc": "^1.5.9"
+    "winston-daily-rotate-file": "^5.0.0",
+    "yup": "^1.7.1"
   },
   "peerDependencies": {
     "@elastic/elasticsearch": "^7.17.14",
@@ -112,6 +113,7 @@
     "redis": "^4.7.0",
     "telegraf": "^4.16.3",
     "winston": "^3.19.0",
+    "winston-daily-rotate-file": "^5.0.0",
     "ws": "^8.20.0"
   },
   "peerDependenciesMeta": {
@@ -137,6 +139,9 @@
       "optional": true
     },
     "winston": {
+      "optional": true
+    },
+    "winston-daily-rotate-file": {
       "optional": true
     },
     "knex": {
