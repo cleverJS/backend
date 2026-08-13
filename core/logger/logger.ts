@@ -1,4 +1,4 @@
-import { v4 as uuidV4 } from 'uuid'
+import { uuidV4 } from '../utils/uuid'
 
 import { ILoggerConfig } from './config'
 import { LogLevel, TransportInterface } from './transport/TransportInterface'

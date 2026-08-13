@@ -1,5 +1,3 @@
-import { WSServer } from '../ws/WSServer'
-
 export const routes: any[] = []
 
 export const route = (service: string, action: string) => {
@@ -37,10 +35,4 @@ export const route = (service: string, action: string) => {
       },
     }
   }
-}
-
-export const initRoutes = (wsServer: WSServer) => {
-  routes.forEach((route) => {
-    wsServer.onRequest(route.service, route.action, route.func)
-  })
 }

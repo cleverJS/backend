@@ -2,7 +2,7 @@ import { randomInt } from 'crypto'
 import hrtime from 'pretty-hrtime'
 import { WebSocket } from 'ws'
 
-import { HttpServerFastify } from '../../core'
+import { HttpServerFastify } from '../../core/http/fastify'
 import { logger } from '../../core/logger/logger'
 import { Ready } from '../../core/utils/ready'
 import { sleep } from '../../core/utils/sleep'

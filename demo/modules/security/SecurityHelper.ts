@@ -3,9 +3,9 @@ import crypto from 'crypto'
 import * as fs from 'fs'
 import jwt, { VerifyOptions } from 'jsonwebtoken'
 import type { StringValue } from 'ms'
-import { v4 as uuidV4 } from 'uuid'
 
 import { logger } from '../../../core/logger/logger'
+import { uuidV4 } from '../../../core/utils/uuid'
 import { settings } from '../../configs'
 
 export interface ITokenInterface {

@@ -1,6 +1,6 @@
 import crypto from 'crypto'
+import { EventEmitter } from 'events'
 import { OAuth2Client } from 'google-auth-library'
-import TypedEmitter from 'typed-emitter'
 
 import { logger } from '../../../../core/logger/logger'
 import { settings } from '../../../configs'
@@ -14,7 +14,7 @@ import { AuthTokenService } from '../token/AuthTokenService'
 export interface IProtectDependencies {
   userService: UserService
   authTokenService: AuthTokenService
-  eventBus: TypedEmitter<AppEvents>
+  eventBus: EventEmitter<AppEvents>
 }
 
 export class AuthService {

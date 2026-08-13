@@ -1,8 +1,6 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "importHelpers": true,
-    "noEmitHelpers": true,
     "declaration": true,
     "declarationDir": "./dist/types",
     "rootDir": "./core",

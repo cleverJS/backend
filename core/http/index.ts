@@ -1,7 +1,5 @@
-import { HttpClient } from './client/HttpClient'
-import { RequestCancel } from './client/RequestCancel'
-import { IHttpServerConfig } from './config'
-import { HttpServer } from './HttpServer'
-import { HttpServerFactory } from './HttpServerFactory'
+/** Peer-free HTTP primitives. Concrete servers and the client live behind their own entry points. */
 
-export { HttpServer, HttpServerFactory, IHttpServerConfig, HttpClient, RequestCancel }
+export { HttpServer, THttpRoute, THttpMethod } from './HttpServer'
+export { IHttpServerConfig } from './config'
+export { RequestCancel } from './client/RequestCancel'

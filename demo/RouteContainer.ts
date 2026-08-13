@@ -1,5 +1,5 @@
-import { initRoutes } from '../core/decorators/routes'
 import { HttpServerFastify } from '../core/http/servers/HttpServerFastify'
+import { initRoutes } from '../core/ws/initRoutes'
 import { WSServer } from '../core/ws/WSServer'
 
 import { ArticleHTTPController } from './controllers/ArticleHTTPController'

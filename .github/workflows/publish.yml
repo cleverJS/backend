@@ -20,8 +20,15 @@ env:
 
 jobs:
   test:
-    name: Validate (install, typecheck, test, build)
+    name: Validate (${{ matrix.peers }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # `peerDependencies` promises more than one major for several packages. Each extra major
+        # gets its own run, so the range is verified rather than assumed. `current` is the set
+        # pinned in devDependencies and the only run that publishes the build artifact.
+        peers: [current, prev-majors, next-majors]
     permissions:
       contents: read
       packages: read
@@ -57,13 +64,26 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies (immutable)
         run: pnpm install --frozen-lockfile
+      # Swap in the lower bound of every peer range that allows an older major. @fastify/cors is
+      # pulled down with it because its 11.x line requires fastify 5 — the demo app registers it,
+      # so leaving it alone would fail this run on the plugin rather than on our own code.
+      - name: Install previous peer majors
+        if: matrix.peers == 'prev-majors'
+        run: pnpm add -D fastify@^4.29.1 knex@^2.5.1 winston-daily-rotate-file@^4.7.1 '@fastify/cors@^9.0.1'
+      # Swap in the upper bound of every peer range that allows a newer major than devDependencies.
+      - name: Install next peer majors
+        if: matrix.peers == 'next-majors'
+        run: pnpm add -D express@^5.0.0 '@types/express@^5.0.0' redis@^5.0.0
       - name: Typecheck
         run: pnpm exec tsc --noEmit -p tsconfig.prod.json
       - name: Run tests
         run: pnpm run tests
       - name: Build package
         run: pnpm run build
+      - name: Verify entry point declarations
+        run: pnpm run verify:exports
       - name: Upload build artifacts
+        if: matrix.peers == 'current'
         uses: actions/upload-artifact@v4
         with:
           name: dist

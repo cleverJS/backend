@@ -22,6 +22,40 @@ Tool that simplify common development's things:
 - You may use your favorite project structure.
 - You may override everything in your way. 
 
+## Entry points
+
+The package root carries no peer dependency: importing `@cleverjs/backend` pulls in nothing but
+`pretty-hrtime`. Everything that needs a third-party package lives behind its own entry point, so a
+project installs only what it actually uses.
+
+UUIDs come from `node:crypto.randomUUID()` through the `uuidV4()` wrapper in
+`core/utils/uuid.ts` — the one place to change if the format or the source of randomness needs to
+differ.
+
+| Entry point | Exports | Needs |
+| --- | --- | --- |
+| `@cleverjs/backend` | services, entities, cache, `Condition`, logger, `HttpServer`, WS wire protocol, utils | — |
+| `@cleverjs/backend/http` | `HttpServer`, `IHttpServerConfig`, `RequestCancel` | — |
+| `@cleverjs/backend/http/client` | `HttpClient` | `axios` |
+| `@cleverjs/backend/http/express` | `HttpServerExpress` | `express` |
+| `@cleverjs/backend/http/fastify` | `HttpServerFastify` | `fastify` |
+| `@cleverjs/backend/http/factory` | `HttpServerFactory`, `THttpServer` | `express` **and** `fastify` |
+| `@cleverjs/backend/ws` | `WSServer`, `WSClient`, `initRoutes` | `ws` |
+| `@cleverjs/backend/db/sql` | `AbstractDBResource`, `DBKnexResource`, `ConditionDbParser`, … | `knex` (types only) |
+| `@cleverjs/backend/db/redis` | `Redis`, `CacheAdapterRedis` | `redis` |
+| `@cleverjs/backend/db/elasticsearch` | `AbstractElasticIndex` | `@elastic/elasticsearch` 7.x (types only) |
+| `@cleverjs/backend/logger/winston` | `TransportWinston`, `TransportWinstonRotate` | `winston` |
+| `@cleverjs/backend/telegram` | `TelegramMessenger`, `TransportTelegram` | `telegraf` |
+
+"Types only" means nothing loads the package at runtime — the client or query builder is injected —
+but the published declarations reference its types, so it must be installed to typecheck against them.
+
+Every peer is optional and several accept more than one major (`fastify` 4 or 5, `knex` 2 or 3,
+`express` 4 or 5, `redis` 4 or 5, `winston-daily-rotate-file` 4 or 5). Each declared major is
+typechecked and tested in CI rather than assumed compatible. `@elastic/elasticsearch` is the one
+hard ceiling: `AbstractElasticIndex` imports `@elastic/elasticsearch/api/requestParams` and
+`/lib/Transport`, neither of which exists in 8.x.
+
 ## Logging transports
 
 | Transport | Writes | Rotation |

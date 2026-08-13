@@ -1,7 +1,6 @@
 import cors from '@fastify/cors'
 import { EventEmitter } from 'events'
 import knex, { Knex } from 'knex'
-import TypedEmitter from 'typed-emitter'
 
 import { HttpServerFactory, THttpServer } from '../core/http/HttpServerFactory'
 import { loggerNamespace } from '../core/logger/logger'
@@ -18,7 +17,7 @@ export class App {
   protected readonly httpServer
   protected readonly connection
   protected readonly wsServer: WSServer
-  protected readonly appEventBus: TypedEmitter<AppEvents> = new EventEmitter() as TypedEmitter<AppEvents>
+  protected readonly appEventBus: EventEmitter<AppEvents> = new EventEmitter<AppEvents>()
 
   public constructor(settings: ISettings) {
     const httpServerFactory = new HttpServerFactory()

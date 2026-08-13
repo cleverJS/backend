@@ -1,9 +1,9 @@
 import { EventEmitter } from 'events'
-import { v4 as uuid4 } from 'uuid'
 import WebSocket, { CloseEvent, ErrorEvent, Event, MessageEvent } from 'ws'
 
 import { loggerNamespace } from '../logger/logger'
 import { Ready } from '../utils/ready'
+import { uuidV4 } from '../utils/uuid'
 
 export const EVENT_OPEN = 'event_open'
 export const EVENT_RECONNECT = 'event_reconnect'
@@ -102,7 +102,7 @@ export class WSClient {
     if (!this.isConnected) {
       this.logger.warn('Client is not connected')
     }
-    const uuid = uuid4()
+    const uuid = uuidV4()
     const header = { uuid, service, action }
     const start = Date.now()
     this.send(header, payload).catch(this.logger.error)

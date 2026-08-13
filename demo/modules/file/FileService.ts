@@ -5,10 +5,10 @@ import md5 from 'md5'
 import os from 'os'
 import path from 'path'
 import { Duplex, pipeline } from 'stream'
-import { v4 as uuidV4 } from 'uuid'
 
 import { logger, loggerNamespace } from '../../../core/logger/logger'
 import { FSWrapper } from '../../../core/utils/fsWrapper'
+import { uuidV4 } from '../../../core/utils/uuid'
 
 import { File } from './File'
 import { FileEntityResource } from './resource/FileEntityResource'

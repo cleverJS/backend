@@ -1,5 +1,5 @@
+import { EventEmitter } from 'events'
 import { Knex } from 'knex'
-import TypedEmitter from 'typed-emitter'
 
 import { ArticleInitializer, ArticleService } from './modules/article'
 import { FileInitializer, FileService } from './modules/file'
@@ -15,7 +15,7 @@ export class ServiceContainer {
   public readonly authService: AuthService
   public readonly fileService: FileService
 
-  public constructor(connection: Knex, eventBus: TypedEmitter<AppEvents>) {
+  public constructor(connection: Knex, eventBus: EventEmitter<AppEvents>) {
     this.userService = new UserInitializer(connection).service
     this.authTokenService = new AuthTokenInitializer(connection).service
 

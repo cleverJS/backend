@@ -1,6 +1,6 @@
 import { User } from '../modules/user/User'
 
-export type AppEvents = {
-  'password-restore': (user: User) => void
-  registration: (user: User) => void
+export interface AppEvents {
+  'password-restore': [user: User]
+  registration: [user: User]
 }

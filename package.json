@@ -1,6 +1,6 @@
 {
   "name": "@cleverjs/backend",
-  "version": "3.1.0",
+  "version": "4.0.0",
   "description": "CleverJS Backend",
   "author": "",
   "license": "MIT",
@@ -26,17 +26,88 @@
       "import": "./dist/http/index.js",
       "default": "./dist/http/index.js"
     },
+    "./http/client": {
+      "types": "./dist/types/http/client/index.d.ts",
+      "require": "./dist/http/client/index.js",
+      "import": "./dist/http/client/index.js",
+      "default": "./dist/http/client/index.js"
+    },
+    "./http/express": {
+      "types": "./dist/types/http/express.d.ts",
+      "require": "./dist/http/express.js",
+      "import": "./dist/http/express.js",
+      "default": "./dist/http/express.js"
+    },
+    "./http/fastify": {
+      "types": "./dist/types/http/fastify.d.ts",
+      "require": "./dist/http/fastify.js",
+      "import": "./dist/http/fastify.js",
+      "default": "./dist/http/fastify.js"
+    },
+    "./http/factory": {
+      "types": "./dist/types/http/factory.d.ts",
+      "require": "./dist/http/factory.js",
+      "import": "./dist/http/factory.js",
+      "default": "./dist/http/factory.js"
+    },
+    "./ws": {
+      "types": "./dist/types/ws/index.d.ts",
+      "require": "./dist/ws/index.js",
+      "import": "./dist/ws/index.js",
+      "default": "./dist/ws/index.js"
+    },
     "./db/sql": {
       "types": "./dist/types/db/sql/index.d.ts",
       "require": "./dist/db/sql/index.js",
       "import": "./dist/db/sql/index.js",
       "default": "./dist/db/sql/index.js"
     },
+    "./db/redis": {
+      "types": "./dist/types/db/redis/index.d.ts",
+      "require": "./dist/db/redis/index.js",
+      "import": "./dist/db/redis/index.js",
+      "default": "./dist/db/redis/index.js"
+    },
+    "./db/elasticsearch": {
+      "types": "./dist/types/db/elasticsearch/index.d.ts",
+      "require": "./dist/db/elasticsearch/index.js",
+      "import": "./dist/db/elasticsearch/index.js",
+      "default": "./dist/db/elasticsearch/index.js"
+    },
+    "./logger/winston": {
+      "types": "./dist/types/logger/winston.d.ts",
+      "require": "./dist/logger/winston.js",
+      "import": "./dist/logger/winston.js",
+      "default": "./dist/logger/winston.js"
+    },
+    "./telegram": {
+      "types": "./dist/types/telegram.d.ts",
+      "require": "./dist/telegram.js",
+      "import": "./dist/telegram.js",
+      "default": "./dist/telegram.js"
+    },
     "./package.json": "./package.json"
+  },
+  "typesVersions": {
+    "*": {
+      "http": ["dist/types/http/index.d.ts"],
+      "http/client": ["dist/types/http/client/index.d.ts"],
+      "http/express": ["dist/types/http/express.d.ts"],
+      "http/fastify": ["dist/types/http/fastify.d.ts"],
+      "http/factory": ["dist/types/http/factory.d.ts"],
+      "ws": ["dist/types/ws/index.d.ts"],
+      "db/sql": ["dist/types/db/sql/index.d.ts"],
+      "db/redis": ["dist/types/db/redis/index.d.ts"],
+      "db/elasticsearch": ["dist/types/db/elasticsearch/index.d.ts"],
+      "logger/winston": ["dist/types/logger/winston.d.ts"],
+      "telegram": ["dist/types/telegram.d.ts"]
+    }
   },
   "files": [
     "dist/**/*",
     "core/**/*",
+    "guide/**/*",
+    "demo/**/*",
     "README.md"
   ],
   "scripts": {
@@ -44,26 +115,22 @@
     "prebuild": "pnpm clean",
     "clean": "rm -rf dist tsconfig.build.tsbuildinfo",
     "prepublishOnly": "pnpm run build",
-    "tests": "vitest --config vitest.config.ts"
+    "tests": "vitest --config vitest.config.ts",
+    "verify:exports": "node scripts/verify-exports.mjs"
   },
   "engines": {
-    "node": ">=22",
-    "pnpm": ">=10"
+    "node": ">=22.12.0",
+    "pnpm": ">=10.0.0"
   },
   "dependencies": {
-    "tslib": "^2.8.1",
-    "typed-emitter": "^2.1.0",
-    "uuid": "^11.1.0"
+    "pretty-hrtime": "^1.0.3"
   },
   "devDependencies": {
     "@elastic/elasticsearch": "^7.17.13",
     "@eslint/js": "^10.0.1",
-    "@fastify/cookie": "^11.0.2",
     "@fastify/cors": "^11.2.0",
-    "@fastify/session": "^11.1.1",
     "@swc/cli": "^0.7.10",
     "@swc/core": "^1.15.32",
-    "@swc/wasm": "^1.15.32",
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "@types/bcrypt": "^5.0.2",
     "@types/express": "^4.17.25",
@@ -72,9 +139,9 @@
     "@types/ms": "^2.1.0",
     "@types/node": "^22.19.17",
     "@types/pretty-hrtime": "^1.0.3",
-    "@types/uuid": "^10.0.0",
     "@types/ws": "^8.18.1",
     "@vitest/coverage-v8": "^4.0.18",
+    "axios": "^1.15.2",
     "bcrypt": "^5.1.1",
     "eslint": "^10.2.1",
     "eslint-config-prettier": "^10.1.8",
@@ -84,46 +151,41 @@
     "express": "^4.22.1",
     "fastest-validator": "^1.19.1",
     "fastify": "^5.8.5",
-    "form-data": "^4.0.5",
     "globals": "^17.5.0",
     "google-auth-library": "^9.15.1",
     "jsonwebtoken": "^9.0.3",
     "knex": "^3.2.9",
     "md5": "^2.3.0",
-    "morphism": "^1.12.3",
-    "piscina": "^4.9.2",
     "prettier": "^3.8.3",
-    "pretty-hrtime": "^1.0.3",
+    "redis": "^4.7.0",
     "sqlite3": "^5.1.7",
     "telegraf": "^4.16.3",
-    "ts-node": "^10.9.2",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.59.1",
     "unplugin-swc": "^1.5.9",
     "vitest": "^4.0.18",
+    "winston": "^3.19.0",
     "winston-daily-rotate-file": "^5.0.0",
+    "ws": "^8.20.0",
     "yup": "^1.7.1"
   },
   "peerDependencies": {
-    "@elastic/elasticsearch": "^7.17.14",
+    "@elastic/elasticsearch": "^7.17.13",
     "axios": "^1.15.2",
-    "express": "^4.21.2",
-    "fastify": "^5.8.5",
-    "knex": "^3.2.9",
-    "redis": "^4.7.0",
+    "express": "^4.22.1 || ^5.0.0",
+    "fastify": "^4.29.1 || ^5.8.5",
+    "knex": "^2.5.1 || ^3.2.9",
+    "redis": "^4.7.0 || ^5.0.0",
     "telegraf": "^4.16.3",
     "winston": "^3.19.0",
-    "winston-daily-rotate-file": "^5.0.0",
+    "winston-daily-rotate-file": "^4.7.1 || ^5.0.0",
     "ws": "^8.20.0"
   },
   "peerDependenciesMeta": {
     "@elastic/elasticsearch": {
       "optional": true
     },
-    "redis": {
-      "optional": true
-    },
-    "telegraf": {
+    "axios": {
       "optional": true
     },
     "express": {
@@ -132,10 +194,13 @@
     "fastify": {
       "optional": true
     },
-    "axios": {
+    "knex": {
       "optional": true
     },
-    "ws": {
+    "redis": {
+      "optional": true
+    },
+    "telegraf": {
       "optional": true
     },
     "winston": {
@@ -144,7 +209,7 @@
     "winston-daily-rotate-file": {
       "optional": true
     },
-    "knex": {
+    "ws": {
       "optional": true
     }
   },

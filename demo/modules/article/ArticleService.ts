@@ -1,5 +1,4 @@
 import { EventEmitter } from 'events'
-import TypedEmitter from 'typed-emitter'
 
 import { AbstractService } from '../../../core/AbstractService'
 import { Cache } from '../../../core/cache/Cache'
@@ -10,12 +9,12 @@ import { cacheContainer } from '../../CacheContainer'
 import { Article } from './Article'
 import { ArticleEntityResource } from './resource/ArticleEntityResource'
 
-export type ArticleEvents = {
-  new: (item: Article) => void
+export interface ArticleEvents {
+  new: [item: Article]
 }
 
 export class ArticleService extends AbstractService<Article, ArticleEntityResource> {
-  public readonly eventEmitter: TypedEmitter<ArticleEvents> = new EventEmitter() as TypedEmitter<ArticleEvents>
+  public readonly eventEmitter: EventEmitter<ArticleEvents> = new EventEmitter<ArticleEvents>()
 
   public async findWithAuthor() {
     return this.resource.findWithAuthor()

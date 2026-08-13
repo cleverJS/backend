@@ -1,11 +1,10 @@
 import { EventEmitter } from 'events'
 import { IncomingMessage, Server } from 'http'
-import TypedEmitter from 'typed-emitter'
 import { types } from 'util'
-import { v4 as uuidV4 } from 'uuid'
 import WebSocket, { WebSocketServer } from 'ws'
 
 import { loggerNamespace } from '../logger/logger'
+import { uuidV4 } from '../utils/uuid'
 
 import { IWSConfig } from './config'
 import { validateWSRequest } from './validator/WSRequestValidator'
@@ -33,15 +32,15 @@ export type RequestHandler<T = Record<string, any>> = (
   client: WebSocket
 ) => Promise<Record<string, any>>
 
-type IWSServerEvents = {
-  [EVENT_CONNECT]: (client: WebSocket) => void
-  [EVENT_DISCONNECT]: (connectionInfo: IConnectionInfo) => void
+interface IWSServerEvents {
+  [EVENT_CONNECT]: [client: WebSocket]
+  [EVENT_DISCONNECT]: [connectionInfo: IConnectionInfo]
 }
 
 export class WSServer {
   public ws: WebSocket.Server
   public readonly connectionInfoMap: Map<WebSocket, IConnectionInfo> = new Map()
-  protected bus: TypedEmitter<IWSServerEvents>
+  protected bus: EventEmitter<IWSServerEvents>
   protected readonly logger = loggerNamespace('WSServer')
   protected readonly keepAliveTimeout: number
   protected keepAliveTimer: NodeJS.Timeout | null = null
@@ -49,7 +48,7 @@ export class WSServer {
   private readonly aliveMap: WeakMap<WebSocket, boolean> = new WeakMap()
 
   public constructor(config: IWSConfig, server?: Server) {
-    this.bus = new EventEmitter() as TypedEmitter<IWSServerEvents>
+    this.bus = new EventEmitter<IWSServerEvents>()
     this.keepAliveTimeout = config.keepalive || KEEP_ALIVE_DEFAULT
     this.ws = this.init(config, server)
   }

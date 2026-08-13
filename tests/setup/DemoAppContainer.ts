@@ -1,9 +1,8 @@
 import { Client } from '@elastic/elasticsearch'
 import { EventEmitter } from 'events'
 import knex, { Knex } from 'knex'
-import TypedEmitter from 'typed-emitter'
 
-import { HttpServerFastify } from '../../core'
+import { HttpServerFastify } from '../../core/http/fastify'
 import { logger, loggerNamespace } from '../../core/logger/logger'
 import { FSWrapper } from '../../core/utils/fsWrapper'
 import { WSServer } from '../../core/ws/WSServer'
@@ -21,7 +20,7 @@ export class DemoAppContainer {
   public readonly serviceContainer: ServiceContainer
   public readonly httpServer: HttpServerFastify
   protected readonly logger = loggerNamespace('App')
-  protected readonly appEventBus: TypedEmitter<AppEvents> = new EventEmitter() as TypedEmitter<AppEvents>
+  protected readonly appEventBus: EventEmitter<AppEvents> = new EventEmitter<AppEvents>()
 
   public constructor(settings: ISettings) {
     this.elasticClient = new Client({
@@ -48,7 +47,7 @@ export class DemoAppContainer {
       this.logger.info('DB connection successful')
     } catch (e) {
       this.logger.warn('Cannot connect to DB')
-      // eslint-disable-next-line no-process-exit
+
       process.exit(1)
     }
 
