@@ -1,7 +1,7 @@
 import winston, { format } from 'winston'
 
+import { argsStringify } from '../../../core/logger/argsStringify'
 import { LogLevel, TransportInterface } from '../../../core/logger/transport/TransportInterface'
-import { argsStringify } from '../../../core/utils/common'
 
 export class TransportWinstonConsole implements TransportInterface {
   protected readonly logger: winston.Logger

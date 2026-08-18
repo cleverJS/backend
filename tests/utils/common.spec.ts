@@ -1,3 +1,6 @@
+/* eslint-disable sonarjs/deprecation -- the deprecated re-export from common.ts is the subject here: this
+   file is the regression test proving 4.x call sites still resolve. Repointing it at
+   core/logger/argsStringify would delete that coverage. */
 import { logger } from '../../core/logger/logger'
 import { argsStringify, convertToBoolean } from '../../core/utils/common'
 

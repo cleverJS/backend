@@ -51,6 +51,7 @@ export { LoggerContainer } from './logger/LoggerContainer'
 export { ILoggerConfig } from './logger/config'
 export { LogLevel, TransportInterface } from './logger/transport/TransportInterface'
 export { TransportConsole } from './logger/transport/TransportConsole'
+export { argsStringify, createArgsStringify, ARGS_STRINGIFY_LIMITS, IArgsStringifyLimits } from './logger/argsStringify'
 
 // Errors
 export { HttpError, TRequestErrorParams, TResponseErrorParams } from './errors/HttpError'
@@ -67,7 +68,6 @@ export {
   arrayUnique,
   JSONStringifySafe,
   formatBytes,
-  argsStringify,
   getCircularReplacer,
   chunkString,
   currentDir,

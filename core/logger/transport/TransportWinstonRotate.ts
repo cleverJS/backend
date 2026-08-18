@@ -2,12 +2,14 @@ import fs from 'fs'
 import { createLogger, format, Logform, Logger, transports } from 'winston'
 import type DailyRotateFile from 'winston-daily-rotate-file'
 
-import { argsStringify } from '../../utils/common'
+import { argsStringify, createArgsStringify } from '../argsStringify'
 
+import { definedLimits } from './limits'
 import { LogLevel, TransportInterface } from './TransportInterface'
+import { buildStructuredEntry, ITransportWinstonConfig, resolveLogLevel, structuredLogFormat } from './TransportWinston'
 
-export interface ITransportWinstonRotateConfig {
-  /** Prefix of every file this transport writes, and the tag in each line. */
+export interface ITransportWinstonRotateConfig extends ITransportWinstonConfig {
+  /** Prefix of every file this transport writes; a tag in each line, or a `namespace` field in structured mode. */
   namespace?: string
   /** Size at which the current file rolls over: a byte count, or a number with a k/m/g suffix. */
   maxSize?: string | number
@@ -31,7 +33,9 @@ export interface ITransportWinstonRotateConfig {
   console?: boolean
 }
 
-const DEFAULTS: Required<ITransportWinstonRotateConfig> = {
+// `limits` is left out rather than defaulted: no value here means the shared serialiser, and any
+// default would replace it with a private copy for every instance.
+const DEFAULTS: Required<Omit<ITransportWinstonRotateConfig, 'limits'>> = {
   namespace: 'app',
   maxSize: '20m',
   maxFiles: '30d',
@@ -40,6 +44,7 @@ const DEFAULTS: Required<ITransportWinstonRotateConfig> = {
   utc: true,
   handleProcessEvents: true,
   console: true,
+  structured: false,
 }
 
 /**
@@ -60,19 +65,29 @@ const DEFAULTS: Required<ITransportWinstonRotateConfig> = {
  */
 export class TransportWinstonRotate implements TransportInterface {
   protected readonly logger: Logger
+  protected readonly structured: boolean
+  protected readonly stringify: (...args: unknown[]) => string
 
   public constructor(logDir: string, config: ITransportWinstonRotateConfig = {}) {
-    const { namespace, handleProcessEvents, console: withConsole, ...rotation } = { ...DEFAULTS, ...config }
+    // Everything destructured by name is ours; `rotation` is what reaches `DailyRotateFile`, and an
+    // option it does not know would be carried into its options object unchanged.
+    const { namespace, handleProcessEvents, console: withConsole, structured, limits, ...rotation } = { ...DEFAULTS, ...config }
 
     if (!fs.existsSync(logDir)) {
       fs.mkdirSync(logDir, { recursive: true })
     }
 
-    const logFormat = format.printf((info) => {
-      return `${info.timestamp} [${info.level}][${namespace}] ${info.message}`
-    })
+    this.structured = structured
+    this.stringify = limits === undefined ? argsStringify : createArgsStringify(definedLimits(limits))
 
-    const appDebug = (process.env.APP_DEBUG || 'false') === 'true'
+    // Structured mode drops the line template: the namespace becomes a field via `defaultMeta`, and the
+    // whole chain sits on the logger so a record is serialised once instead of once per transport.
+    const logFormat = structured
+      ? undefined
+      : format.printf((info) => {
+          return `${info.timestamp} [${info.level}][${namespace}] ${info.message}`
+        })
+
     const rotate = (filename: string, level: string) =>
       this.buildRotateTransport({ ...rotation, dirname: logDir, filename, level, handleProcessEvents, logFormat })
 
@@ -84,14 +99,17 @@ export class TransportWinstonRotate implements TransportInterface {
     ]
 
     this.logger = createLogger({
-      level: process.env.NODE_ENV === 'production' && !appDebug ? 'info' : 'debug',
+      level: resolveLogLevel(),
+      format: structured ? structuredLogFormat() : undefined,
+      defaultMeta: structured ? { namespace } : undefined,
       transports: withConsole
         ? [
             ...fileTransports,
             new transports.Console({
               handleExceptions: handleProcessEvents,
               handleRejections: handleProcessEvents,
-              format: format.combine(format.timestamp(), format.colorize(), logFormat),
+              // `colorize` rewrites `info.level` in place, so its escape codes would land inside the JSON.
+              format: logFormat === undefined ? undefined : format.combine(format.timestamp(), format.colorize(), logFormat),
             }),
           ]
         : fileTransports,
@@ -105,10 +123,13 @@ export class TransportWinstonRotate implements TransportInterface {
    */
   public log(level: LogLevel, ...msg: any[]): void {
     try {
-      this.logger.log({
-        level,
-        message: argsStringify(...msg),
-      })
+      // Winston filters by level inside its transports, after the record has been built and pushed through
+      // the logger format — so without this a discarded `debug` still pays for the whole serialisation.
+      if (!this.logger.isLevelEnabled(level)) {
+        return
+      }
+
+      this.logger.log(this.structured ? buildStructuredEntry(level, msg) : { level, message: this.stringify(...msg) })
     } catch (e) {
       // eslint-disable-next-line no-console
       console.error(e)
@@ -119,7 +140,7 @@ export class TransportWinstonRotate implements TransportInterface {
     dirname: string
     filename: string
     level: string
-    logFormat: Logform.Format
+    logFormat: Logform.Format | undefined
     handleProcessEvents: boolean
     maxSize: string | number
     maxFiles: string | number
@@ -136,7 +157,7 @@ export class TransportWinstonRotate implements TransportInterface {
       level,
       handleExceptions: handleProcessEvents,
       handleRejections: handleProcessEvents,
-      format: format.combine(format.timestamp(), logFormat),
+      format: logFormat === undefined ? undefined : format.combine(format.timestamp(), logFormat),
     })
   }
 

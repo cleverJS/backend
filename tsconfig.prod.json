@@ -6,7 +6,6 @@
     "rootDir": "./core",
     "declarationMap": true,
     "sourceMap": true,
-    "removeComments": true,
 
     "typeRoots": [],
     "types": []

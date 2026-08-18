@@ -23,7 +23,6 @@
     "skipLibCheck": true,
 
     "experimentalDecorators": true,
-    "removeComments": true,
 
     "declaration": true,
     "declarationMap": true,

@@ -1,6 +1,7 @@
 import fs from 'fs'
 import os from 'os'
 import path from 'path'
+import { Logger } from 'winston'
 
 import { ITransportWinstonRotateConfig, TransportWinstonRotate } from '../../core/logger/transport/TransportWinstonRotate'
 
@@ -44,30 +45,30 @@ function readLogFiles(dir: string): string[] {
     .sort()
 }
 
+const dirs: string[] = []
+
+afterAll(() => {
+  for (const dir of dirs) {
+    fs.rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+function logDir(): string {
+  const dir = makeLogDir()
+  dirs.push(dir)
+  return dir
+}
+
+/**
+ * Every logger built here shares one process, and each one that handles process events adds a
+ * listener to it — the exact effect `handleProcessEvents` exists to control. Default it off so a
+ * suite of ten does not drown the run in MaxListeners warnings.
+ */
+function build(dir: string, config: ITransportWinstonRotateConfig = {}): TransportWinstonRotate {
+  return new TransportWinstonRotate(dir, { console: false, handleProcessEvents: false, ...config })
+}
+
 describe('TransportWinstonRotate', () => {
-  const dirs: string[] = []
-
-  afterAll(() => {
-    for (const dir of dirs) {
-      fs.rmSync(dir, { recursive: true, force: true })
-    }
-  })
-
-  function logDir(): string {
-    const dir = makeLogDir()
-    dirs.push(dir)
-    return dir
-  }
-
-  /**
-   * Every logger built here shares one process, and each one that handles process events adds a
-   * listener to it — the exact effect `handleProcessEvents` exists to control. Default it off so a
-   * suite of ten does not drown the run in MaxListeners warnings.
-   */
-  function build(dir: string, config: ITransportWinstonRotateConfig = {}): TransportWinstonRotate {
-    return new TransportWinstonRotate(dir, { console: false, handleProcessEvents: false, ...config })
-  }
-
   test('should create the log directory when it does not exist', () => {
     const dir = path.join(logDir(), 'nested', 'deeper')
     build(dir)
@@ -173,6 +174,25 @@ describe('TransportWinstonRotate', () => {
     expect(off.some((item) => item.handleExceptions)).toBe(false)
   })
 
+  test('should not build a record winston would discard', () => {
+    const transport = build(logDir())
+    const { logger } = transport as unknown as { logger: Logger }
+
+    logger.level = 'info'
+
+    const seen: string[] = []
+    logger.log = ((entry: { level: string }) => {
+      seen.push(entry.level)
+
+      return logger
+    }) as unknown as typeof logger.log
+
+    transport.log('debug', 'discarded before it costs anything')
+    transport.log('info', 'kept')
+
+    expect(seen).toEqual(['info'])
+  })
+
   test('should explain itself when the optional peer dependency is missing', () => {
     class WithoutPeer extends TransportWinstonRotate {
       protected resolveDailyRotateFile(): never {
@@ -194,5 +214,53 @@ describe('TransportWinstonRotate', () => {
 
     expect(imports).toHaveLength(1)
     expect(imports[0].startsWith('import type ')).toBe(true)
+  })
+})
+
+describe('TransportWinstonRotate structured mode', () => {
+  test('should write one JSON object per line, with the namespace as a field', async () => {
+    const dir = logDir()
+    const transport = build(dir, { namespace: 'billing', structured: true })
+
+    transport.log('error', 'nightly sync failed', { attempt: 2 })
+    await flush()
+
+    const file = readLogFiles(dir).find((name) => name.startsWith('billing-error-')) as string
+    const [line] = fs
+      .readFileSync(path.join(dir, file), 'utf8')
+      .split('\n')
+      .filter((item) => item.length > 0)
+    const record = JSON.parse(line) as { level: string; message: string; namespace: string; details: unknown[]; timestamp: string }
+
+    expect(record.level).toEqual('error')
+    expect(record.message).toEqual('nightly sync failed')
+    // A queryable field here, not a `[billing]` tag buried in the line text.
+    expect(record.namespace).toEqual('billing')
+    expect(record.details).toEqual([{ attempt: 2 }])
+    expect(typeof record.timestamp).toEqual('string')
+  })
+
+  test('should bound a record built out of shared references', async () => {
+    const dir = logDir()
+    const transport = build(dir, { namespace: 'billing', structured: true })
+
+    // Both winston transports build the record through the same code, so the bound has to hold here too:
+    // measured once and written two hundred times is how a rotating file gets a record it cannot roll.
+    const shared = { blob: 'z'.repeat(60000) }
+    const payload = Object.fromEntries(Array.from({ length: 200 }, (_, index) => [`ref${index}`, shared]))
+
+    transport.log('error', 'shared', payload)
+    transport.log('error', 'healthy record behind the giant')
+    await flush()
+
+    const file = readLogFiles(dir).find((name) => name.startsWith('billing-error-')) as string
+    const lines = fs
+      .readFileSync(path.join(dir, file), 'utf8')
+      .split('\n')
+      .filter((item) => item.length > 0)
+
+    expect(lines).toHaveLength(2)
+    expect(lines[0].length).toBeLessThan(1024 * 1024)
+    expect(lines[1]).toContain('healthy record behind the giant')
   })
 })

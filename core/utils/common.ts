@@ -80,64 +80,16 @@ export function formatBytes(bytes: number): string {
   return `${(bytes / gigaBytes).toFixed(decimal)} GB`
 }
 
-export function argsStringify(...args: any[]) {
-  const space = ' '
-  const carryover = '\n'
-
-  return args.reduce((prev, current, index) => {
-    const isBeginning = index === 0
-    const preString = `${!isBeginning ? carryover : ''}`
-
-    function errorToString(e: Error) {
-      let result = ''
-
-      const { stack, ...other } = e
-      if (!isEmptyObject(other)) {
-        result += `${preString}${JSON.stringify(other)}\n`
-      }
-
-      result += `${preString}[Stack trace]: ${stack}`
-
-      return result
-    }
-
-    let messageNext = prev
-    try {
-      if (['string', 'number', 'boolean', 'bigint', 'undefined'].includes(typeof current)) {
-        messageNext += `${!isBeginning ? space : ''}${current}`
-      } else if (current instanceof AggregateError) {
-        const { stack, errors, message } = current
-        if (stack) {
-          messageNext += `${preString}[Stack trace]: ${stack}\n`
-        }
-
-        if (message) {
-          messageNext += `\t${preString}${message}\n`
-        }
-
-        if (errors && errors.length) {
-          for (const error of errors) {
-            if (error instanceof Error) {
-              messageNext += `\t${errorToString(error)}\n\n`
-            } else {
-              messageNext += `\t${preString}${JSON.stringify(errors)}\n`
-            }
-          }
-        }
-      } else if (current instanceof Error) {
-        messageNext += `${errorToString(current)}\n`
-      } else if (typeof current === 'function') {
-        messageNext += `${preString}[Function]`
-      } else {
-        messageNext += `${preString}${JSON.stringify(current, getCircularReplacer())}`
-      }
-    } catch (e) {
-      messageNext += `${preString}${JSONStringifySafe(current, getCircularReplacer(), 4)}`
-    }
-
-    return messageNext
-  }, '')
-}
+export {
+  /** @deprecated Import from `core/logger/argsStringify`. Kept so 4.x call sites keep compiling. */
+  argsStringify,
+  /** @deprecated Import from `core/logger/argsStringify`. Kept so 4.x call sites keep compiling. */
+  createArgsStringify,
+  /** @deprecated Import from `core/logger/argsStringify`. Kept so 4.x call sites keep compiling. */
+  ARGS_STRINGIFY_LIMITS,
+  /** @deprecated Import from `core/logger/argsStringify`. Kept so 4.x call sites keep compiling. */
+  IArgsStringifyLimits,
+} from '../logger/argsStringify'
 
 export function getCircularReplacer() {
   const seen = new WeakSet()
@@ -153,12 +105,30 @@ export function getCircularReplacer() {
   }
 }
 
-export function chunkString(input: string, length: number) {
-  const numChunks = Math.ceil(input.length / length)
-  const chunks = new Array(numChunks)
+// Cutting between the halves of a surrogate pair leaves a lone surrogate at the end of one chunk and
+// at the start of the next, which every consumer that re-encodes the text (Telegram, JSON, a UTF-8
+// write) rewrites to U+FFFD. Backing the cut up one unit keeps the pair whole; the chunk is then one
+// unit short, never over, so a caller using `length` as a hard cap is still safe.
+export function chunkString(input: string, length: number): string[] {
+  const size = Math.trunc(length)
+  if (size < 1) {
+    throw new RangeError('chunkString: length must be a positive integer')
+  }
 
-  for (let i = 0, j = 0; i < numChunks; ++i, j += length) {
-    chunks[i] = input.substring(j, j + length)
+  const chunks: string[] = []
+  let start = 0
+
+  while (start < input.length) {
+    let end = Math.min(start + size, input.length)
+    const lastUnit = input.charCodeAt(end - 1)
+
+    // At size 1 a pair cannot be kept whole at all, and backing up would never advance `start`.
+    if (end < input.length && end - 1 > start && lastUnit >= 0xd800 && lastUnit <= 0xdbff) {
+      end--
+    }
+
+    chunks.push(input.substring(start, end))
+    start = end
   }
 
   return chunks
