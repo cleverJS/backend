@@ -87,3 +87,32 @@ npm i winston-daily-rotate-file
 
 The transport bounds only the files the process writes itself. Whatever goes to stdout is the
 process manager's to rotate — under PM2 that means the `pm2-logrotate` module.
+
+### Bounding what a log line costs
+
+Every transport serializes its arguments through `argsStringify`, synchronously, on the caller's stack —
+and `Logger.error` is not gated by config, so a failure path pays this in full. The serializer bounds its
+own work: `objectNodes`, `objectDepth`, `objectBreadth`, `stringChars`, `argChars`, `totalChars` and
+`errorDepth`, with the defaults frozen in `ARGS_STRINGIFY_LIMITS`. Every cut leaves a visible marker
+(`[truncated]`, `[+N entries omitted]`, `[Depth limit reached]`), because a cut that leaves no trace reads
+as data that was never there.
+
+Raise or lower them per transport with `limits`, which takes limits rather than a serializer function on
+purpose — an injected function could be unbounded, and the bound is the point:
+
+```ts
+new TransportWinstonRotate('./runtime', { namespace: 'app', limits: { totalChars: 1_048_576 } })
+```
+
+`TransportTelegram` is bounded to a single Telegram message by default. The Bot API caps one message at
+4096 characters and `TelegramMessenger` splits anything longer into that many separate sends, so one
+oversized record used to cost up to 64 of them — past the per-chat flood limit. Telegram is an alerting
+channel, not a log store: the gist belongs there and the detail in the file transport.
+
+What the serializer cannot bound is the cost of being handed a large object in the first place —
+`Object.keys()` on a 500 000-key object allocates the whole key array before any limit applies. Log a
+count and a sample, not a result set.
+
+`structured: true` on either winston transport hands winston the record as data instead of one flattened
+string, so the file holds queryable fields. It is off by default and the default output is byte-identical
+to 4.0.0; turn it on only where whatever reads the logs expects JSON.

@@ -1,6 +1,6 @@
 {
   "name": "@cleverjs/backend",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "description": "CleverJS Backend",
   "author": "",
   "license": "MIT",
@@ -108,7 +108,8 @@
     "core/**/*",
     "guide/**/*",
     "demo/**/*",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "build": "swc ./core -d ./dist --strip-leading-paths --source-maps && tsc -p tsconfig.prod.json --emitDeclarationOnly",
@@ -116,6 +117,7 @@
     "clean": "rm -rf dist tsconfig.build.tsbuildinfo",
     "prepublishOnly": "pnpm run build",
     "tests": "vitest --config vitest.config.ts",
+    "lint": "eslint core demo tests",
     "verify:exports": "node scripts/verify-exports.mjs"
   },
   "engines": {
