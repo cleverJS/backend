@@ -76,6 +76,8 @@ jobs:
         run: pnpm add -D express@^5.0.0 '@types/express@^5.0.0' redis@^5.0.0
       - name: Typecheck
         run: pnpm exec tsc --noEmit -p tsconfig.prod.json
+      - name: Typecheck (full, includes demo and tests)
+        run: pnpm exec tsc --noEmit -p tsconfig.json
       - name: Run tests
         run: pnpm run tests
       - name: Build package
