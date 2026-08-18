@@ -8,6 +8,13 @@ export interface IndexData {
   id: string | null
 }
 
+/**
+ * A bulk batch fails per document, so the failure set grows with the batch. Logging all of it — with the
+ * source document attached to every entry — turned one call into a multi-megabyte synchronous serialisation
+ * on the event loop, at the exact moment the cluster was already struggling.
+ */
+const BULK_ERROR_SAMPLE_SIZE = 5
+
 export abstract class AbstractElasticIndex {
   public abstract alias: string
   protected readonly logger = loggerNamespace('AbstractElasticIndex')
@@ -184,17 +191,29 @@ export abstract class AbstractElasticIndex {
           const operation = Object.keys(action)[0]
           if (action[operation].error) {
             erroredDocuments.push({
+              // Position in `dataset`, so the offending document is still findable by the caller without
+              // the log carrying a copy of it.
+              position: i,
+              // The only identifier that outlives the process: `position` indexes a `dataset` nobody has
+              // when they read this line back, while `_id` plus `error.reason` is what a mapping or parse
+              // failure is actually diagnosed from.
+              id: action[operation]._id,
+              operation,
               // If the status is 429 it means that you can retry the document,
               // otherwise it's very likely a mapping error, and you should
               // fix the document before to try it again.
               status: action[operation].status,
               error: action[operation].error,
-              operation: body[i * 2],
-              document: body[i * 2 + 1],
             })
           }
         })
-        this.logger.error(erroredDocuments)
+
+        this.logger.error('bulkIndexDocument', {
+          index: this.alias,
+          failed: erroredDocuments.length,
+          total: dataset.length,
+          sample: erroredDocuments.slice(0, BULK_ERROR_SAMPLE_SIZE),
+        })
       }
 
       if (bulkResponse.items && bulkResponse.items.length) {
